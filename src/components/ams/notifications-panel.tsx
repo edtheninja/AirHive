@@ -1,0 +1,66 @@
+import { AnimatePresence, motion } from "motion/react";
+import { AlertTriangle, Bell, CheckCircle2, Info, X, OctagonAlert } from "lucide-react";
+import { useLiveOps } from "@/lib/ams/live-ops";
+import { spring } from "@/lib/ams/motion";
+import { cn } from "@/lib/utils";
+import type { OpsNotification } from "@/lib/ams/data";
+
+const toneMap: Record<OpsNotification["tone"], { icon: typeof Info; className: string }> = {
+  info: { icon: Info, className: "text-info bg-info/12" },
+  success: { icon: CheckCircle2, className: "text-success bg-success/14" },
+  warning: { icon: AlertTriangle, className: "text-warning bg-warning/16" },
+  danger: { icon: OctagonAlert, className: "text-destructive bg-destructive/14" },
+};
+
+export function NotificationsPanel({ limit = 6, className }: { limit?: number; className?: string }) {
+  const { notifications, dismiss } = useLiveOps();
+
+  return (
+    <div className={cn("glass overflow-hidden rounded-3xl", className)}>
+      <div className="flex items-center justify-between px-6 pt-6 pb-4">
+        <div className="flex items-center gap-2">
+          <Bell className="h-4 w-4 text-muted-foreground" strokeWidth={1.7} />
+          <h2 className="text-base font-semibold">Live events</h2>
+        </div>
+        <span className="num rounded-full bg-foreground/5 px-2.5 py-1 text-xs text-muted-foreground">
+          {notifications.length}
+        </span>
+      </div>
+      <div className="max-h-[420px] space-y-2 overflow-y-auto px-4 pb-5">
+        <AnimatePresence initial={false}>
+          {notifications.slice(0, limit).map((n) => {
+            const tone = toneMap[n.tone];
+            const Icon = tone.icon;
+            return (
+              <motion.div
+                key={n.id}
+                layout
+                initial={{ opacity: 0, x: 40, filter: "blur(6px)" }}
+                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, x: 24, height: 0, marginBottom: 0 }}
+                transition={spring}
+                className="group flex items-start gap-3 rounded-2xl px-3 py-3 transition-colors hover:bg-foreground/4"
+              >
+                <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl", tone.className)}>
+                  <Icon className="h-4 w-4" strokeWidth={1.8} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{n.title}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{n.detail}</p>
+                  <p className="num mt-1 text-[11px] text-muted-foreground/80">{n.time}</p>
+                </div>
+                <button
+                  onClick={() => dismiss(n.id)}
+                  aria-label="Dismiss"
+                  className="rounded-lg p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-foreground/6"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
