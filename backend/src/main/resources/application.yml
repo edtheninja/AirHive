@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: AirHive Backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/airhive
+    username: airhive_user
+    password: airhive_dev
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+    show-sql: true
+
+    properties:
+      hibernate:
+        format_sql: true
