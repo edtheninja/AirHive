@@ -1,5 +1,7 @@
 package com.airhive.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,24 +14,18 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(
-        name = "aircraft",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_aircraft_registration",
-                        columnNames = "registration_number"
-                )
-        }
-)
+@Table(name = "aircraft", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_aircraft_registration", columnNames = "registration_number")
+})
 public class Aircraft {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "registration_number", nullable = false, length = 20)
     private String registrationNumber;
-
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "aircraft_type_id", nullable = false)
     private AircraftType aircraftType;
