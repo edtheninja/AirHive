@@ -16,9 +16,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/airports/**",
-                                "/api/aircraft-types/**"
+                                "/api/aircraft-types/**",
+                                "/api/aircrafts/**",
+                                "/api/flights/**"
                         ).permitAll()
-                        .requestMatchers(
+                          .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/**"
                         ).permitAll()
