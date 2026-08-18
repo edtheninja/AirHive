@@ -1,4 +1,4 @@
-# Skyward Ops
+# AirHive
 
 Create a modern, premium Airline Management System (AMS) web application.
 
@@ -11,35 +11,22 @@ The interface should feel inspired by modern macOS design language without copyi
 Use:
 
 • Frosted glass surfaces
-
 • Soft layered shadows
-
 • Rounded corners (18–24px)
-
 • Clean typography
-
 • Large breathing spaces
-
 • Minimal visual clutter
-
 • Intelligent information hierarchy
-
 • Premium enterprise appearance
 
 Avoid:
 
 • Material Design look
-
 • Bootstrap styling
-
 • Heavy gradients
-
 • Loud colors
-
 • Oversized buttons
-
 • Boxy layouts
-
 • Generic admin dashboards
 
 -----------------------------------
