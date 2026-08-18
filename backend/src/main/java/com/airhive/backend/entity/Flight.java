@@ -14,16 +14,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+
 @Entity
-@Table(
-        name = "flight",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_flight_number",
-                        columnNames = "flight_number"
-                )
-        }
-)
+@Table(name = "flight", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_flight_number", columnNames = "flight_number")
+})
 public class Flight {
 
     @Id
@@ -32,17 +27,22 @@ public class Flight {
 
     @Column(name = "flight_number", nullable = false, length = 20)
     private String flightNumber;
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "aircraft_id", nullable = false)
     private Aircraft aircraft;
 
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "route_id", nullable = false)
+    private Route route;
+
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "departure_airport_id", nullable = false)
     private Airport departureAirport;
 
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "arrival_airport_id", nullable = false)
     private Airport arrivalAirport;
@@ -77,6 +77,14 @@ public class Flight {
 
     public void setAircraft(Aircraft aircraft) {
         this.aircraft = aircraft;
+    }
+
+    public Route getRoute() {
+        return route;
+    }
+
+    public void setRoute(Route route) {
+        this.route = route;
     }
 
     public Airport getDepartureAirport() {

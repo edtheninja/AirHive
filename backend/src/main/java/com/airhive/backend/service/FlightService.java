@@ -5,11 +5,13 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.airhive.backend.entity.Flight;
+import com.airhive.backend.entity.Route;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AircraftRepository;
 import com.airhive.backend.repository.AirportRepository;
 import com.airhive.backend.repository.FlightRepository;
+import com.airhive.backend.repository.RouteRepository;
 
 @Service
 public class FlightService {
@@ -17,15 +19,19 @@ public class FlightService {
         private final FlightRepository flightRepository;
         private final AircraftRepository aircraftRepository;
         private final AirportRepository airportRepository;
+        private final RouteRepository routeRepository;
 
         public FlightService(
                         FlightRepository flightRepository,
                         AircraftRepository aircraftRepository,
-                        AirportRepository airportRepository) {
+                        AirportRepository airportRepository,
+                        RouteRepository routeRepository) {
 
                 this.flightRepository = flightRepository;
                 this.aircraftRepository = aircraftRepository;
                 this.airportRepository = airportRepository;
+                this.routeRepository = routeRepository;
+
         }
 
         public List<Flight> getAllFlights() {
@@ -49,6 +55,28 @@ public class FlightService {
                                         "Flight already exists: " + flight.getFlightNumber());
                 }
 
+                Long routeId = flight.getRoute().getId();
+
+                Route route = routeRepository.findById(routeId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Route not found with id: " + routeId));
+
+                if (!route.getDepartureAirport().getId()
+                                .equals(flight.getDepartureAirport().getId())) {
+
+                        throw new RuntimeException(
+                                        "Flight departure airport does not match route");
+                }
+
+                if (!route.getArrivalAirport().getId()
+                                .equals(flight.getArrivalAirport().getId())) {
+
+                        throw new RuntimeException(
+                                        "Flight arrival airport does not match route");
+                }
+
+                flight.setRoute(route);
+
                 return flightRepository.save(flight);
         }
 
@@ -68,11 +96,33 @@ public class FlightService {
                                                         + updatedFlight.getFlightNumber());
                 }
 
+                Long routeId = updatedFlight.getRoute().getId();
+
+                Route route = routeRepository.findById(routeId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Route not found with id: " + routeId));
+
+                if (!route.getDepartureAirport().getId()
+                                .equals(updatedFlight.getDepartureAirport().getId())) {
+
+                        throw new RuntimeException(
+                                        "Flight departure airport does not match route");
+                }
+
+                if (!route.getArrivalAirport().getId()
+                                .equals(updatedFlight.getArrivalAirport().getId())) {
+
+                        throw new RuntimeException(
+                                        "Flight arrival airport does not match route");
+                }
+
                 existingFlight.setFlightNumber(
                                 updatedFlight.getFlightNumber());
 
                 existingFlight.setAircraft(
                                 updatedFlight.getAircraft());
+
+                existingFlight.setRoute(route);
 
                 existingFlight.setDepartureAirport(
                                 updatedFlight.getDepartureAirport());
