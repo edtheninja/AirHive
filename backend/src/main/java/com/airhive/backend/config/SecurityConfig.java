@@ -18,7 +18,8 @@ public class SecurityConfig {
                                 "/api/airports/**",
                                 "/api/aircraft-types/**",
                                 "/api/aircrafts/**",
-                                "/api/flights/**"
+                                "/api/flights/**",
+                                "/api/routes/**"
                         ).permitAll()
                           .requestMatchers(
                                 HttpMethod.GET,
