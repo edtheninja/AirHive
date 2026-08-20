@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.airhive.backend.entity.Flight;
+import com.airhive.backend.dto.FlightRequestDTO;
+import com.airhive.backend.dto.FlightResponseDTO;
+import com.airhive.backend.mapper.FlightMapper;
 import com.airhive.backend.service.FlightService;
 
 @RestController
@@ -27,32 +29,49 @@ public class FlightController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Flight>> getAllFlights() {
-        return ResponseEntity.ok(flightService.getAllFlights());
+    public ResponseEntity<List<FlightResponseDTO>> getAllFlights() {
+
+        return ResponseEntity.ok(
+                flightService.getAllFlights()
+                        .stream()
+                        .map(FlightMapper::toResponse)
+                        .toList()
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Flight> getFlightById(@PathVariable Long id) {
+    public ResponseEntity<FlightResponseDTO> getFlightById(
+            @PathVariable Long id) {
+
         return ResponseEntity.ok(
-                flightService.getFlightById(id)
+                FlightMapper.toResponse(
+                        flightService.getFlightById(id)
+                )
         );
     }
 
     @PostMapping
-    public ResponseEntity<Flight> createFlight(
-            @RequestBody Flight flight) {
+    public ResponseEntity<FlightResponseDTO> createFlight(
+            @RequestBody FlightRequestDTO request) {
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(flightService.createFlight(flight));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        FlightMapper.toResponse(
+                                flightService.createFlight(request)
+                        )
+                );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Flight> updateFlight(
+    public ResponseEntity<FlightResponseDTO> updateFlight(
             @PathVariable Long id,
-            @RequestBody Flight flight) {
+            @RequestBody FlightRequestDTO request) {
 
         return ResponseEntity.ok(
-                flightService.updateFlight(id, flight)
+                FlightMapper.toResponse(
+                        flightService.updateFlight(id, request)
+                )
         );
     }
 
