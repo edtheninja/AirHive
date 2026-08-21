@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.airhive.backend.entity.Route;
+import com.airhive.backend.dto.RouteRequestDTO;
+import com.airhive.backend.dto.RouteResponseDTO;
+import com.airhive.backend.mapper.RouteMapper;
 import com.airhive.backend.service.RouteService;
 
 @RestController
@@ -27,37 +29,52 @@ public class RouteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Route>> getAllRoutes() {
+    public ResponseEntity<List<RouteResponseDTO>> getAllRoutes() {
+
         return ResponseEntity.ok(
                 routeService.getAllRoutes()
+                        .stream()
+                        .map(RouteMapper::toResponse)
+                        .toList()
         );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Route> getRouteById(
+    public ResponseEntity<RouteResponseDTO> getRouteById(
             @PathVariable Long id) {
 
         return ResponseEntity.ok(
-                routeService.getRouteById(id)
+                RouteMapper.toResponse(
+                        routeService.getRouteById(id)
+                )
         );
     }
 
     @PostMapping
-    public ResponseEntity<Route> createRoute(
-            @RequestBody Route route) {
+    public ResponseEntity<RouteResponseDTO> createRoute(
+            @RequestBody RouteRequestDTO request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(routeService.createRoute(route));
+                .body(
+                        RouteMapper.toResponse(
+                                routeService.createRoute(request)
+                        )
+                );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Route> updateRoute(
+    public ResponseEntity<RouteResponseDTO> updateRoute(
             @PathVariable Long id,
-            @RequestBody Route route) {
+            @RequestBody RouteRequestDTO request) {
 
         return ResponseEntity.ok(
-                routeService.updateRoute(id, route)
+                RouteMapper.toResponse(
+                        routeService.updateRoute(
+                                id,
+                                request
+                        )
+                )
         );
     }
 

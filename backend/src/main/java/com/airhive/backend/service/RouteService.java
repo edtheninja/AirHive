@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.airhive.backend.dto.RouteRequestDTO;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.entity.Route;
 import com.airhive.backend.exception.DuplicateResourceException;
@@ -30,22 +31,22 @@ public class RouteService {
     }
 
     public Route getRouteById(Long id) {
+
         return routeRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Route not found with id: " + id
-                        ));
+                                "Route not found with id: " + id));
     }
 
-    public Route createRoute(Route route) {
+    public Route createRoute(RouteRequestDTO request) {
 
-        validateRoute(route);
+        validateRoute(request);
 
         Long departureAirportId =
-                route.getDepartureAirport().getId();
+                request.getDepartureAirportId();
 
         Long arrivalAirportId =
-                route.getArrivalAirport().getId();
+                request.getArrivalAirportId();
 
         if (routeRepository
                 .existsByDepartureAirportIdAndArrivalAirportId(
@@ -56,8 +57,7 @@ public class RouteService {
                     "Route already exists from airport "
                             + departureAirportId
                             + " to airport "
-                            + arrivalAirportId
-            );
+                            + arrivalAirportId);
         }
 
         Airport departureAirport =
@@ -65,34 +65,40 @@ public class RouteService {
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Departure airport not found with id: "
-                                                + departureAirportId
-                                ));
+                                                + departureAirportId));
 
         Airport arrivalAirport =
                 airportRepository.findById(arrivalAirportId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Arrival airport not found with id: "
-                                                + arrivalAirportId
-                                ));
+                                                + arrivalAirportId));
+
+        Route route = new Route();
 
         route.setDepartureAirport(departureAirport);
         route.setArrivalAirport(arrivalAirport);
+        route.setDistanceKm(request.getDistanceKm());
+        route.setEstimatedDurationMinutes(
+                request.getEstimatedDurationMinutes());
+        route.setStatus(request.getStatus());
 
         return routeRepository.save(route);
     }
 
-    public Route updateRoute(Long id, Route updatedRoute) {
+    public Route updateRoute(
+            Long id,
+            RouteRequestDTO request) {
 
         Route existingRoute = getRouteById(id);
 
-        validateRoute(updatedRoute);
+        validateRoute(request);
 
         Long departureAirportId =
-                updatedRoute.getDepartureAirport().getId();
+                request.getDepartureAirportId();
 
         Long arrivalAirportId =
-                updatedRoute.getArrivalAirport().getId();
+                request.getArrivalAirportId();
 
         if (!existingRoute.getDepartureAirport().getId()
                 .equals(departureAirportId)
@@ -108,8 +114,7 @@ public class RouteService {
                         "Route already exists from airport "
                                 + departureAirportId
                                 + " to airport "
-                                + arrivalAirportId
-                );
+                                + arrivalAirportId);
             }
         }
 
@@ -118,85 +123,80 @@ public class RouteService {
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Departure airport not found with id: "
-                                                + departureAirportId
-                                ));
+                                                + departureAirportId));
 
         Airport arrivalAirport =
                 airportRepository.findById(arrivalAirportId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Arrival airport not found with id: "
-                                                + arrivalAirportId
-                                ));
+                                                + arrivalAirportId));
 
-        existingRoute.setDepartureAirport(departureAirport);
-        existingRoute.setArrivalAirport(arrivalAirport);
+        existingRoute.setDepartureAirport(
+                departureAirport);
+
+        existingRoute.setArrivalAirport(
+                arrivalAirport);
+
         existingRoute.setDistanceKm(
-                updatedRoute.getDistanceKm()
-        );
+                request.getDistanceKm());
+
         existingRoute.setEstimatedDurationMinutes(
-                updatedRoute.getEstimatedDurationMinutes()
-        );
+                request.getEstimatedDurationMinutes());
+
         existingRoute.setStatus(
-                updatedRoute.getStatus()
-        );
+                request.getStatus());
 
         return routeRepository.save(existingRoute);
     }
 
     public void deleteRoute(Long id) {
+
         Route route = getRouteById(id);
+
         routeRepository.delete(route);
     }
 
-    private void validateRoute(Route route) {
+    private void validateRoute(RouteRequestDTO request) {
 
-        if (route.getDepartureAirport() == null
-                || route.getDepartureAirport().getId() == null) {
+        if (request.getDepartureAirportId() == null) {
 
-            throw new RuntimeException(
-                    "Departure airport is required"
-            );
+            throw new IllegalArgumentException(
+                    "Departure airport is required");
         }
 
-        if (route.getArrivalAirport() == null
-                || route.getArrivalAirport().getId() == null) {
+        if (request.getArrivalAirportId() == null) {
 
-            throw new RuntimeException(
-                    "Arrival airport is required"
-            );
+            throw new IllegalArgumentException(
+                    "Arrival airport is required");
         }
 
-        if (route.getDepartureAirport().getId()
-                .equals(route.getArrivalAirport().getId())) {
+        if (request.getDepartureAirportId()
+                .equals(request.getArrivalAirportId())) {
 
-            throw new RuntimeException(
-                    "Departure and arrival airports cannot be the same"
-            );
+            throw new IllegalArgumentException(
+                    "Departure and arrival airports cannot be the same");
         }
 
-        if (route.getDistanceKm() == null
-                || route.getDistanceKm() <= 0) {
+        if (request.getDistanceKm() == null
+                || request.getDistanceKm() <= 0) {
 
-            throw new RuntimeException(
-                    "Distance must be greater than zero"
-            );
+            throw new IllegalArgumentException(
+                    "Distance must be greater than zero");
         }
 
-        if (route.getEstimatedDurationMinutes() == null
-                || route.getEstimatedDurationMinutes() <= 0) {
+        if (request.getEstimatedDurationMinutes() == null
+                || request.getEstimatedDurationMinutes() <= 0) {
 
-            throw new RuntimeException(
-                    "Estimated duration must be greater than zero"
-            );
+            throw new IllegalArgumentException(
+                    "Estimated duration must be greater than zero");
         }
 
-        if (route.getStatus() == null
-                || route.getStatus().isBlank()) {
+        if (request.getStatus() == null
+                || request.getStatus().isBlank()) {
 
-            throw new RuntimeException(
-                    "Route status is required"
-            );
+            throw new IllegalArgumentException(
+                    "Route status is required");
         }
     }
 }
