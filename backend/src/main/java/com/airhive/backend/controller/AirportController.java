@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.airhive.backend.entity.Airport;
+import com.airhive.backend.dto.AirportRequestDTO;
+import com.airhive.backend.dto.AirportResponseDTO;
+import com.airhive.backend.mapper.AirportMapper;
 import com.airhive.backend.service.AirportService;
 
 @RestController
@@ -27,35 +29,58 @@ public class AirportController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Airport>> getAllAirports() {
-        return ResponseEntity.ok(airportService.getAllAirports());
+    public ResponseEntity<List<AirportResponseDTO>> getAllAirports() {
+
+        return ResponseEntity.ok(
+                airportService.getAllAirports()
+                        .stream()
+                        .map(AirportMapper::toResponse)
+                        .toList()
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Airport> getAirportById(@PathVariable Long id) {
-        return ResponseEntity.ok(airportService.getAirportById(id));
+    public ResponseEntity<AirportResponseDTO> getAirportById(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                AirportMapper.toResponse(
+                        airportService.getAirportById(id)
+                )
+        );
     }
 
     @PostMapping
-    public ResponseEntity<Airport> createAirport(@RequestBody Airport airport) {
+    public ResponseEntity<AirportResponseDTO> createAirport(
+            @RequestBody AirportRequestDTO request) {
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(airportService.createAirport(airport));
+                .body(
+                        AirportMapper.toResponse(
+                                airportService.createAirport(request)
+                        )
+                );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Airport> updateAirport(
+    public ResponseEntity<AirportResponseDTO> updateAirport(
             @PathVariable Long id,
-            @RequestBody Airport airport) {
+            @RequestBody AirportRequestDTO request) {
 
         return ResponseEntity.ok(
-                airportService.updateAirport(id, airport)
+                AirportMapper.toResponse(
+                        airportService.updateAirport(id, request)
+                )
         );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAirport(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteAirport(
+            @PathVariable Long id) {
+
         airportService.deleteAirport(id);
+
         return ResponseEntity.noContent().build();
     }
 }

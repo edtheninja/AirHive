@@ -1,55 +1,18 @@
-package com.airhive.backend.entity;
+package com.airhive.backend.dto;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+public class AirportResponseDTO {
 
-@Entity
-@Table(
-        name = "airports",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_airport_iata_code",
-                        columnNames = "iata_code"
-                ),
-                @UniqueConstraint(
-                        name = "uk_airport_icao_code",
-                        columnNames = "icao_code"
-                )
-        }
-)
-public class Airport {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "iata_code", nullable = false, length = 3)
     private String iataCode;
-
-    @Column(name = "icao_code", nullable = false, length = 4)
     private String icaoCode;
-
-    @Column(nullable = false)
     private String name;
-
-    @Column(nullable = false)
     private String city;
-
-    @Column(nullable = false)
     private String country;
-
-    @Column(nullable = false)
     private Integer terminalCount;
-
-    @Column(nullable = false)
     private String status;
 
-    public Airport() {
+    public AirportResponseDTO() {
     }
 
     public Long getId() {
