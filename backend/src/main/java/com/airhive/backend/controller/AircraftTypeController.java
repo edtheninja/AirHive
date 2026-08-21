@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.airhive.backend.entity.AircraftType;
+import com.airhive.backend.dto.AircraftTypeRequestDTO;
+import com.airhive.backend.dto.AircraftTypeResponseDTO;
+import com.airhive.backend.mapper.AircraftTypeMapper;
 import com.airhive.backend.service.AircraftTypeService;
 
 @RestController
@@ -22,42 +24,69 @@ public class AircraftTypeController {
 
     private final AircraftTypeService aircraftTypeService;
 
-    public AircraftTypeController(AircraftTypeService aircraftTypeService) {
+    public AircraftTypeController(
+            AircraftTypeService aircraftTypeService) {
+
         this.aircraftTypeService = aircraftTypeService;
     }
 
     @GetMapping
-    public ResponseEntity<List<AircraftType>> getAllAircraftTypes() {
-        return ResponseEntity.ok(aircraftTypeService.getAllAircraftTypes());
+    public ResponseEntity<List<AircraftTypeResponseDTO>>
+            getAllAircraftTypes() {
+
+        return ResponseEntity.ok(
+                aircraftTypeService.getAllAircraftTypes()
+                        .stream()
+                        .map(AircraftTypeMapper::toResponse)
+                        .toList()
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AircraftType> getAircraftTypeById(@PathVariable Long id) {
+    public ResponseEntity<AircraftTypeResponseDTO>
+            getAircraftTypeById(
+                    @PathVariable Long id) {
+
         return ResponseEntity.ok(
-                aircraftTypeService.getAircraftTypeById(id)
+                AircraftTypeMapper.toResponse(
+                        aircraftTypeService
+                                .getAircraftTypeById(id)
+                )
         );
     }
 
     @PostMapping
-    public ResponseEntity<AircraftType> createAircraftType(
-            @RequestBody AircraftType aircraftType) {
+    public ResponseEntity<AircraftTypeResponseDTO>
+            createAircraftType(
+                    @RequestBody AircraftTypeRequestDTO request) {
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(aircraftTypeService.createAircraftType(aircraftType));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        AircraftTypeMapper.toResponse(
+                                aircraftTypeService
+                                        .createAircraftType(request)
+                        )
+                );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AircraftType> updateAircraftType(
-            @PathVariable Long id,
-            @RequestBody AircraftType aircraftType) {
+    public ResponseEntity<AircraftTypeResponseDTO>
+            updateAircraftType(
+                    @PathVariable Long id,
+                    @RequestBody AircraftTypeRequestDTO request) {
 
         return ResponseEntity.ok(
-                aircraftTypeService.updateAircraftType(id, aircraftType)
+                AircraftTypeMapper.toResponse(
+                        aircraftTypeService
+                                .updateAircraftType(id, request)
+                )
         );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAircraftType(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteAircraftType(
+            @PathVariable Long id) {
 
         aircraftTypeService.deleteAircraftType(id);
 
