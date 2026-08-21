@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.airhive.backend.dto.AircraftRequestDTO;
 import com.airhive.backend.entity.Aircraft;
 import com.airhive.backend.repository.AircraftRepository;
 
@@ -11,9 +12,13 @@ import com.airhive.backend.repository.AircraftRepository;
 public class AircraftService {
 
     private final AircraftRepository aircraftRepository;
+    private final AircraftTypeService aircraftTypeService;
 
-    public AircraftService(AircraftRepository aircraftRepository) {
+    public AircraftService(
+            AircraftRepository aircraftRepository,
+            AircraftTypeService aircraftTypeService) {
         this.aircraftRepository = aircraftRepository;
+        this.aircraftTypeService = aircraftTypeService;
     }
 
     public List<Aircraft> getAllAircraft() {
@@ -38,6 +43,12 @@ public class AircraftService {
         return aircraftRepository.save(aircraft);
     }
 
+    public Aircraft createAircraft(AircraftRequestDTO request) {
+        Aircraft aircraft = new Aircraft();
+        applyRequest(aircraft, request);
+        return createAircraft(aircraft);
+    }
+
     public Aircraft updateAircraft(Long id, Aircraft updatedAircraft) {
 
         Aircraft aircraft = getAircraftById(id);
@@ -55,6 +66,20 @@ public class AircraftService {
         );
 
         return aircraftRepository.save(aircraft);
+    }
+
+    public Aircraft updateAircraft(Long id, AircraftRequestDTO request) {
+        Aircraft aircraft = getAircraftById(id);
+        applyRequest(aircraft, request);
+        return aircraftRepository.save(aircraft);
+    }
+
+    private void applyRequest(Aircraft aircraft, AircraftRequestDTO request) {
+        aircraft.setRegistrationNumber(request.getRegistrationNumber());
+        aircraft.setStatus(request.getStatus());
+        aircraft.setAircraftType(
+                aircraftTypeService.getAircraftTypeById(request.getAircraftTypeId())
+        );
     }
 
     public void deleteAircraft(Long id) {
