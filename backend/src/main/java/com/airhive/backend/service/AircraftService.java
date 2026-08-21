@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import com.airhive.backend.dto.AircraftRequestDTO;
 import com.airhive.backend.entity.Aircraft;
+import com.airhive.backend.exception.DuplicateResourceException;
+import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AircraftRepository;
 
 @Service
@@ -27,18 +29,18 @@ public class AircraftService {
 
     public Aircraft getAircraftById(Long id) {
         return aircraftRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Aircraft not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Aircraft not found with id: " + id));
     }
 
     public Aircraft createAircraft(Aircraft aircraft) {
         if (aircraftRepository.existsByRegistrationNumber(
                 aircraft.getRegistrationNumber())) {
 
-            throw new RuntimeException(
-                    "Aircraft already exists with registration number: "
-                            + aircraft.getRegistrationNumber());
-        }
+            throw new DuplicateResourceException(
+                "Aircraft already exists with registration number: "
+                + aircraft.getRegistrationNumber());
+            }
 
         return aircraftRepository.save(aircraft);
     }
@@ -54,16 +56,13 @@ public class AircraftService {
         Aircraft aircraft = getAircraftById(id);
 
         aircraft.setRegistrationNumber(
-                updatedAircraft.getRegistrationNumber()
-        );
+                updatedAircraft.getRegistrationNumber());
 
         aircraft.setStatus(
-                updatedAircraft.getStatus()
-        );
+                updatedAircraft.getStatus());
 
         aircraft.setAircraftType(
-                updatedAircraft.getAircraftType()
-        );
+                updatedAircraft.getAircraftType());
 
         return aircraftRepository.save(aircraft);
     }
@@ -78,8 +77,7 @@ public class AircraftService {
         aircraft.setRegistrationNumber(request.getRegistrationNumber());
         aircraft.setStatus(request.getStatus());
         aircraft.setAircraftType(
-                aircraftTypeService.getAircraftTypeById(request.getAircraftTypeId())
-        );
+                aircraftTypeService.getAircraftTypeById(request.getAircraftTypeId()));
     }
 
     public void deleteAircraft(Long id) {
