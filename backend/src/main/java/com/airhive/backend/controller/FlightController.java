@@ -18,6 +18,8 @@ import com.airhive.backend.dto.FlightResponseDTO;
 import com.airhive.backend.mapper.FlightMapper;
 import com.airhive.backend.service.FlightService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/flights")
 public class FlightController {
@@ -52,7 +54,7 @@ public class FlightController {
 
     @PostMapping
     public ResponseEntity<FlightResponseDTO> createFlight(
-            @RequestBody FlightRequestDTO request) {
+            @Valid @RequestBody FlightRequestDTO request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -66,7 +68,7 @@ public class FlightController {
     @PutMapping("/{id}")
     public ResponseEntity<FlightResponseDTO> updateFlight(
             @PathVariable Long id,
-            @RequestBody FlightRequestDTO request) {
+            @Valid @RequestBody FlightRequestDTO request) {
 
         return ResponseEntity.ok(
                 FlightMapper.toResponse(

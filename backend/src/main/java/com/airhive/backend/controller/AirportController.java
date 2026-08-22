@@ -18,6 +18,8 @@ import com.airhive.backend.dto.AirportResponseDTO;
 import com.airhive.backend.mapper.AirportMapper;
 import com.airhive.backend.service.AirportService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/airports")
 public class AirportController {
@@ -52,7 +54,7 @@ public class AirportController {
 
     @PostMapping
     public ResponseEntity<AirportResponseDTO> createAirport(
-            @RequestBody AirportRequestDTO request) {
+            @Valid @RequestBody AirportRequestDTO request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -66,7 +68,7 @@ public class AirportController {
     @PutMapping("/{id}")
     public ResponseEntity<AirportResponseDTO> updateAirport(
             @PathVariable Long id,
-            @RequestBody AirportRequestDTO request) {
+            @Valid @RequestBody AirportRequestDTO request) {
 
         return ResponseEntity.ok(
                 AirportMapper.toResponse(

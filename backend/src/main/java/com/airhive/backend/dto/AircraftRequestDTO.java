@@ -1,13 +1,22 @@
 package com.airhive.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+
+
 public class AircraftRequestDTO {
-
+         
+    @NotBlank
     private String registrationNumber;
-
+    @NotNull
+    @Positive
     private Long aircraftTypeId;
 
+    @NotBlank
     private String status;
-
+   
     public AircraftRequestDTO() {
     }
 

@@ -1,15 +1,29 @@
 package com.airhive.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 public class RouteRequestDTO {
 
+    @NotNull
+    @Positive
     private Long departureAirportId;
+
+    @NotNull
+    @Positive
     private Long arrivalAirportId;
 
+    @NotNull
+    @Positive
     private Double distanceKm;
+
+    @NotNull
+    @Positive
     private Integer estimatedDurationMinutes;
 
+    @NotBlank
     private String status;
-
     public RouteRequestDTO() {
     }
 

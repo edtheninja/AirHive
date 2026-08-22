@@ -2,18 +2,38 @@ package com.airhive.backend.dto;
 
 import java.time.LocalDateTime;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 public class FlightRequestDTO {
 
+    @NotBlank
     private String flightNumber;
 
+    @NotNull
+    @Positive
     private Long aircraftId;
+
+    @NotNull
+    @Positive
     private Long routeId;
+
+    @NotNull
+    @Positive
     private Long departureAirportId;
+
+    @NotNull
+    @Positive
     private Long arrivalAirportId;
 
+    @NotNull
     private LocalDateTime scheduledDeparture;
+
+    @NotNull
     private LocalDateTime scheduledArrival;
 
+    @NotBlank
     private String status;
 
     public FlightRequestDTO() {

@@ -1,12 +1,27 @@
 package com.airhive.backend.dto;
 
-public class AircraftTypeRequestDTO {
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
+public class AircraftTypeRequestDTO {
+    @NotBlank
     private String typeCode;
+
+    @NotBlank
     private String manufacturer;
+
+    @NotBlank
     private String model;
+
+    @NotNull
+    @Positive
     private Integer passengerCapacity;
+
+    @NotNull
+    @Positive
     private Integer crewCapacity;
+   
 
     public AircraftTypeRequestDTO() {
     }

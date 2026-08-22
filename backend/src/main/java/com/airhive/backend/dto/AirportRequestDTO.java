@@ -1,15 +1,31 @@
 package com.airhive.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 public class AirportRequestDTO {
+    @NotBlank
+private String iataCode;
 
-    private String iataCode;
-    private String icaoCode;
-    private String name;
-    private String city;
-    private String country;
-    private Integer terminalCount;
-    private String status;
+@NotBlank
+private String icaoCode;
 
+@NotBlank
+private String name;
+
+@NotBlank
+private String city;
+
+@NotBlank
+private String country;
+
+@NotNull
+@PositiveOrZero
+private Integer terminalCount;
+
+@NotBlank
+private String status;
+    
     public AirportRequestDTO() {
     }
 

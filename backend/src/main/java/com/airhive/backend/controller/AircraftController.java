@@ -18,6 +18,8 @@ import com.airhive.backend.dto.AircraftResponseDTO;
 import com.airhive.backend.mapper.AircraftMapper;
 import com.airhive.backend.service.AircraftService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/aircraft")
 public class AircraftController {
@@ -52,7 +54,7 @@ public class AircraftController {
 
     @PostMapping
     public ResponseEntity<AircraftResponseDTO> createAircraft(
-            @RequestBody AircraftRequestDTO request) {
+            @Valid @RequestBody AircraftRequestDTO request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -66,7 +68,7 @@ public class AircraftController {
     @PutMapping("/{id}")
     public ResponseEntity<AircraftResponseDTO> updateAircraft(
             @PathVariable Long id,
-            @RequestBody AircraftRequestDTO request) {
+            @Valid @RequestBody AircraftRequestDTO request) {
 
         return ResponseEntity.ok(
                 AircraftMapper.toResponse(

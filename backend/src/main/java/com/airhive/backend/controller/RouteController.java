@@ -18,6 +18,8 @@ import com.airhive.backend.dto.RouteResponseDTO;
 import com.airhive.backend.mapper.RouteMapper;
 import com.airhive.backend.service.RouteService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/routes")
 public class RouteController {
@@ -52,7 +54,7 @@ public class RouteController {
 
     @PostMapping
     public ResponseEntity<RouteResponseDTO> createRoute(
-            @RequestBody RouteRequestDTO request) {
+            @Valid @RequestBody RouteRequestDTO request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -66,7 +68,7 @@ public class RouteController {
     @PutMapping("/{id}")
     public ResponseEntity<RouteResponseDTO> updateRoute(
             @PathVariable Long id,
-            @RequestBody RouteRequestDTO request) {
+            @Valid @RequestBody RouteRequestDTO request) {
 
         return ResponseEntity.ok(
                 RouteMapper.toResponse(
