@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.airhive.backend.dto.AircraftTypeRequestDTO;
 import com.airhive.backend.entity.AircraftType;
+import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AircraftTypeRepository;
 
 @Service
@@ -27,9 +28,8 @@ public class AircraftTypeService {
     public AircraftType getAircraftTypeById(Long id) {
 
         return aircraftTypeRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Aircraft type not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Aircraft type not found with id: " + id));
     }
 
     public AircraftType createAircraftType(
@@ -46,8 +46,7 @@ public class AircraftTypeService {
             Long id,
             AircraftTypeRequestDTO request) {
 
-        AircraftType existing =
-                getAircraftTypeById(id);
+        AircraftType existing = getAircraftTypeById(id);
 
         applyRequest(existing, request);
 
@@ -56,8 +55,7 @@ public class AircraftTypeService {
 
     public void deleteAircraftType(Long id) {
 
-        AircraftType existing =
-                getAircraftTypeById(id);
+        AircraftType existing = getAircraftTypeById(id);
 
         aircraftTypeRepository.delete(existing);
     }

@@ -198,7 +198,7 @@ public class FlightService {
                         request.getScheduledDeparture());
 
         if (conflictCount > 0) {
-            throw new RuntimeException(
+            throw new DuplicateResourceException(
                     "Aircraft is already scheduled for another flight during this time");
         }
 
