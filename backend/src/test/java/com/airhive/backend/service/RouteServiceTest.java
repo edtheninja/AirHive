@@ -37,6 +37,7 @@ class RouteServiceTest {
     private RouteService routeService;
 
     @BeforeEach
+    @SuppressWarnings("unused")
     void setUp() {
         routeService = new RouteService(
                 routeRepository,
