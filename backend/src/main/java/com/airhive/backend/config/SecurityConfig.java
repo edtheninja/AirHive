@@ -17,7 +17,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/airports/**",
                                 "/api/aircraft-types/**",
-                                "/api/aircrafts/**",
+                                "/api/aircraft/**",
                                 "/api/flights/**",
                                 "/api/routes/**"
                         ).permitAll()
