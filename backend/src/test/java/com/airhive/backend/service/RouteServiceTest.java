@@ -28,394 +28,437 @@ import com.airhive.backend.repository.RouteRepository;
 @ExtendWith(MockitoExtension.class)
 class RouteServiceTest {
 
-    @Mock
-    private RouteRepository routeRepository;
+        @Mock
+        private RouteRepository routeRepository;
 
-    @Mock
-    private AirportRepository airportRepository;
+        @Mock
+        private AirportRepository airportRepository;
 
-    private RouteService routeService;
+        private RouteService routeService;
 
-    @BeforeEach
-    @SuppressWarnings("unused")
-    void setUp() {
-        routeService = new RouteService(
-                routeRepository,
-                airportRepository);
-    }
+        @BeforeEach
+        @SuppressWarnings("unused")
+        void setUp() {
+                routeService = new RouteService(
+                                routeRepository,
+                                airportRepository);
+        }
 
-    private RouteRequestDTO validRequest() {
+        private RouteRequestDTO validRequest() {
 
-        RouteRequestDTO request = new RouteRequestDTO();
+                RouteRequestDTO request = new RouteRequestDTO();
 
-        request.setDepartureAirportId(1L);
-        request.setArrivalAirportId(2L);
-        request.setDistanceKm(1150.0);
-        request.setEstimatedDurationMinutes(130);
-        request.setStatus("ACTIVE");
+                request.setDepartureAirportId(1L);
+                request.setArrivalAirportId(2L);
+                request.setDistanceKm(1150.0);
+                request.setEstimatedDurationMinutes(130);
+                request.setStatus("ACTIVE");
 
-        return request;
-    }
+                return request;
+        }
 
-    private Airport airport(Long id, String iataCode) {
+        private Airport airport(Long id, String iataCode) {
 
-        Airport airport = new Airport();
-        airport.setId(id);
-        airport.setIataCode(iataCode);
+                Airport airport = new Airport();
+                airport.setId(id);
+                airport.setIataCode(iataCode);
 
-        return airport;
-    }
+                return airport;
+        }
 
-    @Test
-    void getAllRoutes_shouldReturnAllRoutes() {
+        @Test
+        void getAllRoutes_shouldReturnAllRoutes() {
 
-        Route route1 = new Route();
-        Route route2 = new Route();
+                Route route1 = new Route();
+                Route route2 = new Route();
 
-        when(routeRepository.findAll())
-                .thenReturn(List.of(route1, route2));
+                when(routeRepository.findAll())
+                                .thenReturn(List.of(route1, route2));
 
-        List<Route> result =
-                routeService.getAllRoutes();
+                List<Route> result = routeService.getAllRoutes();
 
-        assertEquals(2, result.size());
+                assertEquals(2, result.size());
 
-        verify(routeRepository).findAll();
-    }
+                verify(routeRepository).findAll();
+        }
 
-    @Test
-    void getRouteById_shouldReturnRoute_whenExists() {
+        @Test
+        void getRouteById_shouldReturnRoute_whenExists() {
 
-        Route route = new Route();
+                Route route = new Route();
 
-        when(routeRepository.findById(1L))
-                .thenReturn(Optional.of(route));
+                when(routeRepository.findById(1L))
+                                .thenReturn(Optional.of(route));
 
-        Route result =
-                routeService.getRouteById(1L);
+                Route result = routeService.getRouteById(1L);
 
-        assertEquals(route, result);
+                assertEquals(route, result);
 
-        verify(routeRepository).findById(1L);
-    }
+                verify(routeRepository).findById(1L);
+        }
 
-    @Test
-    void getRouteById_shouldThrowException_whenNotFound() {
+        @Test
+        void getRouteById_shouldThrowException_whenNotFound() {
 
-        when(routeRepository.findById(99L))
-                .thenReturn(Optional.empty());
+                when(routeRepository.findById(99L))
+                                .thenReturn(Optional.empty());
 
-        ResourceNotFoundException exception =
-                assertThrows(
-                        ResourceNotFoundException.class,
-                        () -> routeService.getRouteById(99L));
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> routeService.getRouteById(99L));
 
-        assertEquals(
-                "Route not found with id: 99",
-                exception.getMessage());
+                assertEquals(
+                                "Route not found with id: 99",
+                                exception.getMessage());
 
-        verify(routeRepository).findById(99L);
-    }
+                verify(routeRepository).findById(99L);
+        }
 
-    @Test
-    void createRoute_shouldSaveRoute_whenRequestIsValid() {
+        @Test
+        void createRoute_shouldSaveRoute_whenRequestIsValid() {
 
-        RouteRequestDTO request = validRequest();
+                RouteRequestDTO request = validRequest();
 
-        Airport departureAirport =
-                airport(1L, "DEL");
+                Airport departureAirport = airport(1L, "DEL");
 
-        Airport arrivalAirport =
-                airport(2L, "BOM");
+                Airport arrivalAirport = airport(2L, "BOM");
 
-        when(routeRepository
-                .existsByDepartureAirportIdAndArrivalAirportId(
-                        1L, 2L))
-                .thenReturn(false);
+                when(routeRepository
+                                .existsByDepartureAirportIdAndArrivalAirportId(
+                                                1L, 2L))
+                                .thenReturn(false);
 
-        when(airportRepository.findById(1L))
-                .thenReturn(Optional.of(departureAirport));
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(departureAirport));
 
-        when(airportRepository.findById(2L))
-                .thenReturn(Optional.of(arrivalAirport));
+                when(airportRepository.findById(2L))
+                                .thenReturn(Optional.of(arrivalAirport));
 
-        when(routeRepository.save(any(Route.class)))
-                .thenAnswer(invocation ->
-                        invocation.getArgument(0));
+                when(routeRepository.save(any(Route.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Route result =
-                routeService.createRoute(request);
+                Route result = routeService.createRoute(request);
 
-        assertEquals(
-                departureAirport,
-                result.getDepartureAirport());
+                assertEquals(
+                                departureAirport,
+                                result.getDepartureAirport());
 
-        assertEquals(
-                arrivalAirport,
-                result.getArrivalAirport());
+                assertEquals(
+                                arrivalAirport,
+                                result.getArrivalAirport());
 
-        assertEquals(
-                1150.0,
-                result.getDistanceKm());
+                assertEquals(
+                                1150.0,
+                                result.getDistanceKm());
 
-        assertEquals(
-                130,
-                result.getEstimatedDurationMinutes());
+                assertEquals(
+                                130,
+                                result.getEstimatedDurationMinutes());
 
-        assertEquals(
-                "ACTIVE",
-                result.getStatus());
+                assertEquals(
+                                "ACTIVE",
+                                result.getStatus());
 
-        verify(routeRepository)
-                .existsByDepartureAirportIdAndArrivalAirportId(
-                        1L, 2L);
+                verify(routeRepository)
+                                .existsByDepartureAirportIdAndArrivalAirportId(
+                                                1L, 2L);
 
-        verify(airportRepository).findById(1L);
-        verify(airportRepository).findById(2L);
-        verify(routeRepository).save(any(Route.class));
-    }
+                verify(airportRepository).findById(1L);
+                verify(airportRepository).findById(2L);
+                verify(routeRepository).save(any(Route.class));
+        }
 
-    @Test
-    void createRoute_shouldThrowException_whenRouteAlreadyExists() {
+        @Test
+        void createRoute_shouldThrowException_whenRouteAlreadyExists() {
 
-        RouteRequestDTO request = validRequest();
+                RouteRequestDTO request = validRequest();
 
-        when(routeRepository
-                .existsByDepartureAirportIdAndArrivalAirportId(
-                        1L, 2L))
-                .thenReturn(true);
+                when(routeRepository
+                                .existsByDepartureAirportIdAndArrivalAirportId(
+                                                1L, 2L))
+                                .thenReturn(true);
 
-        DuplicateResourceException exception =
-                assertThrows(
-                        DuplicateResourceException.class,
-                        () -> routeService.createRoute(request));
+                DuplicateResourceException exception = assertThrows(
+                                DuplicateResourceException.class,
+                                () -> routeService.createRoute(request));
 
-        assertEquals(
-                "Route already exists from airport 1 to airport 2",
-                exception.getMessage());
+                assertEquals(
+                                "Route already exists from airport 1 to airport 2",
+                                exception.getMessage());
 
-        verify(routeRepository)
-                .existsByDepartureAirportIdAndArrivalAirportId(
-                        1L, 2L);
+                verify(routeRepository)
+                                .existsByDepartureAirportIdAndArrivalAirportId(
+                                                1L, 2L);
 
-        verify(airportRepository, never())
-                .findById(anyLong());
+                verify(airportRepository, never())
+                                .findById(anyLong());
 
-        verify(routeRepository, never())
-                .save(any(Route.class));
-    }
+                verify(routeRepository, never())
+                                .save(any(Route.class));
+        }
 
-    @Test
-    void createRoute_shouldThrowException_whenDepartureAirportNotFound() {
+        @Test
+        void createRoute_shouldThrowException_whenDepartureAirportNotFound() {
 
-        RouteRequestDTO request = validRequest();
+                RouteRequestDTO request = validRequest();
 
-        when(routeRepository
-                .existsByDepartureAirportIdAndArrivalAirportId(
-                        1L, 2L))
-                .thenReturn(false);
+                when(routeRepository
+                                .existsByDepartureAirportIdAndArrivalAirportId(
+                                                1L, 2L))
+                                .thenReturn(false);
 
-        when(airportRepository.findById(1L))
-                .thenReturn(Optional.empty());
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.empty());
 
-        ResourceNotFoundException exception =
-                assertThrows(
-                        ResourceNotFoundException.class,
-                        () -> routeService.createRoute(request));
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> routeService.createRoute(request));
 
-        assertEquals(
-                "Departure airport not found with id: 1",
-                exception.getMessage());
+                assertEquals(
+                                "Departure airport not found with id: 1",
+                                exception.getMessage());
 
-        verify(airportRepository).findById(1L);
+                verify(airportRepository).findById(1L);
 
-        verify(airportRepository, never())
-                .findById(2L);
+                verify(airportRepository, never())
+                                .findById(2L);
 
-        verify(routeRepository, never())
-                .save(any(Route.class));
-    }
+                verify(routeRepository, never())
+                                .save(any(Route.class));
+        }
 
-    @Test
-    void createRoute_shouldThrowException_whenArrivalAirportNotFound() {
+        @Test
+        void createRoute_shouldThrowException_whenArrivalAirportNotFound() {
 
-        RouteRequestDTO request = validRequest();
+                RouteRequestDTO request = validRequest();
 
-        when(routeRepository
-                .existsByDepartureAirportIdAndArrivalAirportId(
-                        1L, 2L))
-                .thenReturn(false);
+                when(routeRepository
+                                .existsByDepartureAirportIdAndArrivalAirportId(
+                                                1L, 2L))
+                                .thenReturn(false);
 
-        when(airportRepository.findById(1L))
-                .thenReturn(Optional.of(
-                        airport(1L, "DEL")));
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(
+                                                airport(1L, "DEL")));
 
-        when(airportRepository.findById(2L))
-                .thenReturn(Optional.empty());
+                when(airportRepository.findById(2L))
+                                .thenReturn(Optional.empty());
 
-        ResourceNotFoundException exception =
-                assertThrows(
-                        ResourceNotFoundException.class,
-                        () -> routeService.createRoute(request));
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> routeService.createRoute(request));
 
-        assertEquals(
-                "Arrival airport not found with id: 2",
-                exception.getMessage());
+                assertEquals(
+                                "Arrival airport not found with id: 2",
+                                exception.getMessage());
 
-        verify(airportRepository).findById(1L);
-        verify(airportRepository).findById(2L);
+                verify(airportRepository).findById(1L);
+                verify(airportRepository).findById(2L);
 
-        verify(routeRepository, never())
-                .save(any(Route.class));
-    }
+                verify(routeRepository, never())
+                                .save(any(Route.class));
+        }
 
-    @Test
-    void createRoute_shouldThrowException_whenDepartureAirportMissing() {
+        @Test
+        void createRoute_shouldThrowException_whenDepartureAirportMissing() {
 
-        RouteRequestDTO request = validRequest();
-        request.setDepartureAirportId(null);
+                RouteRequestDTO request = validRequest();
+                request.setDepartureAirportId(null);
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> routeService.createRoute(request));
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> routeService.createRoute(request));
 
-        assertEquals(
-                "Departure airport is required",
-                exception.getMessage());
+                assertEquals(
+                                "Departure airport is required",
+                                exception.getMessage());
 
-        verifyNoInteractions(routeRepository, airportRepository);
-    }
+                verifyNoInteractions(routeRepository, airportRepository);
+        }
 
-    @Test
-    void createRoute_shouldThrowException_whenAirportsAreSame() {
+        @Test
+        void createRoute_shouldThrowException_whenArrivalAirportMissing() {
 
-        RouteRequestDTO request = validRequest();
-        request.setArrivalAirportId(1L);
+                RouteRequestDTO request = validRequest();
+                request.setArrivalAirportId(null);
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> routeService.createRoute(request));
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> routeService.createRoute(request));
 
-        assertEquals(
-                "Departure and arrival airports cannot be the same",
-                exception.getMessage());
+                assertEquals(
+                                "Arrival airport is required",
+                                exception.getMessage());
 
-        verifyNoInteractions(routeRepository, airportRepository);
-    }
+                verifyNoInteractions(routeRepository, airportRepository);
+        }
 
-    @Test
-    void createRoute_shouldThrowException_whenDistanceIsInvalid() {
+        @Test
+        void createRoute_shouldThrowException_whenAirportsAreSame() {
 
-        RouteRequestDTO request = validRequest();
-        request.setDistanceKm(0.0);
+                RouteRequestDTO request = validRequest();
+                request.setArrivalAirportId(1L);
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> routeService.createRoute(request));
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> routeService.createRoute(request));
 
-        assertEquals(
-                "Distance must be greater than zero",
-                exception.getMessage());
+                assertEquals(
+                                "Departure and arrival airports cannot be the same",
+                                exception.getMessage());
 
-        verifyNoInteractions(routeRepository, airportRepository);
-    }
+                verifyNoInteractions(routeRepository, airportRepository);
+        }
 
-    @Test
-    void createRoute_shouldThrowException_whenDurationIsInvalid() {
+        @Test
+        void createRoute_shouldThrowException_whenDistanceIsInvalid() {
 
-        RouteRequestDTO request = validRequest();
-        request.setEstimatedDurationMinutes(0);
+                RouteRequestDTO request = validRequest();
+                request.setDistanceKm(0.0);
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> routeService.createRoute(request));
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> routeService.createRoute(request));
 
-        assertEquals(
-                "Estimated duration must be greater than zero",
-                exception.getMessage());
+                assertEquals(
+                                "Distance must be greater than zero",
+                                exception.getMessage());
 
-        verifyNoInteractions(routeRepository, airportRepository);
-    }
+                verifyNoInteractions(routeRepository, airportRepository);
+        }
 
-    @Test
-    void createRoute_shouldThrowException_whenStatusIsMissing() {
+        @Test
+        void createRoute_shouldThrowException_whenDurationIsInvalid() {
 
-        RouteRequestDTO request = validRequest();
-        request.setStatus("");
+                RouteRequestDTO request = validRequest();
+                request.setEstimatedDurationMinutes(0);
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> routeService.createRoute(request));
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> routeService.createRoute(request));
 
-        assertEquals(
-                "Route status is required",
-                exception.getMessage());
+                assertEquals(
+                                "Estimated duration must be greater than zero",
+                                exception.getMessage());
 
-        verifyNoInteractions(routeRepository, airportRepository);
-    }
+                verifyNoInteractions(routeRepository, airportRepository);
+        }
 
-    @Test
-    void updateRoute_shouldUpdate_whenRequestIsValid() {
+        @Test
+        void createRoute_shouldThrowException_whenStatusIsMissing() {
 
-        Airport oldDeparture = airport(1L, "DEL");
-        Airport oldArrival = airport(2L, "BOM");
+                RouteRequestDTO request = validRequest();
+                request.setStatus("");
 
-        Route existingRoute = new Route();
-        existingRoute.setDepartureAirport(oldDeparture);
-        existingRoute.setArrivalAirport(oldArrival);
-        existingRoute.setDistanceKm(1000.0);
-        existingRoute.setEstimatedDurationMinutes(120);
-        existingRoute.setStatus("ACTIVE");
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> routeService.createRoute(request));
 
-        RouteRequestDTO request = validRequest();
+                assertEquals(
+                                "Route status is required",
+                                exception.getMessage());
 
-        when(routeRepository.findById(10L))
-                .thenReturn(Optional.of(existingRoute));
+                verifyNoInteractions(routeRepository, airportRepository);
+        }
 
-        when(airportRepository.findById(1L))
-                .thenReturn(Optional.of(oldDeparture));
+        @Test
+        void updateRoute_shouldUpdate_whenRequestIsValid() {
 
-        when(airportRepository.findById(2L))
-                .thenReturn(Optional.of(oldArrival));
+                Airport oldDeparture = airport(1L, "DEL");
+                Airport oldArrival = airport(2L, "BOM");
 
-        when(routeRepository.save(existingRoute))
-                .thenReturn(existingRoute);
+                Route existingRoute = new Route();
+                existingRoute.setDepartureAirport(oldDeparture);
+                existingRoute.setArrivalAirport(oldArrival);
+                existingRoute.setDistanceKm(1000.0);
+                existingRoute.setEstimatedDurationMinutes(120);
+                existingRoute.setStatus("ACTIVE");
 
-        Route result =
-                routeService.updateRoute(10L, request);
+                RouteRequestDTO request = validRequest();
 
-        assertEquals(1150.0, result.getDistanceKm());
-        assertEquals(130, result.getEstimatedDurationMinutes());
-        assertEquals("ACTIVE", result.getStatus());
+                when(routeRepository.findById(10L))
+                                .thenReturn(Optional.of(existingRoute));
 
-        verify(routeRepository).findById(10L);
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(oldDeparture));
 
-        verify(airportRepository).findById(1L);
-        verify(airportRepository).findById(2L);
+                when(airportRepository.findById(2L))
+                                .thenReturn(Optional.of(oldArrival));
 
-        verify(routeRepository).save(existingRoute);
+                when(routeRepository.save(existingRoute))
+                                .thenReturn(existingRoute);
 
-        verify(routeRepository, never())
-                .existsByDepartureAirportIdAndArrivalAirportId(
-                        anyLong(), anyLong());
-    }
+                Route result = routeService.updateRoute(10L, request);
 
-    @Test
-    void deleteRoute_shouldDelete_whenRouteExists() {
+                assertEquals(1150.0, result.getDistanceKm());
+                assertEquals(130, result.getEstimatedDurationMinutes());
+                assertEquals("ACTIVE", result.getStatus());
 
-        Route route = new Route();
+                verify(routeRepository).findById(10L);
 
-        when(routeRepository.findById(1L))
-                .thenReturn(Optional.of(route));
+                verify(airportRepository).findById(1L);
+                verify(airportRepository).findById(2L);
 
-        routeService.deleteRoute(1L);
+                verify(routeRepository).save(existingRoute);
 
-        verify(routeRepository).findById(1L);
-        verify(routeRepository).delete(route);
-    }
+                verify(routeRepository, never())
+                                .existsByDepartureAirportIdAndArrivalAirportId(
+                                                anyLong(), anyLong());
+        }
+
+        @Test
+        void updateRoute_shouldThrowException_whenRouteAlreadyExists() {
+
+                Airport existingDeparture = airport(1L, "DEL");
+                Airport existingArrival = airport(2L, "BOM");
+
+                Route existingRoute = new Route();
+                existingRoute.setDepartureAirport(existingDeparture);
+                existingRoute.setArrivalAirport(existingArrival);
+
+                RouteRequestDTO request = validRequest();
+
+                request.setDepartureAirportId(2L);
+                request.setArrivalAirportId(1L);
+
+                when(routeRepository.findById(10L))
+                                .thenReturn(Optional.of(existingRoute));
+
+                when(routeRepository
+                                .existsByDepartureAirportIdAndArrivalAirportId(2L, 1L))
+                                .thenReturn(true);
+
+                DuplicateResourceException exception = assertThrows(
+                                DuplicateResourceException.class,
+                                () -> routeService.updateRoute(10L, request));
+
+                assertEquals(
+                                "Route already exists from airport 2 to airport 1",
+                                exception.getMessage());
+
+                verify(routeRepository).findById(10L);
+
+                verify(routeRepository)
+                                .existsByDepartureAirportIdAndArrivalAirportId(2L, 1L);
+
+                verify(airportRepository, never())
+                                .findById(anyLong());
+
+                verify(routeRepository, never())
+                                .save(any(Route.class));
+        }
+
+        @Test
+        void deleteRoute_shouldDelete_whenRouteExists() {
+
+                Route route = new Route();
+
+                when(routeRepository.findById(1L))
+                                .thenReturn(Optional.of(route));
+
+                routeService.deleteRoute(1L);
+
+                verify(routeRepository).findById(1L);
+                verify(routeRepository).delete(route);
+        }
 }

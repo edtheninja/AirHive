@@ -25,372 +25,331 @@ import com.airhive.backend.repository.AirportRepository;
 @ExtendWith(MockitoExtension.class)
 class AirportServiceTest {
 
-    @Mock
-    private AirportRepository airportRepository;
+        @Mock
+        private AirportRepository airportRepository;
 
-    private AirportService airportService;
-  
-    @BeforeEach
-    @SuppressWarnings("unused")
-    void setUp() {
-        airportService = new AirportService(airportRepository);
-    }
+        private AirportService airportService;
 
-    private AirportRequestDTO validRequest() {
+        @BeforeEach
+        @SuppressWarnings("unused")
+        void setUp() {
+                airportService = new AirportService(airportRepository);
+        }
 
-        AirportRequestDTO request = new AirportRequestDTO();
+        private AirportRequestDTO validRequest() {
 
-        request.setIataCode("DEL");
-        request.setIcaoCode("VIDP");
-        request.setName("Indira Gandhi International Airport");
-        request.setCity("Delhi");
-        request.setCountry("India");
-        request.setTerminalCount(3);
-        request.setStatus("ACTIVE");
+                AirportRequestDTO request = new AirportRequestDTO();
 
-        return request;
-    }
+                request.setIataCode("DEL");
+                request.setIcaoCode("VIDP");
+                request.setName("Indira Gandhi International Airport");
+                request.setCity("Delhi");
+                request.setCountry("India");
+                request.setTerminalCount(3);
+                request.setStatus("ACTIVE");
 
-    @Test
-    void getAllAirports_shouldReturnAllAirports() {
+                return request;
+        }
 
-        Airport airport1 = new Airport();
-        airport1.setIataCode("DEL");
+        @Test
+        void getAllAirports_shouldReturnAllAirports() {
 
-        Airport airport2 = new Airport();
-        airport2.setIataCode("BOM");
+                Airport airport1 = new Airport();
+                airport1.setIataCode("DEL");
 
-        when(airportRepository.findAll())
-                .thenReturn(List.of(airport1, airport2));
+                Airport airport2 = new Airport();
+                airport2.setIataCode("BOM");
 
-        List<Airport> result =
-                airportService.getAllAirports();
+                when(airportRepository.findAll())
+                                .thenReturn(List.of(airport1, airport2));
 
-        assertEquals(2, result.size());
-        assertEquals("DEL", result.get(0).getIataCode());
-        assertEquals("BOM", result.get(1).getIataCode());
+                List<Airport> result = airportService.getAllAirports();
 
-        verify(airportRepository).findAll();
-    }
+                assertEquals(2, result.size());
+                assertEquals("DEL", result.get(0).getIataCode());
+                assertEquals("BOM", result.get(1).getIataCode());
 
-    @Test
-    void getAirportById_shouldReturnAirport_whenExists() {
+                verify(airportRepository).findAll();
+        }
 
-        Airport airport = new Airport();
-        airport.setIataCode("DEL");
-        airport.setIcaoCode("VIDP");
-        airport.setName("Indira Gandhi International Airport");
+        @Test
+        void getAirportById_shouldReturnAirport_whenExists() {
 
-        when(airportRepository.findById(1L))
-                .thenReturn(Optional.of(airport));
+                Airport airport = new Airport();
+                airport.setIataCode("DEL");
+                airport.setIcaoCode("VIDP");
+                airport.setName("Indira Gandhi International Airport");
 
-        Airport result =
-                airportService.getAirportById(1L);
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(airport));
 
-        assertEquals("DEL", result.getIataCode());
-        assertEquals("VIDP", result.getIcaoCode());
-        assertEquals(
-                "Indira Gandhi International Airport",
-                result.getName());
+                Airport result = airportService.getAirportById(1L);
 
-        verify(airportRepository).findById(1L);
-    }
+                assertEquals("DEL", result.getIataCode());
+                assertEquals("VIDP", result.getIcaoCode());
+                assertEquals(
+                                "Indira Gandhi International Airport",
+                                result.getName());
 
-    @Test
-    void getAirportById_shouldThrowException_whenNotFound() {
+                verify(airportRepository).findById(1L);
+        }
 
-        when(airportRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        @Test
+        void getAirportById_shouldThrowException_whenNotFound() {
 
-        ResourceNotFoundException exception =
-                assertThrows(
-                        ResourceNotFoundException.class,
-                        () -> airportService.getAirportById(99L));
+                when(airportRepository.findById(99L))
+                                .thenReturn(Optional.empty());
 
-        assertEquals(
-                "Airport not found with id: 99",
-                exception.getMessage());
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> airportService.getAirportById(99L));
 
-        verify(airportRepository).findById(99L);
-    }
+                assertEquals(
+                                "Airport not found with id: 99",
+                                exception.getMessage());
 
-    @Test
-    void createAirport_shouldSaveAirport_whenRequestIsValid() {
+                verify(airportRepository).findById(99L);
+        }
 
-        AirportRequestDTO request = validRequest();
+        @Test
+        void createAirport_shouldSaveAirport_whenRequestIsValid() {
 
-        Airport savedAirport = new Airport();
-        savedAirport.setIataCode("DEL");
-        savedAirport.setIcaoCode("VIDP");
-        savedAirport.setName(
-                "Indira Gandhi International Airport");
-        savedAirport.setCity("Delhi");
-        savedAirport.setCountry("India");
-        savedAirport.setTerminalCount(3);
-        savedAirport.setStatus("ACTIVE");
+                AirportRequestDTO request = validRequest();
 
-        when(airportRepository.existsByIataCode("DEL"))
-                .thenReturn(false);
+                Airport savedAirport = new Airport();
+                savedAirport.setIataCode("DEL");
+                savedAirport.setIcaoCode("VIDP");
+                savedAirport.setName(
+                                "Indira Gandhi International Airport");
+                savedAirport.setCity("Delhi");
+                savedAirport.setCountry("India");
+                savedAirport.setTerminalCount(3);
+                savedAirport.setStatus("ACTIVE");
 
-        when(airportRepository.existsByIcaoCode("VIDP"))
-                .thenReturn(false);
+                when(airportRepository.existsByIataCode("DEL"))
+                                .thenReturn(false);
 
-        when(airportRepository.save(any(Airport.class)))
-                .thenReturn(savedAirport);
+                when(airportRepository.existsByIcaoCode("VIDP"))
+                                .thenReturn(false);
 
-        Airport result =
-                airportService.createAirport(request);
+                when(airportRepository.save(any(Airport.class)))
+                                .thenReturn(savedAirport);
 
-        assertEquals("DEL", result.getIataCode());
-        assertEquals("VIDP", result.getIcaoCode());
-        assertEquals("Delhi", result.getCity());
-        assertEquals(3, result.getTerminalCount());
+                Airport result = airportService.createAirport(request);
 
-        verify(airportRepository)
-                .existsByIataCode("DEL");
+                assertEquals("DEL", result.getIataCode());
+                assertEquals("VIDP", result.getIcaoCode());
+                assertEquals("Delhi", result.getCity());
+                assertEquals(3, result.getTerminalCount());
 
-        verify(airportRepository)
-                .existsByIcaoCode("VIDP");
+                verify(airportRepository)
+                                .existsByIataCode("DEL");
 
-        verify(airportRepository)
-                .save(any(Airport.class));
-    }
+                verify(airportRepository)
+                                .existsByIcaoCode("VIDP");
 
-    @Test
-    void createAirport_shouldThrowException_whenIataAlreadyExists() {
+                verify(airportRepository)
+                                .save(any(Airport.class));
+        }
 
-        AirportRequestDTO request = validRequest();
+        @Test
+        void createAirport_shouldThrowException_whenIataAlreadyExists() {
 
-        when(airportRepository.existsByIataCode("DEL"))
-                .thenReturn(true);
+                AirportRequestDTO request = validRequest();
 
-        DuplicateResourceException exception =
-                assertThrows(
-                        DuplicateResourceException.class,
-                        () -> airportService.createAirport(request));
+                when(airportRepository.existsByIataCode("DEL"))
+                                .thenReturn(true);
 
-        assertEquals(
-                "Airport already exists with IATA code: DEL",
-                exception.getMessage());
+                DuplicateResourceException exception = assertThrows(
+                                DuplicateResourceException.class,
+                                () -> airportService.createAirport(request));
 
-        verify(airportRepository)
-                .existsByIataCode("DEL");
+                assertEquals(
+                                "Airport already exists with IATA code: DEL",
+                                exception.getMessage());
 
-        verify(airportRepository, never())
-                .existsByIcaoCode(anyString());
+                verify(airportRepository)
+                                .existsByIataCode("DEL");
 
-        verify(airportRepository, never())
-                .save(any(Airport.class));
-    }
+                verify(airportRepository, never())
+                                .existsByIcaoCode(anyString());
 
-    @Test
-    void createAirport_shouldThrowException_whenIcaoAlreadyExists() {
+                verify(airportRepository, never())
+                                .save(any(Airport.class));
+        }
 
-        AirportRequestDTO request = validRequest();
+        @Test
+        void createAirport_shouldThrowException_whenIcaoAlreadyExists() {
 
-        when(airportRepository.existsByIataCode("DEL"))
-                .thenReturn(false);
+                AirportRequestDTO request = validRequest();
 
-        when(airportRepository.existsByIcaoCode("VIDP"))
-                .thenReturn(true);
+                when(airportRepository.existsByIataCode("DEL"))
+                                .thenReturn(false);
 
-        DuplicateResourceException exception =
-                assertThrows(
-                        DuplicateResourceException.class,
-                        () -> airportService.createAirport(request));
+                when(airportRepository.existsByIcaoCode("VIDP"))
+                                .thenReturn(true);
 
-        assertEquals(
-                "Airport already exists with ICAO code: VIDP",
-                exception.getMessage());
+                DuplicateResourceException exception = assertThrows(
+                                DuplicateResourceException.class,
+                                () -> airportService.createAirport(request));
 
-        verify(airportRepository)
-                .existsByIataCode("DEL");
+                assertEquals(
+                                "Airport already exists with ICAO code: VIDP",
+                                exception.getMessage());
 
-        verify(airportRepository)
-                .existsByIcaoCode("VIDP");
+                verify(airportRepository)
+                                .existsByIataCode("DEL");
 
-        verify(airportRepository, never())
-                .save(any(Airport.class));
-    }
+                verify(airportRepository)
+                                .existsByIcaoCode("VIDP");
 
-    @Test
-    void createAirport_shouldThrowException_whenIataCodeIsMissing() {
+                verify(airportRepository, never())
+                                .save(any(Airport.class));
+        }
 
-        AirportRequestDTO request = validRequest();
-        request.setIataCode("");
+        @Test
+        void createAirport_shouldThrowException_whenIataCodeIsMissing() {
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> airportService.createAirport(request));
+                AirportRequestDTO request = validRequest();
+                request.setIataCode("");
 
-        assertEquals(
-                "IATA code is required",
-                exception.getMessage());
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> airportService.createAirport(request));
 
-        verify(airportRepository, never())
-                .save(any(Airport.class));
-    }
+                assertEquals(
+                                "IATA code is required",
+                                exception.getMessage());
 
-    @Test
-    void updateAirport_shouldUpdate_whenRequestIsValid() {
+                verify(airportRepository, never())
+                                .save(any(Airport.class));
+        }
 
-        Airport existing = new Airport();
+        @Test
+        void updateAirport_shouldUpdate_whenRequestIsValid() {
 
-        existing.setIataCode("DEL");
-        existing.setIcaoCode("VIDP");
-        existing.setName("Old Name");
-        existing.setCity("Delhi");
-        existing.setCountry("India");
-        existing.setTerminalCount(2);
-        existing.setStatus("ACTIVE");
+                Airport existing = new Airport();
 
-        AirportRequestDTO request = validRequest();
+                existing.setIataCode("DEL");
+                existing.setIcaoCode("VIDP");
+                existing.setName("Old Name");
+                existing.setCity("Delhi");
+                existing.setCountry("India");
+                existing.setTerminalCount(2);
+                existing.setStatus("ACTIVE");
 
-        when(airportRepository.findById(1L))
-                .thenReturn(Optional.of(existing));
+                AirportRequestDTO request = validRequest();
 
-        when(airportRepository.save(existing))
-                .thenReturn(existing);
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(existing));
 
-        Airport result =
-                airportService.updateAirport(1L, request);
+                when(airportRepository.save(existing))
+                                .thenReturn(existing);
 
-        assertEquals("DEL", result.getIataCode());
-        assertEquals("VIDP", result.getIcaoCode());
-        assertEquals(
-                "Indira Gandhi International Airport",
-                result.getName());
-        assertEquals(3, result.getTerminalCount());
+                Airport result = airportService.updateAirport(1L, request);
 
-        verify(airportRepository).findById(1L);
-        verify(airportRepository).save(existing);
-    }
+                assertEquals("DEL", result.getIataCode());
+                assertEquals("VIDP", result.getIcaoCode());
+                assertEquals(
+                                "Indira Gandhi International Airport",
+                                result.getName());
+                assertEquals(3, result.getTerminalCount());
 
-    @Test
-    void updateAirport_shouldThrowException_whenIataAlreadyExists() {
+                verify(airportRepository).findById(1L);
+                verify(airportRepository).save(existing);
+        }
 
-        Airport existing = new Airport();
+        @Test
+        void updateAirport_shouldThrowException_whenIcaoAlreadyExists() {
 
-        existing.setIataCode("BOM");
-        existing.setIcaoCode("VABB");
+                Airport existing = new Airport();
 
-        AirportRequestDTO request = validRequest();
+                existing.setIataCode("BOM");
+                existing.setIcaoCode("VABB");
 
-        when(airportRepository.findById(1L))
-                .thenReturn(Optional.of(existing));
+                AirportRequestDTO request = validRequest();
 
-        when(airportRepository.existsByIataCode("DEL"))
-                .thenReturn(true);
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(existing));
 
-        DuplicateResourceException exception =
-                assertThrows(
-                        DuplicateResourceException.class,
-                        () -> airportService.updateAirport(1L, request));
+                when(airportRepository.existsByIataCode("DEL"))
+                                .thenReturn(false);
 
-        assertEquals(
-                "Airport already exists with IATA code: DEL",
-                exception.getMessage());
+                when(airportRepository.existsByIcaoCode("VIDP"))
+                                .thenReturn(true);
 
-        verify(airportRepository)
-                .existsByIataCode("DEL");
+                DuplicateResourceException exception = assertThrows(
+                                DuplicateResourceException.class,
+                                () -> airportService.updateAirport(1L, request));
 
-        verify(airportRepository, never())
-                .save(any(Airport.class));
-    }
+                assertEquals(
+                                "Airport already exists with ICAO code: VIDP",
+                                exception.getMessage());
 
-    @Test
-    void updateAirport_shouldThrowException_whenIcaoAlreadyExists() {
+                verify(airportRepository)
+                                .existsByIataCode("DEL");
 
-        Airport existing = new Airport();
+                verify(airportRepository)
+                                .existsByIcaoCode("VIDP");
 
-        existing.setIataCode("BOM");
-        existing.setIcaoCode("VABB");
+                verify(airportRepository, never())
+                                .save(any(Airport.class));
+        }
 
-        AirportRequestDTO request = validRequest();
+        @Test
+        void updateAirport_shouldThrowException_whenAirportNotFound() {
 
-        when(airportRepository.findById(1L))
-                .thenReturn(Optional.of(existing));
+                AirportRequestDTO request = validRequest();
 
-        when(airportRepository.existsByIataCode("DEL"))
-                .thenReturn(false);
+                when(airportRepository.findById(99L))
+                                .thenReturn(Optional.empty());
 
-        when(airportRepository.existsByIcaoCode("VIDP"))
-                .thenReturn(true);
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> airportService.updateAirport(99L, request));
 
-        DuplicateResourceException exception =
-                assertThrows(
-                        DuplicateResourceException.class,
-                        () -> airportService.updateAirport(1L, request));
+                assertEquals(
+                                "Airport not found with id: 99",
+                                exception.getMessage());
 
-        assertEquals(
-                "Airport already exists with ICAO code: VIDP",
-                exception.getMessage());
+                verify(airportRepository).findById(99L);
 
-        verify(airportRepository)
-                .existsByIataCode("DEL");
+                verify(airportRepository, never())
+                                .save(any(Airport.class));
+        }
 
-        verify(airportRepository)
-                .existsByIcaoCode("VIDP");
+        @Test
+        void deleteAirport_shouldDelete_whenAirportExists() {
 
-        verify(airportRepository, never())
-                .save(any(Airport.class));
-    }
+                Airport airport = new Airport();
+                airport.setIataCode("DEL");
 
-    @Test
-    void updateAirport_shouldThrowException_whenAirportDoesNotExist() {
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(airport));
 
-        AirportRequestDTO request = validRequest();
+                airportService.deleteAirport(1L);
 
-        when(airportRepository.findById(99L))
-                .thenReturn(Optional.empty());
+                verify(airportRepository).findById(1L);
+                verify(airportRepository).delete(airport);
+        }
 
-        ResourceNotFoundException exception = assertThrows(
-                ResourceNotFoundException.class,
-                () -> airportService.updateAirport(99L, request));
+        @Test
+        void deleteAirport_shouldThrowException_whenAirportDoesNotExist() {
 
-        assertEquals(
-                "Airport not found with id: 99",
-                exception.getMessage());
+                when(airportRepository.findById(99L))
+                                .thenReturn(Optional.empty());
 
-        verify(airportRepository).findById(99L);
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> airportService.deleteAirport(99L));
 
-        verify(airportRepository, never())
-                .save(any(Airport.class));
-    }
+                assertEquals(
+                                "Airport not found with id: 99",
+                                exception.getMessage());
 
-    @Test
-    void deleteAirport_shouldDelete_whenAirportExists() {
+                verify(airportRepository).findById(99L);
 
-        Airport airport = new Airport();
-        airport.setIataCode("DEL");
-
-        when(airportRepository.findById(1L))
-                .thenReturn(Optional.of(airport));
-
-        airportService.deleteAirport(1L);
-
-        verify(airportRepository).findById(1L);
-        verify(airportRepository).delete(airport);
-    }
-
-    @Test
-    void deleteAirport_shouldThrowException_whenAirportDoesNotExist() {
-
-        when(airportRepository.findById(99L))
-                .thenReturn(Optional.empty());
-
-        ResourceNotFoundException exception = assertThrows(
-                ResourceNotFoundException.class,
-                () -> airportService.deleteAirport(99L));
-
-        assertEquals(
-                "Airport not found with id: 99",
-                exception.getMessage());
-
-        verify(airportRepository).findById(99L);
-
-        verify(airportRepository, never())
-                .delete(any(Airport.class));
-    }
+                verify(airportRepository, never())
+                                .delete(any(Airport.class));
+        }
 }

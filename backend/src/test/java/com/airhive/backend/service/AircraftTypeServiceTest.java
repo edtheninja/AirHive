@@ -23,197 +23,206 @@ import com.airhive.backend.repository.AircraftTypeRepository;
 @ExtendWith(MockitoExtension.class)
 class AircraftTypeServiceTest {
 
-    @Mock
-    private AircraftTypeRepository aircraftTypeRepository;
+        @Mock
+        private AircraftTypeRepository aircraftTypeRepository;
 
-    private AircraftTypeService aircraftTypeService;
-    
-    
-    @BeforeEach
-    @SuppressWarnings("unused")
-    void setUp() {
-        aircraftTypeService =
-                new AircraftTypeService(aircraftTypeRepository);
-    }
+        private AircraftTypeService aircraftTypeService;
 
-    @Test
-    void getAllAircraftTypes_shouldReturnAllAircraftTypes() {
+        @BeforeEach
+        @SuppressWarnings("unused")
+        void setUp() {
+                aircraftTypeService = new AircraftTypeService(aircraftTypeRepository);
+        }
 
-        AircraftType type1 = new AircraftType();
-        type1.setTypeCode("B738");
+        @Test
+        void getAllAircraftTypes_shouldReturnAllAircraftTypes() {
 
-        AircraftType type2 = new AircraftType();
-        type2.setTypeCode("A320");
+                AircraftType type1 = new AircraftType();
+                type1.setTypeCode("B738");
 
-        when(aircraftTypeRepository.findAll())
-                .thenReturn(List.of(type1, type2));
+                AircraftType type2 = new AircraftType();
+                type2.setTypeCode("A320");
 
-        List<AircraftType> result =
-                aircraftTypeService.getAllAircraftTypes();
+                when(aircraftTypeRepository.findAll())
+                                .thenReturn(List.of(type1, type2));
 
-        assertEquals(2, result.size());
-        assertEquals("B738", result.get(0).getTypeCode());
-        assertEquals("A320", result.get(1).getTypeCode());
+                List<AircraftType> result = aircraftTypeService.getAllAircraftTypes();
 
-        verify(aircraftTypeRepository).findAll();
-    }
+                assertEquals(2, result.size());
+                assertEquals("B738", result.get(0).getTypeCode());
+                assertEquals("A320", result.get(1).getTypeCode());
 
-    @Test
-    void getAircraftTypeById_shouldReturnAircraftType_whenExists() {
+                verify(aircraftTypeRepository).findAll();
+        }
 
-        AircraftType aircraftType = new AircraftType();
-        aircraftType.setTypeCode("B738");
-        aircraftType.setManufacturer("Boeing");
-        aircraftType.setModel("737-800");
+        @Test
+        void getAircraftTypeById_shouldReturnAircraftType_whenExists() {
 
-        when(aircraftTypeRepository.findById(1L))
-                .thenReturn(Optional.of(aircraftType));
+                AircraftType aircraftType = new AircraftType();
+                aircraftType.setTypeCode("B738");
+                aircraftType.setManufacturer("Boeing");
+                aircraftType.setModel("737-800");
 
-        AircraftType result =
-                aircraftTypeService.getAircraftTypeById(1L);
+                when(aircraftTypeRepository.findById(1L))
+                                .thenReturn(Optional.of(aircraftType));
 
-        assertEquals("B738", result.getTypeCode());
-        assertEquals("Boeing", result.getManufacturer());
-        assertEquals("737-800", result.getModel());
+                AircraftType result = aircraftTypeService.getAircraftTypeById(1L);
 
-        verify(aircraftTypeRepository).findById(1L);
-    }
+                assertEquals("B738", result.getTypeCode());
+                assertEquals("Boeing", result.getManufacturer());
+                assertEquals("737-800", result.getModel());
 
-    @Test
-    void getAircraftTypeById_shouldThrowException_whenNotFound() {
+                verify(aircraftTypeRepository).findById(1L);
+        }
 
-        when(aircraftTypeRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        @Test
+        void getAircraftTypeById_shouldThrowException_whenNotFound() {
 
-        ResourceNotFoundException exception =
-                assertThrows(
-                        ResourceNotFoundException.class,
-                        () -> aircraftTypeService
-                                .getAircraftTypeById(99L));
+                when(aircraftTypeRepository.findById(99L))
+                                .thenReturn(Optional.empty());
 
-        assertEquals(
-                "Aircraft type not found with id: 99",
-                exception.getMessage());
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> aircraftTypeService
+                                                .getAircraftTypeById(99L));
 
-        verify(aircraftTypeRepository).findById(99L);
-    }
+                assertEquals(
+                                "Aircraft type not found with id: 99",
+                                exception.getMessage());
 
-    @Test
-    void createAircraftType_shouldSaveAircraftType() {
+                verify(aircraftTypeRepository).findById(99L);
+        }
 
-        AircraftTypeRequestDTO request =
-                new AircraftTypeRequestDTO();
+        @Test
+        void createAircraftType_shouldSaveAircraftType() {
 
-        request.setTypeCode("B738");
-        request.setManufacturer("Boeing");
-        request.setModel("737-800");
-        request.setPassengerCapacity(189);
-        request.setCrewCapacity(2);
+                AircraftTypeRequestDTO request = new AircraftTypeRequestDTO();
 
-        AircraftType savedAircraftType =
-                new AircraftType();
+                request.setTypeCode("B738");
+                request.setManufacturer("Boeing");
+                request.setModel("737-800");
+                request.setPassengerCapacity(189);
+                request.setCrewCapacity(2);
 
-        savedAircraftType.setTypeCode("B738");
-        savedAircraftType.setManufacturer("Boeing");
-        savedAircraftType.setModel("737-800");
-        savedAircraftType.setPassengerCapacity(189);
-        savedAircraftType.setCrewCapacity(2);
+                AircraftType savedAircraftType = new AircraftType();
 
-        when(aircraftTypeRepository.save(any(AircraftType.class)))
-                .thenReturn(savedAircraftType);
+                savedAircraftType.setTypeCode("B738");
+                savedAircraftType.setManufacturer("Boeing");
+                savedAircraftType.setModel("737-800");
+                savedAircraftType.setPassengerCapacity(189);
+                savedAircraftType.setCrewCapacity(2);
 
-        AircraftType result =
-                aircraftTypeService.createAircraftType(request);
+                when(aircraftTypeRepository.save(any(AircraftType.class)))
+                                .thenReturn(savedAircraftType);
 
-        assertEquals("B738", result.getTypeCode());
-        assertEquals("Boeing", result.getManufacturer());
-        assertEquals("737-800", result.getModel());
-        assertEquals(189, result.getPassengerCapacity());
-        assertEquals(2, result.getCrewCapacity());
+                AircraftType result = aircraftTypeService.createAircraftType(request);
 
-        verify(aircraftTypeRepository)
-                .save(any(AircraftType.class));
-    }
+                assertEquals("B738", result.getTypeCode());
+                assertEquals("Boeing", result.getManufacturer());
+                assertEquals("737-800", result.getModel());
+                assertEquals(189, result.getPassengerCapacity());
+                assertEquals(2, result.getCrewCapacity());
 
-    @Test
-    void updateAircraftType_shouldUpdateExistingAircraftType() {
+                verify(aircraftTypeRepository)
+                                .save(any(AircraftType.class));
+        }
 
-        AircraftType existing = new AircraftType();
-        existing.setTypeCode("B738");
-        existing.setManufacturer("Boeing");
-        existing.setModel("737-800");
+        @Test
+        void updateAircraftType_shouldUpdateExistingAircraftType() {
 
-        AircraftTypeRequestDTO request =
-                new AircraftTypeRequestDTO();
+                AircraftType existing = new AircraftType();
+                existing.setTypeCode("B738");
+                existing.setManufacturer("Boeing");
+                existing.setModel("737-800");
 
-        request.setTypeCode("B738");
-        request.setManufacturer("Boeing");
-        request.setModel("737-900");
-        request.setPassengerCapacity(215);
-        request.setCrewCapacity(2);
+                AircraftTypeRequestDTO request = new AircraftTypeRequestDTO();
 
-        when(aircraftTypeRepository.findById(1L))
-                .thenReturn(Optional.of(existing));
+                request.setTypeCode("B738");
+                request.setManufacturer("Boeing");
+                request.setModel("737-900");
+                request.setPassengerCapacity(215);
+                request.setCrewCapacity(2);
 
-        when(aircraftTypeRepository.save(existing))
-                .thenReturn(existing);
+                when(aircraftTypeRepository.findById(1L))
+                                .thenReturn(Optional.of(existing));
 
-        AircraftType result =
-                aircraftTypeService.updateAircraftType(1L, request);
+                when(aircraftTypeRepository.save(existing))
+                                .thenReturn(existing);
 
-        assertEquals("B738", result.getTypeCode());
-        assertEquals("Boeing", result.getManufacturer());
-        assertEquals("737-900", result.getModel());
-        assertEquals(215, result.getPassengerCapacity());
-        assertEquals(2, result.getCrewCapacity());
+                AircraftType result = aircraftTypeService.updateAircraftType(1L, request);
 
-        verify(aircraftTypeRepository).findById(1L);
-        verify(aircraftTypeRepository).save(existing);
-    }
+                assertEquals("B738", result.getTypeCode());
+                assertEquals("Boeing", result.getManufacturer());
+                assertEquals("737-900", result.getModel());
+                assertEquals(215, result.getPassengerCapacity());
+                assertEquals(2, result.getCrewCapacity());
 
-    @Test
-void updateAircraftType_shouldThrowException_whenNotFound() {
+                verify(aircraftTypeRepository).findById(1L);
+                verify(aircraftTypeRepository).save(existing);
+        }
 
-    AircraftTypeRequestDTO request =
-            new AircraftTypeRequestDTO();
+        @Test
+        void updateAircraftType_shouldThrowException_whenNotFound() {
 
-    request.setTypeCode("B738");
-    request.setManufacturer("Boeing");
-    request.setModel("737-800");
-    request.setPassengerCapacity(189);
-    request.setCrewCapacity(2);
+                AircraftTypeRequestDTO request = new AircraftTypeRequestDTO();
 
-    when(aircraftTypeRepository.findById(99L))
-            .thenReturn(Optional.empty());
+                request.setTypeCode("B738");
+                request.setManufacturer("Boeing");
+                request.setModel("737-800");
+                request.setPassengerCapacity(189);
+                request.setCrewCapacity(2);
 
-    ResourceNotFoundException exception =
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> aircraftTypeService
-                            .updateAircraftType(99L, request));
+                when(aircraftTypeRepository.findById(99L))
+                                .thenReturn(Optional.empty());
 
-    assertEquals(
-            "Aircraft type not found with id: 99",
-            exception.getMessage());
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> aircraftTypeService
+                                                .updateAircraftType(99L, request));
 
-    verify(aircraftTypeRepository).findById(99L);
+                assertEquals(
+                                "Aircraft type not found with id: 99",
+                                exception.getMessage());
 
-    verify(aircraftTypeRepository, never())
-            .save(any(AircraftType.class));
-}
+                verify(aircraftTypeRepository).findById(99L);
 
-    @Test
-    void deleteAircraftType_shouldDelete_whenExists() {
+                verify(aircraftTypeRepository, never())
+                                .save(any(AircraftType.class));
+        }
 
-        AircraftType existing = new AircraftType();
-        existing.setTypeCode("B738");
+        @Test
+        void deleteAircraftType_shouldDelete_whenExists() {
 
-        when(aircraftTypeRepository.findById(1L))
-                .thenReturn(Optional.of(existing));
+                AircraftType existing = new AircraftType();
+                existing.setTypeCode("B738");
 
-        aircraftTypeService.deleteAircraftType(1L);
+                when(aircraftTypeRepository.findById(1L))
+                                .thenReturn(Optional.of(existing));
 
-        verify(aircraftTypeRepository).findById(1L);
-        verify(aircraftTypeRepository).delete(existing);
-    }
+                aircraftTypeService.deleteAircraftType(1L);
+
+                verify(aircraftTypeRepository).findById(1L);
+                verify(aircraftTypeRepository).delete(existing);
+        }
+
+        @Test
+        void deleteAircraftType_shouldThrowException_whenNotFound() {
+
+                when(aircraftTypeRepository.findById(99L))
+                                .thenReturn(Optional.empty());
+
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> aircraftTypeService.deleteAircraftType(99L));
+
+                assertEquals(
+                                "Aircraft type not found with id: 99",
+                                exception.getMessage());
+
+                verify(aircraftTypeRepository).findById(99L);
+
+                verify(aircraftTypeRepository, never())
+                                .delete(any(AircraftType.class));
+        }
+        
 }

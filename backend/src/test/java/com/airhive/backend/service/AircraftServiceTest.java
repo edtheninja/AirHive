@@ -25,262 +25,300 @@ import com.airhive.backend.repository.AircraftRepository;
 @ExtendWith(MockitoExtension.class)
 class AircraftServiceTest {
 
-    @Mock
-    private AircraftRepository aircraftRepository;
+        @Mock
+        private AircraftRepository aircraftRepository;
 
-    @Mock
-    private AircraftTypeService aircraftTypeService;
+        @Mock
+        private AircraftTypeService aircraftTypeService;
 
-    private AircraftService aircraftService;
-    
-    
-    @BeforeEach
-    @SuppressWarnings("unused")
-    void setUp() {
-        aircraftService = new AircraftService(
-                aircraftRepository,
-                aircraftTypeService);
-    }
+        private AircraftService aircraftService;
 
-    @Test
-    void getAircraftById_shouldReturnAircraft_whenAircraftExists() {
+        @BeforeEach
+        @SuppressWarnings("unused")
+        void setUp() {
+                aircraftService = new AircraftService(
+                                aircraftRepository,
+                                aircraftTypeService);
+        }
 
-        Aircraft aircraft = new Aircraft();
-        aircraft.setRegistrationNumber("VT-AIR01");
-        aircraft.setStatus("ACTIVE");
+        @Test
+        void getAircraftById_shouldReturnAircraft_whenAircraftExists() {
 
-        when(aircraftRepository.findById(1L))
-                .thenReturn(Optional.of(aircraft));
+                Aircraft aircraft = new Aircraft();
+                aircraft.setRegistrationNumber("VT-AIR01");
+                aircraft.setStatus("ACTIVE");
 
-        Aircraft result = aircraftService.getAircraftById(1L);
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(aircraft));
 
-        assertEquals("VT-AIR01", result.getRegistrationNumber());
-        assertEquals("ACTIVE", result.getStatus());
+                Aircraft result = aircraftService.getAircraftById(1L);
 
-        verify(aircraftRepository).findById(1L);
-    }
+                assertEquals("VT-AIR01", result.getRegistrationNumber());
+                assertEquals("ACTIVE", result.getStatus());
 
-    @Test
-    void getAircraftById_shouldThrowException_whenAircraftDoesNotExist() {
+                verify(aircraftRepository).findById(1L);
+        }
 
-        when(aircraftRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        @Test
+        void getAircraftById_shouldThrowException_whenAircraftDoesNotExist() {
 
-        ResourceNotFoundException exception =
-                assertThrows(
-                        ResourceNotFoundException.class,
-                        () -> aircraftService.getAircraftById(99L));
+                when(aircraftRepository.findById(99L))
+                                .thenReturn(Optional.empty());
 
-        assertEquals(
-                "Aircraft not found with id: 99",
-                exception.getMessage());
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> aircraftService.getAircraftById(99L));
 
-        verify(aircraftRepository).findById(99L);
-    }
+                assertEquals(
+                                "Aircraft not found with id: 99",
+                                exception.getMessage());
 
-    @Test
-    void getAllAircraft_shouldReturnAllAircraft() {
+                verify(aircraftRepository).findById(99L);
+        }
 
-        Aircraft aircraft1 = new Aircraft();
-        aircraft1.setRegistrationNumber("VT-AIR01");
+        @Test
+        void getAllAircraft_shouldReturnAllAircraft() {
 
-        Aircraft aircraft2 = new Aircraft();
-        aircraft2.setRegistrationNumber("VT-AIR02");
+                Aircraft aircraft1 = new Aircraft();
+                aircraft1.setRegistrationNumber("VT-AIR01");
 
-        when(aircraftRepository.findAll())
-                .thenReturn(List.of(aircraft1, aircraft2));
+                Aircraft aircraft2 = new Aircraft();
+                aircraft2.setRegistrationNumber("VT-AIR02");
 
-        List<Aircraft> result = aircraftService.getAllAircraft();
+                when(aircraftRepository.findAll())
+                                .thenReturn(List.of(aircraft1, aircraft2));
 
-        assertEquals(2, result.size());
-        assertEquals("VT-AIR01",
-                result.get(0).getRegistrationNumber());
-        assertEquals("VT-AIR02",
-                result.get(1).getRegistrationNumber());
+                List<Aircraft> result = aircraftService.getAllAircraft();
 
-        verify(aircraftRepository).findAll();
-    }
+                assertEquals(2, result.size());
+                assertEquals("VT-AIR01",
+                                result.get(0).getRegistrationNumber());
+                assertEquals("VT-AIR02",
+                                result.get(1).getRegistrationNumber());
 
-    @Test
-    void createAircraft_shouldSaveAircraft_whenRegistrationIsUnique() {
+                verify(aircraftRepository).findAll();
+        }
 
-        Aircraft aircraft = new Aircraft();
-        aircraft.setRegistrationNumber("VT-TEST01");
-        aircraft.setStatus("ACTIVE");
+        @Test
+        void createAircraft_shouldSaveAircraft_whenRegistrationIsUnique() {
 
-        when(aircraftRepository.existsByRegistrationNumber("VT-TEST01"))
-                .thenReturn(false);
+                Aircraft aircraft = new Aircraft();
+                aircraft.setRegistrationNumber("VT-TEST01");
+                aircraft.setStatus("ACTIVE");
 
-        when(aircraftRepository.save(aircraft))
-                .thenReturn(aircraft);
+                when(aircraftRepository.existsByRegistrationNumber("VT-TEST01"))
+                                .thenReturn(false);
 
-        Aircraft result = aircraftService.createAircraft(aircraft);
+                when(aircraftRepository.save(aircraft))
+                                .thenReturn(aircraft);
 
-        assertEquals("VT-TEST01",
-                result.getRegistrationNumber());
+                Aircraft result = aircraftService.createAircraft(aircraft);
 
-        verify(aircraftRepository)
-                .existsByRegistrationNumber("VT-TEST01");
+                assertEquals("VT-TEST01",
+                                result.getRegistrationNumber());
 
-        verify(aircraftRepository)
-                .save(aircraft);
-    }
+                verify(aircraftRepository)
+                                .existsByRegistrationNumber("VT-TEST01");
 
-    @Test
-    void createAircraft_shouldThrowException_whenRegistrationAlreadyExists() {
+                verify(aircraftRepository)
+                                .save(aircraft);
+        }
 
-        Aircraft aircraft = new Aircraft();
-        aircraft.setRegistrationNumber("VT-AIR02");
+        @Test
+        void createAircraft_shouldThrowException_whenRegistrationAlreadyExists() {
 
-        when(aircraftRepository.existsByRegistrationNumber("VT-AIR02"))
-                .thenReturn(true);
+                Aircraft aircraft = new Aircraft();
+                aircraft.setRegistrationNumber("VT-AIR02");
 
-        DuplicateResourceException exception =
-                assertThrows(
-                        DuplicateResourceException.class,
-                        () -> aircraftService.createAircraft(aircraft));
+                when(aircraftRepository.existsByRegistrationNumber("VT-AIR02"))
+                                .thenReturn(true);
 
-        assertEquals(
-                "Aircraft already exists with registration number: VT-AIR02",
-                exception.getMessage());
+                DuplicateResourceException exception = assertThrows(
+                                DuplicateResourceException.class,
+                                () -> aircraftService.createAircraft(aircraft));
 
-        verify(aircraftRepository)
-                .existsByRegistrationNumber("VT-AIR02");
+                assertEquals(
+                                "Aircraft already exists with registration number: VT-AIR02",
+                                exception.getMessage());
 
-        verify(aircraftRepository, never())
-                .save(any(Aircraft.class));
-    }
+                verify(aircraftRepository)
+                                .existsByRegistrationNumber("VT-AIR02");
 
-    @Test
-    void deleteAircraft_shouldDeleteAircraft_whenAircraftExists() {
+                verify(aircraftRepository, never())
+                                .save(any(Aircraft.class));
+        }
 
-        Aircraft aircraft = new Aircraft();
-        aircraft.setRegistrationNumber("VT-AIR01");
+        @Test
+        void createAircraft_shouldCreateUsingRequestDTO() {
 
-        when(aircraftRepository.findById(1L))
-                .thenReturn(Optional.of(aircraft));
+                AircraftRequestDTO request = new AircraftRequestDTO();
+                request.setRegistrationNumber("VT-AIR99");
+                request.setStatus("ACTIVE");
+                request.setAircraftTypeId(1L);
 
-        aircraftService.deleteAircraft(1L);
+                AircraftType aircraftType = new AircraftType();
+                aircraftType.setTypeCode("A320");
 
-        verify(aircraftRepository).findById(1L);
-        verify(aircraftRepository).delete(aircraft);
-    }
+                when(aircraftTypeService.getAircraftTypeById(1L))
+                                .thenReturn(aircraftType);
 
-    @Test
-    void deleteAircraft_shouldThrowException_whenAircraftDoesNotExist() {
+                when(aircraftRepository.existsByRegistrationNumber("VT-AIR99"))
+                                .thenReturn(false);
 
-    when(aircraftRepository.findById(99L))
-            .thenReturn(Optional.empty());
+                when(aircraftRepository.save(any(Aircraft.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-    ResourceNotFoundException exception =
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> aircraftService.deleteAircraft(99L));
+                Aircraft result = aircraftService.createAircraft(request);
 
-    assertEquals(
-            "Aircraft not found with id: 99",
-            exception.getMessage());
+                assertEquals(
+                                "VT-AIR99",
+                                result.getRegistrationNumber());
 
-    verify(aircraftRepository).findById(99L);
-    verify(aircraftRepository, never())
-            .delete(any(Aircraft.class));
-}
-    @Test
-void updateAircraft_shouldUpdateAircraft_whenAircraftExists() {
+                assertEquals(
+                                "ACTIVE",
+                                result.getStatus());
 
-    Aircraft existingAircraft = new Aircraft();
-    existingAircraft.setRegistrationNumber("VT-AIR01");
-    existingAircraft.setStatus("ACTIVE");
+                assertEquals(
+                                aircraftType,
+                                result.getAircraftType());
 
-    Aircraft updatedAircraft = new Aircraft();
-    updatedAircraft.setRegistrationNumber("VT-AIR99");
-    updatedAircraft.setStatus("INACTIVE");
+                verify(aircraftTypeService)
+                                .getAircraftTypeById(1L);
 
-    when(aircraftRepository.findById(1L))
-            .thenReturn(Optional.of(existingAircraft));
+                verify(aircraftRepository)
+                                .existsByRegistrationNumber("VT-AIR99");
 
-    when(aircraftRepository.save(existingAircraft))
-            .thenReturn(existingAircraft);
+                verify(aircraftRepository)
+                                .save(any(Aircraft.class));
+        }
 
-    Aircraft result =
-            aircraftService.updateAircraft(1L, updatedAircraft);
+        @Test
+        void deleteAircraft_shouldDeleteAircraft_whenAircraftExists() {
 
-    assertEquals(
-            "VT-AIR99",
-            result.getRegistrationNumber());
+                Aircraft aircraft = new Aircraft();
+                aircraft.setRegistrationNumber("VT-AIR01");
 
-    assertEquals(
-            "INACTIVE",
-            result.getStatus());
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(aircraft));
 
-    verify(aircraftRepository).findById(1L);
-    verify(aircraftRepository).save(existingAircraft);
-    }
+                aircraftService.deleteAircraft(1L);
 
-    @Test
-void updateAircraft_shouldThrowException_whenAircraftDoesNotExist() {
+                verify(aircraftRepository).findById(1L);
+                verify(aircraftRepository).delete(aircraft);
+        }
 
-    Aircraft updatedAircraft = new Aircraft();
-    updatedAircraft.setRegistrationNumber("VT-AIR99");
-    updatedAircraft.setStatus("INACTIVE");
+        @Test
+        void deleteAircraft_shouldThrowException_whenAircraftDoesNotExist() {
 
-    when(aircraftRepository.findById(99L))
-            .thenReturn(Optional.empty());
+                when(aircraftRepository.findById(99L))
+                                .thenReturn(Optional.empty());
 
-    ResourceNotFoundException exception =
-            assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> aircraftService.updateAircraft(
-                            99L,
-                            updatedAircraft));
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> aircraftService.deleteAircraft(99L));
 
-    assertEquals(
-            "Aircraft not found with id: 99",
-            exception.getMessage());
+                assertEquals(
+                                "Aircraft not found with id: 99",
+                                exception.getMessage());
 
-    verify(aircraftRepository).findById(99L);
+                verify(aircraftRepository).findById(99L);
+                verify(aircraftRepository, never())
+                                .delete(any(Aircraft.class));
+        }
 
-    verify(aircraftRepository, never())
-            .save(any(Aircraft.class));
-}
+        @Test
+        void updateAircraft_shouldUpdateAircraft_whenAircraftExists() {
 
-    @Test
-void updateAircraft_shouldUpdateUsingRequestDTO() {
+                Aircraft existingAircraft = new Aircraft();
+                existingAircraft.setRegistrationNumber("VT-AIR01");
+                existingAircraft.setStatus("ACTIVE");
 
-    Aircraft existingAircraft = new Aircraft();
-    existingAircraft.setRegistrationNumber("VT-AIR01");
-    existingAircraft.setStatus("ACTIVE");
+                Aircraft updatedAircraft = new Aircraft();
+                updatedAircraft.setRegistrationNumber("VT-AIR99");
+                updatedAircraft.setStatus("INACTIVE");
 
-    AircraftType aircraftType = new AircraftType();
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(existingAircraft));
 
-    AircraftRequestDTO request = new AircraftRequestDTO();
-    request.setRegistrationNumber("VT-AIR99");
-    request.setStatus("ACTIVE");
-    request.setAircraftTypeId(1L);
+                when(aircraftRepository.save(existingAircraft))
+                                .thenReturn(existingAircraft);
 
-    when(aircraftRepository.findById(1L))
-            .thenReturn(Optional.of(existingAircraft));
+                Aircraft result = aircraftService.updateAircraft(1L, updatedAircraft);
 
-    when(aircraftTypeService.getAircraftTypeById(1L))
-            .thenReturn(aircraftType);
+                assertEquals(
+                                "VT-AIR99",
+                                result.getRegistrationNumber());
 
-    when(aircraftRepository.save(existingAircraft))
-            .thenReturn(existingAircraft);
+                assertEquals(
+                                "INACTIVE",
+                                result.getStatus());
 
-    Aircraft result =
-            aircraftService.updateAircraft(1L, request);
+                verify(aircraftRepository).findById(1L);
+                verify(aircraftRepository).save(existingAircraft);
+        }
 
-    assertEquals(
-            "VT-AIR99",
-            result.getRegistrationNumber());
+        @Test
+        void updateAircraft_shouldThrowException_whenAircraftDoesNotExist() {
 
-    assertEquals(
-            aircraftType,
-            result.getAircraftType());
+                Aircraft updatedAircraft = new Aircraft();
+                updatedAircraft.setRegistrationNumber("VT-AIR99");
+                updatedAircraft.setStatus("INACTIVE");
 
-    verify(aircraftRepository).findById(1L);
-    verify(aircraftTypeService).getAircraftTypeById(1L);
-    verify(aircraftRepository).save(existingAircraft);
-    }
-       
+                when(aircraftRepository.findById(99L))
+                                .thenReturn(Optional.empty());
+
+                ResourceNotFoundException exception = assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> aircraftService.updateAircraft(
+                                                99L,
+                                                updatedAircraft));
+
+                assertEquals(
+                                "Aircraft not found with id: 99",
+                                exception.getMessage());
+
+                verify(aircraftRepository).findById(99L);
+
+                verify(aircraftRepository, never())
+                                .save(any(Aircraft.class));
+        }
+
+        @Test
+        void updateAircraft_shouldUpdateUsingRequestDTO() {
+
+                Aircraft existingAircraft = new Aircraft();
+                existingAircraft.setRegistrationNumber("VT-AIR01");
+                existingAircraft.setStatus("ACTIVE");
+
+                AircraftType aircraftType = new AircraftType();
+
+                AircraftRequestDTO request = new AircraftRequestDTO();
+                request.setRegistrationNumber("VT-AIR99");
+                request.setStatus("ACTIVE");
+                request.setAircraftTypeId(1L);
+
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(existingAircraft));
+
+                when(aircraftTypeService.getAircraftTypeById(1L))
+                                .thenReturn(aircraftType);
+
+                when(aircraftRepository.save(existingAircraft))
+                                .thenReturn(existingAircraft);
+
+                Aircraft result = aircraftService.updateAircraft(1L, request);
+
+                assertEquals(
+                                "VT-AIR99",
+                                result.getRegistrationNumber());
+
+                assertEquals(
+                                aircraftType,
+                                result.getAircraftType());
+
+                verify(aircraftRepository).findById(1L);
+                verify(aircraftTypeService).getAircraftTypeById(1L);
+                verify(aircraftRepository).save(existingAircraft);
+        }
+
 }
