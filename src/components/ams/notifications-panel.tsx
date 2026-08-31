@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { AlertTriangle, Bell, CheckCircle2, Info, X, OctagonAlert } from "lucide-react";
-import { useLiveOps } from "@/lib/ams/live-ops";
+import { useLiveOps } from "@/lib/ams/hooks";
 import { spring } from "@/lib/ams/motion";
 import { cn } from "@/lib/utils";
 import type { OpsNotification } from "@/lib/ams/data";
@@ -12,7 +12,13 @@ const toneMap: Record<OpsNotification["tone"], { icon: typeof Info; className: s
   danger: { icon: OctagonAlert, className: "text-destructive bg-destructive/14" },
 };
 
-export function NotificationsPanel({ limit = 6, className }: { limit?: number; className?: string }) {
+export function NotificationsPanel({
+  limit = 6,
+  className,
+}: {
+  limit?: number;
+  className?: string;
+}) {
   const { notifications, dismiss } = useLiveOps();
 
   return (
@@ -26,7 +32,7 @@ export function NotificationsPanel({ limit = 6, className }: { limit?: number; c
           {notifications.length}
         </span>
       </div>
-      <div className="max-h-[420px] space-y-2 overflow-y-auto px-4 pb-5">
+      <div className="max-h-105 space-y-2 overflow-y-auto px-4 pb-5">
         <AnimatePresence initial={false}>
           {notifications.slice(0, limit).map((n) => {
             const tone = toneMap[n.tone];
@@ -41,7 +47,12 @@ export function NotificationsPanel({ limit = 6, className }: { limit?: number; c
                 transition={spring}
                 className="group flex items-start gap-3 rounded-2xl px-3 py-3 transition-colors hover:bg-foreground/4"
               >
-                <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl", tone.className)}>
+                <span
+                  className={cn(
+                    "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
+                    tone.className,
+                  )}
+                >
                   <Icon className="h-4 w-4" strokeWidth={1.8} />
                 </span>
                 <div className="min-w-0 flex-1">

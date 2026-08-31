@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { Activity, Clock3, Gauge, ShieldCheck } from "lucide-react";
 import { pageVariants } from "@/lib/ams/motion";
-import { useLiveOps } from "@/lib/ams/live-ops";
+import { useLiveOps } from "@/lib/ams/hooks";
 import { KpiCard } from "@/components/ams/kpi-card";
 import { FlightMap } from "@/components/ams/flight-map";
 import { NotificationsPanel } from "@/components/ams/notifications-panel";

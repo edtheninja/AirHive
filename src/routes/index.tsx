@@ -16,7 +16,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { pageVariants } from "@/lib/ams/motion";
-import { useLiveOps } from "@/lib/ams/live-ops";
+import { useLiveOps } from "@/lib/ams/hooks";
 import { KpiCard } from "@/components/ams/kpi-card";
 import { FlightsTable } from "@/components/ams/flights-table";
 import { FlightMap } from "@/components/ams/flight-map";
@@ -29,9 +29,15 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Operations Dashboard — Aerion AMS" },
-      { name: "description", content: "Live airline operations: flights, delays, revenue, fleet availability and crew." },
+      {
+        name: "description",
+        content: "Live airline operations: flights, delays, revenue, fleet availability and crew.",
+      },
       { property: "og:title", content: "Operations Dashboard — Aerion AMS" },
-      { property: "og:description", content: "Live airline operations control centre for flights, fleet and crew." },
+      {
+        property: "og:description",
+        content: "Live airline operations control centre for flights, fleet and crew.",
+      },
     ],
   }),
   component: Dashboard,
@@ -50,19 +56,68 @@ function Dashboard() {
   const { kpis, flights } = useLiveOps();
 
   return (
-    <motion.div variants={pageVariants} initial="initial" animate="animate" className="mx-auto max-w-[1600px] space-y-6 py-6">
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      className="mx-auto max-w-[1600px] space-y-6 py-6"
+    >
       <PageHeader
         title="Operations Dashboard"
         description="Network-wide situational awareness, updating live."
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-        <KpiCard index={0} label="Total Flights" value={kpis.totalFlights} icon={PlaneTakeoff} tone="primary" trend="Scheduled today" />
-        <KpiCard index={1} label="Active Flights" value={kpis.activeFlights} icon={Radar} tone="accent" trend="Currently airborne" />
-        <KpiCard index={2} label="Delayed Flights" value={kpis.delayedFlights} icon={Clock3} tone="warning" trend="Above 15 minutes" />
-        <KpiCard index={3} label="Revenue Today" value={kpis.revenueToday} icon={Wallet} tone="success" prefix="$" trend="Net of refunds" />
-        <KpiCard index={4} label="Passenger Count" value={kpis.passengers} icon={Users} tone="accent" trend="Checked in network-wide" />
-        <KpiCard index={5} label="Fleet Availability" value={kpis.fleetAvailability} icon={Gauge} tone="success" suffix="%" trend="42 of 46 aircraft" />
+        <KpiCard
+          index={0}
+          label="Total Flights"
+          value={kpis.totalFlights}
+          icon={PlaneTakeoff}
+          tone="primary"
+          trend="Scheduled today"
+        />
+        <KpiCard
+          index={1}
+          label="Active Flights"
+          value={kpis.activeFlights}
+          icon={Radar}
+          tone="accent"
+          trend="Currently airborne"
+        />
+        <KpiCard
+          index={2}
+          label="Delayed Flights"
+          value={kpis.delayedFlights}
+          icon={Clock3}
+          tone="warning"
+          trend="Above 15 minutes"
+        />
+        <KpiCard
+          index={3}
+          label="Revenue Today"
+          value={kpis.revenueToday}
+          icon={Wallet}
+          tone="success"
+          prefix="$"
+          trend="Net of refunds"
+        />
+        <KpiCard
+          index={4}
+          label="Passenger Count"
+          value={kpis.passengers}
+          icon={Users}
+          tone="accent"
+          trend="Checked in network-wide"
+        />
+        <KpiCard
+          index={5}
+          label="Fleet Availability"
+          value={kpis.fleetAvailability}
+          icon={Gauge}
+          tone="success"
+          suffix="%"
+          trend="42 of 46 aircraft"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -89,17 +144,23 @@ function Dashboard() {
         </div>
 
         <div className="space-y-6">
-          <SectionCard title="Quick actions" subtitle="Common operations tasks" bodyClassName="px-4 pb-5">
+          <SectionCard
+            title="Quick actions"
+            subtitle="Common operations tasks"
+            bodyClassName="px-4 pb-5"
+          >
             <div className="grid grid-cols-2 gap-2">
               {QUICK_ACTIONS.map((a) => (
                 <motion.button
                   key={a.label}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => toast(a.label, { description: "Action queued in the operations centre." })}
+                  onClick={() =>
+                    toast(a.label, { description: "Action queued in the operations centre." })
+                  }
                   className="flex flex-col items-start gap-3 rounded-2xl border border-border/60 bg-foreground/3 p-3 text-left text-sm transition-colors hover:bg-foreground/6"
                 >
-                  <a.icon className={`h-[18px] w-[18px] ${a.tone}`} strokeWidth={1.7} />
+                  <a.icon className={`h-4.5 w-4.5 ${a.tone}`} strokeWidth={1.7} />
                   <span className="leading-tight">{a.label}</span>
                 </motion.button>
               ))}

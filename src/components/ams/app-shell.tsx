@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/ams/motion";
-import { useLiveOps } from "@/lib/ams/live-ops";
+import { useLiveOps } from "@/lib/ams/hooks";
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -102,18 +102,20 @@ function NavItems({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: 
                 <motion.span
                   layoutId="nav-active"
                   transition={spring}
-                  className="absolute inset-0 rounded-2xl bg-sidebar-accent shadow-[var(--elev-1)]"
+                  className="absolute inset-0 rounded-2xl bg-sidebar-accent shadow-float"
                 />
               ) : null}
               <item.icon
                 className={cn(
-                  "relative z-10 h-[18px] w-[18px] shrink-0 transition-transform duration-300",
+                  "relative z-10 h-4.5 w-4.5 shrink-0 transition-transform duration-300",
                   active ? "scale-110" : "group-hover:scale-110",
                 )}
                 strokeWidth={1.6}
               />
               {!collapsed ? (
-                <span className={cn("relative z-10 truncate", active && "font-medium")}>{item.label}</span>
+                <span className={cn("relative z-10 truncate", active && "font-medium")}>
+                  {item.label}
+                </span>
               ) : null}
             </motion.div>
           </Link>
@@ -135,9 +137,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-background">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute -top-40 -left-32 h-[420px] w-[420px] rounded-full bg-accent/12 blur-[120px]" />
-        <div className="absolute top-1/3 -right-40 h-[480px] w-[480px] rounded-full bg-primary/10 blur-[140px]" />
-        <div className="absolute bottom-0 left-1/3 h-[360px] w-[360px] rounded-full bg-success/8 blur-[130px]" />
+        <div className="absolute -top-40 -left-32 h-105 w-105 rounded-full bg-accent/12 blur-[120px]" />
+        <div className="absolute top-1/3 -right-40 h-120 w-120 rounded-full bg-primary/10 blur-[140px]" />
+        <div className="absolute bottom-0 left-1/3 h-90 w-90 rounded-full bg-success/8 blur-[130px]" />
       </div>
 
       <motion.aside
@@ -147,7 +149,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="glass flex h-full flex-col rounded-3xl p-4">
           <div className="flex items-center gap-3 px-1 pb-6">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--elev-1)]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-float">
               <PlaneTakeoff className="h-5 w-5" strokeWidth={1.7} />
             </div>
             {!collapsed ? (
@@ -166,7 +168,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             onClick={() => setCollapsed((c) => !c)}
             className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-border/60 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            <ChevronLeft className={cn("h-4 w-4 transition-transform duration-300", collapsed && "rotate-180")} />
+            <ChevronLeft
+              className={cn("h-4 w-4 transition-transform duration-300", collapsed && "rotate-180")}
+            />
             {!collapsed ? "Collapse" : null}
           </button>
         </div>
@@ -188,25 +192,34 @@ export function AppShell({ children }: { children: ReactNode }) {
                 placeholder="Search flights, aircraft, crew…"
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
-              <kbd className="hidden rounded-md border border-border px-1.5 py-0.5 text-[10px] sm:block">⌘K</kbd>
+              <kbd className="hidden rounded-md border border-border px-1.5 py-0.5 text-[10px] sm:block">
+                ⌘K
+              </kbd>
             </div>
             <button
               onClick={toggle}
               aria-label="Toggle theme"
               className="rounded-2xl p-2 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
             >
-              {dark ? <Sun className="h-[18px] w-[18px]" strokeWidth={1.7} /> : <Moon className="h-[18px] w-[18px]" strokeWidth={1.7} />}
+              {dark ? (
+                <Sun className="h-4.5 w-4.5" strokeWidth={1.7} />
+              ) : (
+                <Moon className="h-4.5 w-4.5" strokeWidth={1.7} />
+              )}
             </button>
             <Link
               to="/notifications"
               className="relative rounded-2xl p-2 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
             >
-              <Bell className="h-[18px] w-[18px]" strokeWidth={1.7} />
+              <Bell className="h-4.5 w-4.5" strokeWidth={1.7} />
               {notifications.length ? (
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
               ) : null}
             </Link>
-            <Link to="/profile" className="flex items-center gap-2 rounded-2xl py-1 pr-2 pl-1 hover:bg-foreground/5">
+            <Link
+              to="/profile"
+              className="flex items-center gap-2 rounded-2xl py-1 pr-2 pl-1 hover:bg-foreground/5"
+            >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                 NK
               </span>
@@ -223,7 +236,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => setMobileOpen(true)}
-          className="glass flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium shadow-[var(--elev-2)]"
+          className="glass flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium shadow-lift"
         >
           <LayoutDashboard className="h-4 w-4" strokeWidth={1.7} />
           {current}

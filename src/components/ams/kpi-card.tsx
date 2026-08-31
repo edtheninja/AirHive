@@ -40,7 +40,7 @@ export function KpiCard({
         <div className="flex items-start justify-between">
           <span className="text-sm text-muted-foreground">{label}</span>
           <span className={cn("flex h-9 w-9 items-center justify-center rounded-2xl", toneClass)}>
-            <Icon className="h-[18px] w-[18px]" strokeWidth={1.7} />
+            <Icon className="h-4.5 w-4.5" strokeWidth={1.7} />
           </span>
         </div>
         <p className="mt-6 text-3xl font-semibold">
