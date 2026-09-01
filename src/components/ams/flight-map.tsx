@@ -18,7 +18,12 @@ const HUBS = [
 export function FlightMap() {
   return (
     <div className="relative h-[340px] w-full overflow-hidden rounded-2xl bg-foreground/3">
-      <svg viewBox="0 0 960 420" className="h-full w-full" role="img" aria-label="Live aircraft tracking map">
+      <svg
+        viewBox="0 0 960 420"
+        className="h-full w-full"
+        role="img"
+        aria-label="Live aircraft tracking map"
+      >
         <defs>
           <linearGradient id="pathGrad" x1="0" x2="1">
             <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.05" />
@@ -58,7 +63,13 @@ export function FlightMap() {
 
         {PATHS.map((p, i) => (
           <g key={i}>
-            <path d={p.d} fill="none" stroke="url(#pathGrad)" strokeWidth="1.6" strokeDasharray="6 8" />
+            <path
+              d={p.d}
+              fill="none"
+              stroke="url(#pathGrad)"
+              strokeWidth="1.6"
+              strokeDasharray="6 8"
+            />
             <circle r="16" fill="url(#glow)">
               <animateMotion dur={`${p.dur}s`} repeatCount="indefinite" path={p.d} />
             </circle>
@@ -71,8 +82,19 @@ export function FlightMap() {
         {HUBS.map((h) => (
           <g key={h.code}>
             <circle cx={h.x} cy={h.y} r="4" className="fill-primary dark:fill-info" />
-            <circle cx={h.x} cy={h.y} r="10" className="fill-none stroke-primary/30 dark:stroke-info/30" strokeWidth="1" />
-            <text x={h.x + 14} y={h.y + 4} className="fill-muted-foreground text-[11px]" fontFamily="var(--font-mono)">
+            <circle
+              cx={h.x}
+              cy={h.y}
+              r="10"
+              className="fill-none stroke-primary/30 dark:stroke-info/30"
+              strokeWidth="1"
+            />
+            <text
+              x={h.x + 14}
+              y={h.y + 4}
+              className="fill-muted-foreground text-[11px]"
+              fontFamily="var(--font-mono)"
+            >
               {h.code}
             </text>
           </g>

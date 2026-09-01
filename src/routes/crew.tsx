@@ -8,9 +8,15 @@ export const Route = createFileRoute("/crew")({
   head: () => ({
     meta: [
       { title: "Crew Management — Aerion AMS" },
-      { name: "description", content: "Crew availability, rest hours, rosters and medical clearance tracking." },
+      {
+        name: "description",
+        content: "Crew availability, rest hours, rosters and medical clearance tracking.",
+      },
       { property: "og:title", content: "Crew Management — Aerion AMS" },
-      { property: "og:description", content: "Crew availability, rest hours and medical clearance tracking." },
+      {
+        property: "og:description",
+        content: "Crew availability, rest hours and medical clearance tracking.",
+      },
     ],
   }),
   component: CrewPage,
@@ -25,8 +31,16 @@ const availTone: Record<CrewMember["availability"], string> = {
 
 function CrewPage() {
   return (
-    <motion.div variants={pageVariants} initial="initial" animate="animate" className="mx-auto max-w-[1600px] space-y-6 py-6">
-      <PageHeader title="Crew" description="Rostering, duty limits and readiness across all bases." />
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      className="mx-auto max-w-[1600px] space-y-6 py-6"
+    >
+      <PageHeader
+        title="Crew"
+        description="Rostering, duty limits and readiness across all bases."
+      />
 
       <motion.div
         variants={listVariants}
@@ -43,10 +57,14 @@ function CrewPage() {
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{c.name}</p>
-                  <p className="text-xs text-muted-foreground">{c.role} · {c.base}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {c.role} · {c.base}
+                  </p>
                 </div>
               </div>
-              <span className={`mt-4 inline-block rounded-full px-2.5 py-1 text-xs ${availTone[c.availability]}`}>
+              <span
+                className={`mt-4 inline-block rounded-full px-2.5 py-1 text-xs ${availTone[c.availability]}`}
+              >
                 {c.availability}
               </span>
               <div className="mt-4">
@@ -54,7 +72,10 @@ function CrewPage() {
                   <span>Rest hours</span>
                   <span className="num">{c.restHours}h</span>
                 </div>
-                <Meter value={(c.restHours / 24) * 100} tone={c.restHours >= 10 ? "success" : "warning"} />
+                <Meter
+                  value={(c.restHours / 24) * 100}
+                  tone={c.restHours >= 10 ? "success" : "warning"}
+                />
               </div>
             </GlassCard>
           </motion.div>
@@ -66,9 +87,13 @@ function CrewPage() {
           <table className="w-full min-w-[760px] border-separate border-spacing-y-1 text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
-                {["Crew", "Role", "Base", "Availability", "Rest", "Next flight", "Medical"].map((h) => (
-                  <th key={h} className="px-3 pb-2 font-medium">{h}</th>
-                ))}
+                {["Crew", "Role", "Base", "Availability", "Rest", "Next flight", "Medical"].map(
+                  (h) => (
+                    <th key={h} className="px-3 pb-2 font-medium">
+                      {h}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody>
@@ -84,7 +109,11 @@ function CrewPage() {
                   <td className="px-3 py-3 text-muted-foreground">{c.role}</td>
                   <td className="num px-3 py-3">{c.base}</td>
                   <td className="px-3 py-3">
-                    <span className={`rounded-full px-2.5 py-1 text-xs ${availTone[c.availability]}`}>{c.availability}</span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs ${availTone[c.availability]}`}
+                    >
+                      {c.availability}
+                    </span>
                   </td>
                   <td className="num px-3 py-3">{c.restHours}h</td>
                   <td className="num px-3 py-3">{c.nextFlight}</td>

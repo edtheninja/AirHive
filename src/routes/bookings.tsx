@@ -11,9 +11,15 @@ export const Route = createFileRoute("/bookings")({
   head: () => ({
     meta: [
       { title: "Bookings — Aerion AMS" },
-      { name: "description", content: "Search, filter, export and inspect every booking across the network." },
+      {
+        name: "description",
+        content: "Search, filter, export and inspect every booking across the network.",
+      },
       { property: "og:title", content: "Bookings — Aerion AMS" },
-      { property: "og:description", content: "Search, filter and inspect every booking across the network." },
+      {
+        property: "og:description",
+        content: "Search, filter and inspect every booking across the network.",
+      },
     ],
   }),
   component: BookingsPage,
@@ -40,7 +46,10 @@ function BookingsPage() {
       BOOKINGS.filter(
         (b) =>
           (cabin === "All" || b.cabin === cabin) &&
-          (query === "" || `${b.passenger}${b.id}${b.flight}${b.route}`.toLowerCase().includes(query.toLowerCase())),
+          (query === "" ||
+            `${b.passenger}${b.id}${b.flight}${b.route}`
+              .toLowerCase()
+              .includes(query.toLowerCase())),
       ),
     [query, cabin],
   );
@@ -50,7 +59,12 @@ function BookingsPage() {
   const rows = filtered.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE);
 
   return (
-    <motion.div variants={pageVariants} initial="initial" animate="animate" className="mx-auto max-w-[1600px] space-y-6 py-6">
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      className="mx-auto max-w-[1600px] space-y-6 py-6"
+    >
       <PageHeader
         title="Bookings"
         description="Reservation management with search, filters and export."
@@ -58,7 +72,9 @@ function BookingsPage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => toast("Export queued", { description: "CSV will be emailed to ops@aerion.example" })}
+            onClick={() =>
+              toast("Export queued", { description: "CSV will be emailed to ops@aerion.example" })
+            }
             className="glass flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium"
           >
             <Download className="h-4 w-4" strokeWidth={1.7} /> Export
@@ -91,7 +107,9 @@ function BookingsPage() {
                   setPage(0);
                 }}
                 className={`rounded-full px-3 py-1.5 text-xs transition-colors ${
-                  cabin === c ? "bg-primary text-primary-foreground" : "bg-foreground/5 text-muted-foreground hover:text-foreground"
+                  cabin === c
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-foreground/5 text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {c}
@@ -104,8 +122,20 @@ function BookingsPage() {
           <table className="w-full min-w-[860px] border-separate border-spacing-y-1 text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
-                {["PNR", "Passenger", "Flight", "Route", "Cabin", "Seat", "Amount", "Status", ""].map((h) => (
-                  <th key={h} className="px-3 pb-2 font-medium">{h}</th>
+                {[
+                  "PNR",
+                  "Passenger",
+                  "Flight",
+                  "Route",
+                  "Cabin",
+                  "Seat",
+                  "Amount",
+                  "Status",
+                  "",
+                ].map((h) => (
+                  <th key={h} className="px-3 pb-2 font-medium">
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -128,7 +158,9 @@ function BookingsPage() {
                     <td className="num px-3 py-3">{b.seat}</td>
                     <td className="num px-3 py-3">${b.amount.toLocaleString()}</td>
                     <td className="px-3 py-3">
-                      <span className={`rounded-full px-2.5 py-1 text-xs ${statusTone[b.status]}`}>{b.status}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-xs ${statusTone[b.status]}`}>
+                        {b.status}
+                      </span>
                     </td>
                     <td className="rounded-r-2xl px-3 py-3 text-right">
                       <button
@@ -190,7 +222,11 @@ function BookingsPage() {
                   <p className="text-sm text-muted-foreground">Booking</p>
                   <h2 className="num text-xl font-semibold">{selected.id}</h2>
                 </div>
-                <button onClick={() => setSelected(null)} className="rounded-xl p-2 hover:bg-foreground/6" aria-label="Close">
+                <button
+                  onClick={() => setSelected(null)}
+                  className="rounded-xl p-2 hover:bg-foreground/6"
+                  aria-label="Close"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>

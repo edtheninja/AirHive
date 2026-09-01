@@ -70,8 +70,10 @@ export function CountUp({
 }) {
   const mv = useMotionValue(value);
   const smooth = useSpring(mv, { stiffness: 90, damping: 22, mass: 0.8 });
-  const text = useTransform(smooth, (v) =>
-    `${prefix}${v.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`,
+  const text = useTransform(
+    smooth,
+    (v) =>
+      `${prefix}${v.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`,
   );
 
   useEffect(() => {
@@ -121,7 +123,13 @@ export function StatusPill({ status }: { status: FlightStatus }) {
   );
 }
 
-export function Meter({ value, tone = "accent" }: { value: number; tone?: "accent" | "success" | "warning" | "danger" }) {
+export function Meter({
+  value,
+  tone = "accent",
+}: {
+  value: number;
+  tone?: "accent" | "success" | "warning" | "danger";
+}) {
   const toneClass = {
     accent: "bg-accent",
     success: "bg-success",

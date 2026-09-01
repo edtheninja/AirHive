@@ -4,10 +4,7 @@ import { motion } from "motion/react";
 
 import { pageVariants } from "@/lib/ams/motion";
 import { getRoutes, type Route as ApiRoute } from "@/lib/api/routes";
-import {
-  PageHeader,
-  SectionCard,
-} from "@/components/ams/primitives";
+import { PageHeader, SectionCard } from "@/components/ams/primitives";
 
 export const Route = createFileRoute("/routes")({
   head: () => ({
@@ -15,8 +12,7 @@ export const Route = createFileRoute("/routes")({
       { title: "Network Routes — Aerion AMS" },
       {
         name: "description",
-        content:
-          "Network routes, distance, duration and operational status.",
+        content: "Network routes, distance, duration and operational status.",
       },
       {
         property: "og:title",
@@ -24,8 +20,7 @@ export const Route = createFileRoute("/routes")({
       },
       {
         property: "og:description",
-        content:
-          "Network routes, distance, duration and operational status.",
+        content: "Network routes, distance, duration and operational status.",
       },
     ],
   }),
@@ -83,11 +78,7 @@ function RoutesPage() {
         const data = await getRoutes();
         setRoutes(data);
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load routes.",
-        );
+        setError(err instanceof Error ? err.message : "Failed to load routes.");
       } finally {
         setLoading(false);
       }
@@ -103,20 +94,12 @@ function RoutesPage() {
       animate="animate"
       className="mx-auto max-w-[1600px] space-y-6 py-6"
     >
-      <PageHeader
-        title="Routes"
-        description="Sector performance and network planning."
-      />
+      <PageHeader title="Routes" description="Sector performance and network planning." />
 
-      <SectionCard
-        title="Active routes"
-        subtitle="Live route information from the AirHive backend"
-      >
+      <SectionCard title="Active routes" subtitle="Live route information from the AirHive backend">
         {loading && (
           <div className="px-3 py-6">
-            <p className="text-sm text-muted-foreground">
-              Loading routes...
-            </p>
+            <p className="text-sm text-muted-foreground">Loading routes...</p>
           </div>
         )}
 
@@ -128,9 +111,7 @@ function RoutesPage() {
 
         {!loading && !error && routes.length === 0 && (
           <div className="px-3 py-6">
-            <p className="text-sm text-muted-foreground">
-              No routes found.
-            </p>
+            <p className="text-sm text-muted-foreground">No routes found.</p>
           </div>
         )}
 
@@ -139,21 +120,13 @@ function RoutesPage() {
             <table className="w-full min-w-[720px] border-separate border-spacing-y-1 text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground">
-                  {[
-                    "Route",
-                    "Distance",
-                    "Block time",
-                    "Departure",
-                    "Arrival",
-                    "Status",
-                  ].map((heading) => (
-                    <th
-                      key={heading}
-                      className="px-3 pb-2 font-medium"
-                    >
-                      {heading}
-                    </th>
-                  ))}
+                  {["Route", "Distance", "Block time", "Departure", "Arrival", "Status"].map(
+                    (heading) => (
+                      <th key={heading} className="px-3 pb-2 font-medium">
+                        {heading}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
 
@@ -169,8 +142,7 @@ function RoutesPage() {
                     className="hover:bg-foreground/4"
                   >
                     <td className="num rounded-l-2xl px-3 py-3 font-medium">
-                      {route.departureAirportCode} →{" "}
-                      {route.arrivalAirportCode}
+                      {route.departureAirportCode} → {route.arrivalAirportCode}
                     </td>
 
                     <td className="num px-3 py-3 text-muted-foreground">
@@ -178,25 +150,17 @@ function RoutesPage() {
                     </td>
 
                     <td className="num px-3 py-3 text-muted-foreground">
-                      {formatDuration(
-                        route.estimatedDurationMinutes,
-                      )}
+                      {formatDuration(route.estimatedDurationMinutes)}
                     </td>
 
                     <td className="px-3 py-3 text-muted-foreground">
                       {route.departureAirportCode}
                     </td>
 
-                    <td className="px-3 py-3 text-muted-foreground">
-                      {route.arrivalAirportCode}
-                    </td>
+                    <td className="px-3 py-3 text-muted-foreground">{route.arrivalAirportCode}</td>
 
                     <td className="rounded-r-2xl px-3 py-3">
-                      <span
-                        className={statusTone(route.status)}
-                      >
-                        {statusLabel(route.status)}
-                      </span>
+                      <span className={statusTone(route.status)}>{statusLabel(route.status)}</span>
                     </td>
                   </motion.tr>
                 ))}

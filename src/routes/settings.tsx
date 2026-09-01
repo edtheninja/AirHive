@@ -8,9 +8,15 @@ export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
       { title: "Settings — Aerion AMS" },
-      { name: "description", content: "Configure operations preferences, alert thresholds and integrations." },
+      {
+        name: "description",
+        content: "Configure operations preferences, alert thresholds and integrations.",
+      },
       { property: "og:title", content: "Settings — Aerion AMS" },
-      { property: "og:description", content: "Configure operations preferences and alert thresholds." },
+      {
+        property: "og:description",
+        content: "Configure operations preferences and alert thresholds.",
+      },
     ],
   }),
   component: SettingsPage,
@@ -26,7 +32,12 @@ const TOGGLES = [
 
 function SettingsPage() {
   return (
-    <motion.div variants={pageVariants} initial="initial" animate="animate" className="mx-auto max-w-[1000px] space-y-6 py-6">
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      className="mx-auto max-w-[1000px] space-y-6 py-6"
+    >
       <PageHeader title="Settings" description="Operational defaults for the control centre." />
       <SectionCard title="Automation" subtitle="How the platform reacts to operational events">
         <ul className="divide-y divide-border">

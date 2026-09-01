@@ -56,7 +56,11 @@ export function FlightsTable({ flights }: { flights: Flight[] }) {
                 </td>
                 <td className="num px-3 py-3">{f.departure}</td>
                 <td className="num px-3 py-3">
-                  {f.delay ? <span className="text-warning">+{f.delay}m</span> : <span className="text-muted-foreground">On time</span>}
+                  {f.delay ? (
+                    <span className="text-warning">+{f.delay}m</span>
+                  ) : (
+                    <span className="text-muted-foreground">On time</span>
+                  )}
                 </td>
                 <td className="px-3 py-3 whitespace-nowrap text-muted-foreground">{f.crew}</td>
                 <td className="rounded-r-2xl px-3 py-3">

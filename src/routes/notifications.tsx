@@ -8,7 +8,10 @@ export const Route = createFileRoute("/notifications")({
   head: () => ({
     meta: [
       { title: "Notifications — Aerion AMS" },
-      { name: "description", content: "Live operational event feed: delays, gate changes, crew and readiness updates." },
+      {
+        name: "description",
+        content: "Live operational event feed: delays, gate changes, crew and readiness updates.",
+      },
       { property: "og:title", content: "Notifications — Aerion AMS" },
       { property: "og:description", content: "Live operational event feed for the whole network." },
     ],
@@ -18,8 +21,16 @@ export const Route = createFileRoute("/notifications")({
 
 function NotificationsPage() {
   return (
-    <motion.div variants={pageVariants} initial="initial" animate="animate" className="mx-auto max-w-[1200px] space-y-6 py-6">
-      <PageHeader title="Notifications" description="Everything happening across the operation, as it happens." />
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      className="mx-auto max-w-[1200px] space-y-6 py-6"
+    >
+      <PageHeader
+        title="Notifications"
+        description="Everything happening across the operation, as it happens."
+      />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <NotificationsPanel limit={12} />
         <SectionCard title="Delivery preferences" subtitle="Where operational alerts are sent">

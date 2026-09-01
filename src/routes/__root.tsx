@@ -83,21 +83,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Aerion AMS — Airline Operations Platform" },
       {
         name: "description",
-        content: "Enterprise airline management system for flights, fleet, crew and live operations.",
+        content:
+          "Enterprise airline management system for flights, fleet, crew and live operations.",
       },
       { name: "author", content: "Aerion Airlines" },
       { property: "og:title", content: "Aerion AMS — Airline Operations Platform" },
       {
         property: "og:description",
-        content: "Enterprise airline management system for flights, fleet, crew and live operations.",
+        content:
+          "Enterprise airline management system for flights, fleet, crew and live operations.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Aerion AMS — Airline Operations Platform" },
-      { name: "twitter:description", content: "Enterprise airline management system for flights, fleet, crew and live operations." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d2903fca-aac2-4843-9aae-12385e92784b/id-preview-b4fb6f7d--df8b1868-feef-4438-9a0a-d5022b91e158.lovable.app-1785475238065.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d2903fca-aac2-4843-9aae-12385e92784b/id-preview-b4fb6f7d--df8b1868-feef-4438-9a0a-d5022b91e158.lovable.app-1785475238065.png" },
+      {
+        name: "twitter:description",
+        content:
+          "Enterprise airline management system for flights, fleet, crew and live operations.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d2903fca-aac2-4843-9aae-12385e92784b/id-preview-b4fb6f7d--df8b1868-feef-4438-9a0a-d5022b91e158.lovable.app-1785475238065.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d2903fca-aac2-4843-9aae-12385e92784b/id-preview-b4fb6f7d--df8b1868-feef-4438-9a0a-d5022b91e158.lovable.app-1785475238065.png",
+      },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

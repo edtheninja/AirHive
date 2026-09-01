@@ -13,8 +13,6 @@ export async function getAircraftTypes(): Promise<AircraftType[]> {
   return apiRequest<AircraftType[]>("/aircraft-types");
 }
 
-export async function getAircraftTypeById(
-  id: number,
-): Promise<AircraftType> {
+export async function getAircraftTypeById(id: number): Promise<AircraftType> {
   return apiRequest<AircraftType>(`/aircraft-types/${id}`);
 }
