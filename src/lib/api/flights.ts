@@ -1,24 +1,37 @@
 import { apiRequest } from "./client";
 
-export interface ApiFlight {
+export type Flight = {
   id: number;
   flightNumber: string;
+
   aircraftId: number;
   aircraftRegistration: string;
+
   routeId: number;
+
   departureAirportId: number;
   departureAirportCode: string;
+
   arrivalAirportId: number;
   arrivalAirportCode: string;
+
   scheduledDeparture: string;
   scheduledArrival: string;
+
+  distanceKm?: number;
+  estimatedDurationMinutes?: number;
+
   status: string;
-}
+};
 
-export async function getFlights(): Promise<ApiFlight[]> {
-  return apiRequest<ApiFlight[]>("/flights");
-}
+const API_BASE_URL = "http://localhost:8080";
 
-export async function getFlightById(id: number): Promise<ApiFlight> {
-  return apiRequest<ApiFlight>(`/flights/${id}`);
+export async function getFlights(): Promise<Flight[]> {
+  const response = await fetch(`${API_BASE_URL}/api/flights`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch flights: ${response.status}`);
+  }
+
+  return response.json();
 }

@@ -29,6 +29,9 @@ export type Flight = {
   gate: string;
   boarding: number;
   departure: string;
+  arrival: string;
+  scheduledDeparture: string;
+  scheduledArrival: string;
   delay: number;
   crew: string;
   crewCount: number;
@@ -502,6 +505,10 @@ export const COMPLETION_SERIES = Array.from({ length: 12 }, (_, i) => ({
   completion: 92 + Math.round(Math.sin(i / 2) * 4),
 }));
 
+function seedTime(hour: number, i: number) {
+  return `${String(hour).padStart(2, "0")}:${(i % 6) * 10 || "05"}`.slice(0.5);
+}
+
 function flightSeed(i: number): Flight {
   const statuses: FlightStatus[] = [
     "Scheduled",
@@ -515,6 +522,8 @@ function flightSeed(i: number): Flight {
   ];
   const status = statuses[i % statuses.length];
   const ac = AIRCRAFT[i % AIRCRAFT.length];
+  const depTime = seedTime(6 + (i % 16), i);
+  const arrTime = seedTime(8 + (i % 14), i);
   return {
     id: `F${i}`,
     number: `AI${300 + i * 17}`,
@@ -524,7 +533,10 @@ function flightSeed(i: number): Flight {
     destination: pick(airports, i + 5),
     gate: `${"ABCD"[i % 4]}${(i % 20) + 1}`,
     boarding: status === "Boarding" ? 20 + ((i * 9) % 60) : status === "Scheduled" ? 0 : 100,
-    departure: `${String(6 + (i % 16)).padStart(2, "0")}:${(i % 6) * 10 || "05"}`.slice(0, 5),
+    departure: depTime,
+    arrival: arrTime,
+    scheduledDeparture: depTime,
+    scheduledArrival: arrTime,
     delay: status === "Delayed" ? 15 + ((i * 5) % 45) : 0,
     crew: `${pick(CREW, i).name.split(" ").slice(-1)[0]} +${4 + (i % 5)}`,
     crewCount: 5 + (i % 5),

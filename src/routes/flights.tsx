@@ -1,14 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { pageVariants } from "@/lib/ams/motion";
-import { getFlights, type Flight as ApiFlight } from "@/lib/api/flights";
-// Note: ApiFlight is the API type, Flight is the local type defined in this file
+import { getFlights } from "@/lib/api/flights";
+import type { Flight } from "@/lib/ams/data";
 import { FlightsTable } from "@/components/ams/flights-table";
 import { PageHeader, SectionCard } from "@/components/ams/primitives";
-import type { FlightStatus, Flight } from "@/lib/ams/data";
 
 export const Route = createFileRoute("/flights")({
   head: () => ({
@@ -24,72 +23,28 @@ export const Route = createFileRoute("/flights")({
       },
       {
         property: "og:description",
-        content: "Monitor every scheduled, airborne and delayed flight in one board.",
+        content: "Monitor every scheduled, boarding, airborne and delayed flight in one board.",
       },
     ],
   }),
   component: FlightsPage,
 });
 
-const FILTERS: (FlightStatus | "All")[] = [
-  "All",
-  "Scheduled",
-  "Boarding",
-  "In Air",
-  "Landed",
-  "Delayed",
-];
-
-function formatTime(dateTime: string) {
-  const date = new Date(dateTime);
-
-  if (Number.isNaN(date.getTime())) {
-    return dateTime;
-  }
-
-  return date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
-
-function mapFlight(flight: ApiFlight): Flight {
-  return {
-    id: String(flight.id),
-    number: flight.flightNumber,
-    aircraft: flight.aircraftRegistration,
-    aircraftModel: "Aircraft",
-    origin: flight.departureAirportCode,
-    destination: flight.arrivalAirportCode,
-    gate: "—",
-    boarding: 0,
-    departure: formatTime(flight.scheduledDeparture),
-    delay: 0,
-    crew: "—",
-    status:
-      flight.status === "SCHEDULED"
-        ? "Scheduled"
-        : flight.status === "BOARDING"
-          ? "Boarding"
-          : flight.status === "IN_AIR"
-            ? "In Air"
-            : flight.status === "LANDED"
-              ? "Landed"
-              : flight.status === "DELAYED"
-                ? "Delayed"
-                : (flight.status as FlightStatus),
-    crewCount: 0,
-    pax: 0,
-  };
-}
+const FILTERS = [
+  { label: "All", value: "ALL" },
+  { label: "Scheduled", value: "SCHEDULED" },
+  { label: "Boarding", value: "BOARDING" },
+  { label: "In Air", value: "IN_AIR" },
+  { label: "Landed", value: "LANDED" },
+  { label: "Delayed", value: "DELAYED" },
+] as const;
 
 function FlightsPage() {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [filter, setFilter] = useState<FlightStatus | "All">("All");
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]["value"]>("ALL");
 
   const [query, setQuery] = useState("");
 
@@ -101,7 +56,27 @@ function FlightsPage() {
 
         const data = await getFlights();
 
-        setFlights(data.map(mapFlight));
+        setFlights(
+          data.map((f) => ({
+            id: String(f.id),
+            number: f.flightNumber,
+            aircraft: f.aircraftRegistration,
+            aircraftModel: "",
+            origin: f.departureAirportCode,
+            destination: f.arrivalAirportCode,
+            scheduledDeparture: f.scheduledDeparture,
+            scheduledArrival: f.scheduledArrival,
+            departure: f.scheduledDeparture,
+            arrival: f.scheduledArrival,
+            gate: "",
+            boarding: 0,
+            delay: 0,
+            crew: "",
+            crewCount: 0,
+            pax: 0,
+            status: f.status as Flight["status"],
+          })),
+        );
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load flights.");
       } finally {
@@ -112,18 +87,21 @@ function FlightsPage() {
     loadFlights();
   }, []);
 
-  const visible = useMemo(
-    () =>
-      flights.filter(
-        (flight) =>
-          (filter === "All" || flight.status === filter) &&
-          (query === "" ||
-            `${flight.number}${flight.origin}${flight.destination}${flight.aircraft}`
-              .toLowerCase()
-              .includes(query.toLowerCase())),
-      ),
-    [flights, filter, query],
-  );
+  const visible = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return flights.filter((flight) => {
+      const matchesStatus = filter === "ALL" || flight.status === (filter as Flight["status"]);
+
+      const searchable = [flight.number, flight.aircraft, flight.origin, flight.destination]
+        .join(" ")
+        .toLowerCase();
+
+      const matchesSearch = normalizedQuery === "" || searchable.includes(normalizedQuery);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [flights, filter, query]);
 
   return (
     <motion.div
@@ -158,27 +136,33 @@ function FlightsPage() {
         <div className="mb-4 flex flex-wrap gap-2">
           {FILTERS.map((status) => (
             <motion.button
-              key={status}
+              key={status.value}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setFilter(status)}
+              onClick={() => setFilter(status.value)}
               className={`rounded-full px-3.5 py-1.5 text-xs transition-colors ${
-                filter === status
+                filter === status.value
                   ? "bg-primary text-primary-foreground"
                   : "bg-foreground/5 text-muted-foreground hover:text-foreground"
               }`}
             >
-              {status}
+              {status.label}
             </motion.button>
           ))}
         </div>
 
         {loading && (
-          <div className="px-3 py-8 text-sm text-muted-foreground"> Loading flights...</div>
+          <div className="px-3 py-8 text-sm text-muted-foreground">Loading flights...</div>
         )}
 
         {!loading && error && <div className="px-3 py-8 text-sm text-destructive">{error}</div>}
 
-        {!loading && !error && <FlightsTable flights={visible} />}
+        {!loading && !error && visible.length === 0 && (
+          <div className="px-3 py-8 text-sm text-muted-foreground">
+            No flights match the current filters.
+          </div>
+        )}
+
+        {!loading && !error && visible.length > 0 && <FlightsTable flights={visible} />}
       </SectionCard>
     </motion.div>
   );

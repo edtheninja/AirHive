@@ -96,7 +96,10 @@ function RoutesPage() {
     >
       <PageHeader title="Routes" description="Sector performance and network planning." />
 
-      <SectionCard title="Active routes" subtitle="Live route information from the AirHive backend">
+      <SectionCard
+        title="Network routes"
+        subtitle="Live route information from the AirHive backend"
+      >
         {loading && (
           <div className="px-3 py-6">
             <p className="text-sm text-muted-foreground">Loading routes...</p>
