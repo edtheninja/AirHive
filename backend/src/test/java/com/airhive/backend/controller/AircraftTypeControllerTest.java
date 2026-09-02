@@ -40,6 +40,7 @@ class AircraftTypeControllerTest {
     private AircraftTypeResponseDTO aircraftType;
 
     @BeforeEach
+    @SuppressWarnings("unused")
     void setUp() {
 
         aircraftType = new AircraftTypeResponseDTO();
