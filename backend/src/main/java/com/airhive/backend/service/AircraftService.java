@@ -10,6 +10,7 @@ import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AircraftRepository;
 
+
 @Service
 public class AircraftService {
 
@@ -77,7 +78,7 @@ public class AircraftService {
         aircraft.setRegistrationNumber(request.getRegistrationNumber());
         aircraft.setStatus(request.getStatus());
         aircraft.setAircraftType(
-                aircraftTypeService.getAircraftTypeById(request.getAircraftTypeId()));
+                aircraftTypeService.findEntityById(request.getAircraftTypeId()));
     }
 
     public void deleteAircraft(Long id) {

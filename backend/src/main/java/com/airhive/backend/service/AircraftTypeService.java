@@ -2,11 +2,15 @@ package com.airhive.backend.service;
 
 import java.util.List;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.airhive.backend.dto.AircraftTypeRequestDTO;
+import com.airhive.backend.dto.AircraftTypeResponseDTO;
 import com.airhive.backend.entity.AircraftType;
 import com.airhive.backend.exception.ResourceNotFoundException;
+import com.airhive.backend.mapper.AircraftTypeMapper;
 import com.airhive.backend.repository.AircraftTypeRepository;
 
 @Service
@@ -20,63 +24,67 @@ public class AircraftTypeService {
         this.aircraftTypeRepository = aircraftTypeRepository;
     }
 
-    public List<AircraftType> getAllAircraftTypes() {
+    @Cacheable("aircraftTypes")
+    public List<AircraftTypeResponseDTO> getAllAircraftTypes() {
 
-        return aircraftTypeRepository.findAll();
+        return aircraftTypeRepository.findAll()
+                .stream()
+                .map(AircraftTypeMapper::toResponse)
+                .toList();
     }
 
-    public AircraftType getAircraftTypeById(Long id) {
+    @Cacheable(value = "aircraftTypes", key = "#id")
+    public AircraftTypeResponseDTO getAircraftTypeById(Long id) {
+
+        return AircraftTypeMapper.toResponse(findEntityById(id));
+    }
+
+    public AircraftType findEntityById(Long id) {
 
         return aircraftTypeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Aircraft type not found with id: " + id));
     }
 
-    public AircraftType createAircraftType(
+    @CacheEvict(value = "aircraftTypes", allEntries = true)
+    public AircraftTypeResponseDTO createAircraftType(
             AircraftTypeRequestDTO request) {
 
         AircraftType aircraftType = new AircraftType();
 
         applyRequest(aircraftType, request);
 
-        return aircraftTypeRepository.save(aircraftType);
+        return AircraftTypeMapper.toResponse(
+                aircraftTypeRepository.save(aircraftType));
     }
 
-    public AircraftType updateAircraftType(
+    @CacheEvict(value = "aircraftTypes", allEntries = true)
+    public AircraftTypeResponseDTO updateAircraftType(
             Long id,
             AircraftTypeRequestDTO request) {
 
-        AircraftType existing = getAircraftTypeById(id);
+        AircraftType existing = findEntityById(id);
 
         applyRequest(existing, request);
 
-        return aircraftTypeRepository.save(existing);
+        return AircraftTypeMapper.toResponse(
+                aircraftTypeRepository.save(existing));
     }
 
+    @CacheEvict(value = "aircraftTypes", allEntries = true)
     public void deleteAircraftType(Long id) {
 
-        AircraftType existing = getAircraftTypeById(id);
-
-        aircraftTypeRepository.delete(existing);
+        aircraftTypeRepository.delete(findEntityById(id));
     }
 
     private void applyRequest(
             AircraftType aircraftType,
             AircraftTypeRequestDTO request) {
 
-        aircraftType.setTypeCode(
-                request.getTypeCode());
-
-        aircraftType.setManufacturer(
-                request.getManufacturer());
-
-        aircraftType.setModel(
-                request.getModel());
-
-        aircraftType.setPassengerCapacity(
-                request.getPassengerCapacity());
-
-        aircraftType.setCrewCapacity(
-                request.getCrewCapacity());
+        aircraftType.setTypeCode(request.getTypeCode());
+        aircraftType.setManufacturer(request.getManufacturer());
+        aircraftType.setModel(request.getModel());
+        aircraftType.setPassengerCapacity(request.getPassengerCapacity());
+        aircraftType.setCrewCapacity(request.getCrewCapacity());
     }
 }

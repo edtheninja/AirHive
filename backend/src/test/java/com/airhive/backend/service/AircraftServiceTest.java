@@ -159,7 +159,7 @@ class AircraftServiceTest {
                 AircraftType aircraftType = new AircraftType();
                 aircraftType.setTypeCode("A320");
 
-                when(aircraftTypeService.getAircraftTypeById(1L))
+                when(aircraftTypeService.findEntityById(1L))
                                 .thenReturn(aircraftType);
 
                 when(aircraftRepository.existsByRegistrationNumber("VT-AIR99"))
@@ -183,7 +183,7 @@ class AircraftServiceTest {
                                 result.getAircraftType());
 
                 verify(aircraftTypeService)
-                                .getAircraftTypeById(1L);
+                                .findEntityById(1L);
 
                 verify(aircraftRepository)
                                 .existsByRegistrationNumber("VT-AIR99");
@@ -300,7 +300,7 @@ class AircraftServiceTest {
                 when(aircraftRepository.findById(1L))
                                 .thenReturn(Optional.of(existingAircraft));
 
-                when(aircraftTypeService.getAircraftTypeById(1L))
+                when(aircraftTypeService.findEntityById(1L))
                                 .thenReturn(aircraftType);
 
                 when(aircraftRepository.save(existingAircraft))
@@ -317,7 +317,7 @@ class AircraftServiceTest {
                                 result.getAircraftType());
 
                 verify(aircraftRepository).findById(1L);
-                verify(aircraftTypeService).getAircraftTypeById(1L);
+                verify(aircraftTypeService).findEntityById(1L);
                 verify(aircraftRepository).save(existingAircraft);
         }
 

@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.airhive.backend.entity.AircraftType;
+import com.airhive.backend.dto.AircraftTypeResponseDTO;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.service.AircraftTypeService;
@@ -37,12 +37,12 @@ class AircraftTypeControllerTest {
     @MockitoBean
     private AircraftTypeService aircraftTypeService;
 
-    private AircraftType aircraftType;
+    private AircraftTypeResponseDTO aircraftType;
 
     @BeforeEach
     void setUp() {
 
-        aircraftType = new AircraftType();
+        aircraftType = new AircraftTypeResponseDTO();
 
         aircraftType.setTypeCode("A320");
         aircraftType.setManufacturer("Airbus");
@@ -55,7 +55,7 @@ class AircraftTypeControllerTest {
     void getAllAircraftTypes_shouldReturn200() throws Exception {
 
         when(aircraftTypeService.getAllAircraftTypes())
-                .thenReturn(List.of(aircraftType));
+                .thenReturn(new java.util.ArrayList<>(List.of(aircraftType)));
 
         mockMvc.perform(get("/api/aircraft-types"))
                 .andExpect(status().isOk())

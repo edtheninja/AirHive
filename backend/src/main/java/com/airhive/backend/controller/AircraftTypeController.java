@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.airhive.backend.dto.AircraftTypeRequestDTO;
 import com.airhive.backend.dto.AircraftTypeResponseDTO;
-import com.airhive.backend.mapper.AircraftTypeMapper;
 import com.airhive.backend.service.AircraftTypeService;
 
 import jakarta.validation.Valid;
@@ -38,9 +37,6 @@ public class AircraftTypeController {
 
         return ResponseEntity.ok(
                 aircraftTypeService.getAllAircraftTypes()
-                        .stream()
-                        .map(AircraftTypeMapper::toResponse)
-                        .toList()
         );
     }
 
@@ -50,10 +46,7 @@ public class AircraftTypeController {
                     @PathVariable Long id) {
 
         return ResponseEntity.ok(
-                AircraftTypeMapper.toResponse(
-                        aircraftTypeService
-                                .getAircraftTypeById(id)
-                )
+                aircraftTypeService.getAircraftTypeById(id)
         );
     }
 
@@ -65,10 +58,7 @@ public class AircraftTypeController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(
-                        AircraftTypeMapper.toResponse(
-                                aircraftTypeService
-                                        .createAircraftType(request)
-                        )
+                        aircraftTypeService.createAircraftType(request)
                 );
     }
 
@@ -79,10 +69,7 @@ public class AircraftTypeController {
                     @Valid @RequestBody AircraftTypeRequestDTO request) {
 
         return ResponseEntity.ok(
-                AircraftTypeMapper.toResponse(
-                        aircraftTypeService
-                                .updateAircraftType(id, request)
-                )
+                aircraftTypeService.updateAircraftType(id, request)
         );
     }
 
