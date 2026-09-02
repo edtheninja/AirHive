@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.airhive.backend.entity.Airport;
+import com.airhive.backend.dto.AirportResponseDTO;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.service.AirportService;
@@ -37,12 +37,13 @@ class AirportControllerTest {
     @MockitoBean
     private AirportService airportService;
 
-    private Airport airport;
+    private AirportResponseDTO airport;
 
     @BeforeEach
+    @SuppressWarnings("unused")
     void setUp() {
 
-        airport = new Airport();
+        airport = new AirportResponseDTO();
 
         airport.setIataCode("DEL");
         airport.setIcaoCode("VIDP");

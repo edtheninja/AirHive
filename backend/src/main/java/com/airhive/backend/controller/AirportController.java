@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.airhive.backend.dto.AirportRequestDTO;
 import com.airhive.backend.dto.AirportResponseDTO;
-import com.airhive.backend.mapper.AirportMapper;
 import com.airhive.backend.service.AirportService;
 
 import jakarta.validation.Valid;
@@ -35,9 +34,6 @@ public class AirportController {
 
         return ResponseEntity.ok(
                 airportService.getAllAirports()
-                        .stream()
-                        .map(AirportMapper::toResponse)
-                        .toList()
         );
     }
 
@@ -46,9 +42,7 @@ public class AirportController {
             @PathVariable Long id) {
 
         return ResponseEntity.ok(
-                AirportMapper.toResponse(
-                        airportService.getAirportById(id)
-                )
+                airportService.getAirportById(id)
         );
     }
 
@@ -59,9 +53,7 @@ public class AirportController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(
-                        AirportMapper.toResponse(
-                                airportService.createAirport(request)
-                        )
+                        airportService.createAirport(request)
                 );
     }
 
@@ -71,9 +63,7 @@ public class AirportController {
             @Valid @RequestBody AirportRequestDTO request) {
 
         return ResponseEntity.ok(
-                AirportMapper.toResponse(
-                        airportService.updateAirport(id, request)
-                )
+                airportService.updateAirport(id, request)
         );
     }
 

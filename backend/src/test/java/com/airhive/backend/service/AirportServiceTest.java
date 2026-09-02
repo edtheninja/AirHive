@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.airhive.backend.dto.AirportRequestDTO;
+import com.airhive.backend.dto.AirportResponseDTO;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
@@ -63,7 +64,7 @@ class AirportServiceTest {
                 when(airportRepository.findAll())
                                 .thenReturn(List.of(airport1, airport2));
 
-                List<Airport> result = airportService.getAllAirports();
+                List<AirportResponseDTO> result = airportService.getAllAirports();
 
                 assertEquals(2, result.size());
                 assertEquals("DEL", result.get(0).getIataCode());
@@ -83,7 +84,7 @@ class AirportServiceTest {
                 when(airportRepository.findById(1L))
                                 .thenReturn(Optional.of(airport));
 
-                Airport result = airportService.getAirportById(1L);
+                AirportResponseDTO result = airportService.getAirportById(1L);
 
                 assertEquals("DEL", result.getIataCode());
                 assertEquals("VIDP", result.getIcaoCode());
@@ -135,7 +136,7 @@ class AirportServiceTest {
                 when(airportRepository.save(any(Airport.class)))
                                 .thenReturn(savedAirport);
 
-                Airport result = airportService.createAirport(request);
+                AirportResponseDTO result = airportService.createAirport(request);
 
                 assertEquals("DEL", result.getIataCode());
                 assertEquals("VIDP", result.getIcaoCode());
@@ -246,7 +247,7 @@ class AirportServiceTest {
                 when(airportRepository.save(existing))
                                 .thenReturn(existing);
 
-                Airport result = airportService.updateAirport(1L, request);
+                AirportResponseDTO result = airportService.updateAirport(1L, request);
 
                 assertEquals("DEL", result.getIataCode());
                 assertEquals("VIDP", result.getIcaoCode());

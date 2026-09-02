@@ -2,12 +2,16 @@ package com.airhive.backend.service;
 
 import java.util.List;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.airhive.backend.dto.AirportRequestDTO;
+import com.airhive.backend.dto.AirportResponseDTO;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
+import com.airhive.backend.mapper.AirportMapper;
 import com.airhive.backend.repository.AirportRepository;
 
 @Service
@@ -19,19 +23,27 @@ public class AirportService {
         this.airportRepository = airportRepository;
     }
 
-    public List<Airport> getAllAirports() {
-        return airportRepository.findAll();
+    @Cacheable("airports")
+    public List<AirportResponseDTO> getAllAirports() {
+        return airportRepository.findAll()
+                .stream()
+                .map(AirportMapper::toResponse)
+                .toList();
     }
 
-    public Airport getAirportById(Long id) {
+    @Cacheable(value = "airports", key = "#id")
+    public AirportResponseDTO getAirportById(Long id) {
 
-        return airportRepository.findById(id)
+        Airport airport = airportRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Airport not found with id: " + id));
+
+        return AirportMapper.toResponse(airport);
     }
 
-    public Airport createAirport(AirportRequestDTO request) {
+    @CacheEvict(value = "airports", allEntries = true)
+    public AirportResponseDTO createAirport(AirportRequestDTO request) {
 
         validateAirport(request);
 
@@ -51,14 +63,20 @@ public class AirportService {
 
         applyRequest(airport, request);
 
-        return airportRepository.save(airport);
+        Airport savedAirport = airportRepository.save(airport);
+
+        return AirportMapper.toResponse(savedAirport);
     }
 
-    public Airport updateAirport(
+    @CacheEvict(value = "airports", allEntries = true)
+    public AirportResponseDTO updateAirport(
             Long id,
             AirportRequestDTO request) {
 
-        Airport airport = getAirportById(id);
+        Airport airport = airportRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Airport not found with id: " + id));
 
         validateAirport(request);
 
@@ -82,12 +100,18 @@ public class AirportService {
 
         applyRequest(airport, request);
 
-        return airportRepository.save(airport);
+        Airport updatedAirport = airportRepository.save(airport);
+
+        return AirportMapper.toResponse(updatedAirport);
     }
 
+    @CacheEvict(value = "airports", allEntries = true)
     public void deleteAirport(Long id) {
 
-        Airport airport = getAirportById(id);
+        Airport airport = airportRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Airport not found with id: " + id));
 
         airportRepository.delete(airport);
     }
