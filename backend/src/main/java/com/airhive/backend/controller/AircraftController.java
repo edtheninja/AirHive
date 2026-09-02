@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.airhive.backend.dto.AircraftRequestDTO;
 import com.airhive.backend.dto.AircraftResponseDTO;
-import com.airhive.backend.mapper.AircraftMapper;
 import com.airhive.backend.service.AircraftService;
 
 import jakarta.validation.Valid;
@@ -32,13 +31,8 @@ public class AircraftController {
 
     @GetMapping
     public ResponseEntity<List<AircraftResponseDTO>> getAllAircraft() {
-
         return ResponseEntity.ok(
-                aircraftService.getAllAircraft()
-                        .stream()
-                        .map(AircraftMapper::toResponse)
-                        .toList()
-        );
+                aircraftService.getAllAircraft());
     }
 
     @GetMapping("/{id}")
@@ -46,10 +40,7 @@ public class AircraftController {
             @PathVariable Long id) {
 
         return ResponseEntity.ok(
-                AircraftMapper.toResponse(
-                        aircraftService.getAircraftById(id)
-                )
-        );
+                aircraftService.getAircraftById(id));
     }
 
     @PostMapping
@@ -58,11 +49,7 @@ public class AircraftController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(
-                        AircraftMapper.toResponse(
-                                aircraftService.createAircraft(request)
-                        )
-                );
+                .body(aircraftService.createAircraft(request));
     }
 
     @PutMapping("/{id}")
@@ -70,11 +57,7 @@ public class AircraftController {
             @PathVariable Long id,
             @Valid @RequestBody AircraftRequestDTO request) {
 
-        return ResponseEntity.ok(
-                AircraftMapper.toResponse(
-                        aircraftService.updateAircraft(id, request)
-                )
-        );
+        return ResponseEntity.ok(aircraftService.updateAircraft(id, request));
     }
 
     @DeleteMapping("/{id}")

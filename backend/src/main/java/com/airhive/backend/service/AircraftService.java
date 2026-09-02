@@ -2,14 +2,17 @@ package com.airhive.backend.service;
 
 import java.util.List;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.airhive.backend.dto.AircraftRequestDTO;
+import com.airhive.backend.dto.AircraftResponseDTO;
 import com.airhive.backend.entity.Aircraft;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
+import com.airhive.backend.mapper.AircraftMapper;
 import com.airhive.backend.repository.AircraftRepository;
-
 
 @Service
 public class AircraftService {
@@ -24,37 +27,47 @@ public class AircraftService {
         this.aircraftTypeService = aircraftTypeService;
     }
 
-    public List<Aircraft> getAllAircraft() {
-        return aircraftRepository.findAll();
+    @Cacheable("aircraft")
+    public List<AircraftResponseDTO> getAllAircraft() {
+        return aircraftRepository.findAll()
+                .stream()
+                .map(AircraftMapper::toResponse)
+                .toList();
     }
 
-    public Aircraft getAircraftById(Long id) {
-        return aircraftRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Aircraft not found with id: " + id));
+    @Cacheable(value = "aircraft", key = "#id")
+    public AircraftResponseDTO getAircraftById(Long id) {
+        return AircraftMapper.toResponse(
+                aircraftRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Aircraft not found with id: " + id))
+        );
     }
 
-    public Aircraft createAircraft(Aircraft aircraft) {
+    @CacheEvict(value = "aircraft", allEntries = true)
+    public AircraftResponseDTO createAircraft(Aircraft aircraft) {
         if (aircraftRepository.existsByRegistrationNumber(
                 aircraft.getRegistrationNumber())) {
 
             throw new DuplicateResourceException(
-                "Aircraft already exists with registration number: "
-                + aircraft.getRegistrationNumber());
-            }
+                    "Aircraft already exists with registration number: "
+                            + aircraft.getRegistrationNumber());
+        }
 
-        return aircraftRepository.save(aircraft);
+        return AircraftMapper.toResponse(aircraftRepository.save(aircraft));
     }
 
-    public Aircraft createAircraft(AircraftRequestDTO request) {
+    @CacheEvict(value = "aircraft", allEntries = true)
+    public AircraftResponseDTO createAircraft(AircraftRequestDTO request) {
         Aircraft aircraft = new Aircraft();
         applyRequest(aircraft, request);
         return createAircraft(aircraft);
     }
 
-    public Aircraft updateAircraft(Long id, Aircraft updatedAircraft) {
+    @CacheEvict(value = "aircraft", allEntries = true)
+    public AircraftResponseDTO updateAircraft(Long id, Aircraft updatedAircraft) {
 
-        Aircraft aircraft = getAircraftById(id);
+        Aircraft aircraft = getAircraftEntityById(id);
 
         aircraft.setRegistrationNumber(
                 updatedAircraft.getRegistrationNumber());
@@ -65,24 +78,40 @@ public class AircraftService {
         aircraft.setAircraftType(
                 updatedAircraft.getAircraftType());
 
-        return aircraftRepository.save(aircraft);
+        return AircraftMapper.toResponse(aircraftRepository.save(aircraft));
     }
 
-    public Aircraft updateAircraft(Long id, AircraftRequestDTO request) {
-        Aircraft aircraft = getAircraftById(id);
+    @CacheEvict(value = "aircraft", allEntries = true)
+    public AircraftResponseDTO updateAircraft(Long id, AircraftRequestDTO request) {
+        Aircraft aircraft = getAircraftEntityById(id);
         applyRequest(aircraft, request);
-        return aircraftRepository.save(aircraft);
+        return AircraftMapper.toResponse(aircraftRepository.save(aircraft));
     }
 
-    private void applyRequest(Aircraft aircraft, AircraftRequestDTO request) {
-        aircraft.setRegistrationNumber(request.getRegistrationNumber());
-        aircraft.setStatus(request.getStatus());
+    private Aircraft getAircraftEntityById(Long id) {
+        return aircraftRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Aircraft not found with id: " + id));
+    }
+
+    private void applyRequest(
+            Aircraft aircraft,
+            AircraftRequestDTO request) {
+
+        aircraft.setRegistrationNumber(
+                request.getRegistrationNumber());
+
+        aircraft.setStatus(
+                request.getStatus());
+
         aircraft.setAircraftType(
-                aircraftTypeService.findEntityById(request.getAircraftTypeId()));
+                aircraftTypeService.findEntityById(
+                        request.getAircraftTypeId()));
     }
 
+    @CacheEvict(value = "aircraft", allEntries = true)
     public void deleteAircraft(Long id) {
-        Aircraft aircraft = getAircraftById(id);
+        Aircraft aircraft = getAircraftEntityById(id);
         aircraftRepository.delete(aircraft);
     }
 }

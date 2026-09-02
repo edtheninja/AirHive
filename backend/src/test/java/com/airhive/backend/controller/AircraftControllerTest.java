@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.airhive.backend.dto.AircraftResponseDTO;
 import com.airhive.backend.entity.Aircraft;
 import com.airhive.backend.entity.AircraftType;
 import com.airhive.backend.exception.DuplicateResourceException;
@@ -40,6 +41,7 @@ class AircraftControllerTest {
 
     private Aircraft aircraft;
     private AircraftType aircraftType;
+    private AircraftResponseDTO aircraftResponse;
 
     @BeforeEach
     @SuppressWarnings("unused")
@@ -52,15 +54,20 @@ class AircraftControllerTest {
         aircraft.setRegistrationNumber("VT-AIR01");
         aircraft.setAircraftType(aircraftType);
         aircraft.setStatus("ACTIVE");
-    }
 
-    // ALL YOUR EXISTING @Test METHODS CONTINUE HERE
+        aircraftResponse = new AircraftResponseDTO();
+        aircraftResponse.setId(1L);
+        aircraftResponse.setRegistrationNumber("VT-AIR01");
+        aircraftResponse.setAircraftTypeId(1L);
+        aircraftResponse.setAircraftTypeCode("A320");
+        aircraftResponse.setStatus("ACTIVE");
+    }
 
     @Test
     void getAllAircraft_shouldReturn200() throws Exception {
 
         when(aircraftService.getAllAircraft())
-                .thenReturn(List.of(aircraft));
+                .thenReturn(List.of(aircraftResponse));
 
         mockMvc.perform(get("/api/aircraft"))
                 .andExpect(status().isOk())
@@ -76,7 +83,7 @@ class AircraftControllerTest {
     void getAircraftById_shouldReturn200() throws Exception {
 
         when(aircraftService.getAircraftById(1L))
-                .thenReturn(aircraft);
+                .thenReturn(aircraftResponse);
 
         mockMvc.perform(get("/api/aircraft/1"))
                 .andExpect(status().isOk())
@@ -106,7 +113,7 @@ class AircraftControllerTest {
 
         when(aircraftService.createAircraft(any(
                 com.airhive.backend.dto.AircraftRequestDTO.class)))
-                .thenReturn(aircraft);
+                .thenReturn(aircraftResponse);
 
         String request = """
                 {
@@ -225,7 +232,7 @@ class AircraftControllerTest {
         when(aircraftService.updateAircraft(
                 eq(1L),
                 any(com.airhive.backend.dto.AircraftRequestDTO.class)))
-                .thenReturn(aircraft);
+                .thenReturn(aircraftResponse);
 
         String request = """
                 {
@@ -307,3 +314,4 @@ class AircraftControllerTest {
                 .andExpect(status().isNotFound());
     }
 }
+
