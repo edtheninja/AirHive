@@ -158,7 +158,7 @@ function AircraftPage() {
                     />
 
                     <span
-                      className={`absolute right-3 top-3 rounded-full bg-background/85 px-2.5 py-1 text-xs font-medium shadow-[var(--elev-1)] backdrop-blur-md ${statusTone(a.status)}`}
+                      className={`absolute right-3 top-3 rounded-full bg-background/85 px-2.5 py-1 text-xs font-medium shadow-0[var(--elev-1)] backdrop-blur-md ${statusTone(a.status)}`}
                     >
                       {statusLabel(a.status)}
                     </span>
