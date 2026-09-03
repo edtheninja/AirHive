@@ -7,12 +7,12 @@ import { Meter, PageHeader, SectionCard } from "@/components/ams/primitives";
 export const Route = createFileRoute("/maintenance")({
   head: () => ({
     meta: [
-      { title: "Maintenance — Aerion AMS" },
+      { title: "Maintenance — AirHive AMS" },
       {
         name: "description",
         content: "Work orders, severity, engineers and completion progress for the fleet.",
       },
-      { property: "og:title", content: "Maintenance — Aerion AMS" },
+      { property: "og:title", content: "Maintenance — AirHive AMS" },
       { property: "og:description", content: "Work orders and completion progress for the fleet." },
     ],
   }),

@@ -154,7 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             {!collapsed ? (
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">Aerion AMS</p>
+                <p className="truncate text-sm font-semibold">AirHive AMS</p>
                 <p className="truncate text-xs text-muted-foreground">Operations Control</p>
               </div>
             ) : null}
@@ -183,7 +183,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-30 px-4 pt-4">
           <div className="glass flex items-center gap-3 rounded-3xl px-4 py-3">
             <div className="hidden min-w-0 flex-col lg:flex">
-              <span className="text-xs text-muted-foreground">Aerion Airlines</span>
+              <span className="text-xs text-muted-foreground">AirHive</span>
               <span className="truncate text-sm font-semibold">{current}</span>
             </div>
             <div className="flex flex-1 items-center gap-2 rounded-2xl bg-foreground/4 px-3 py-2 text-sm text-muted-foreground">

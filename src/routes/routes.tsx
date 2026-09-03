@@ -9,14 +9,14 @@ import { PageHeader, SectionCard } from "@/components/ams/primitives";
 export const Route = createFileRoute("/routes")({
   head: () => ({
     meta: [
-      { title: "Network Routes — Aerion AMS" },
+      { title: "Network Routes — AirHive AMS" },
       {
         name: "description",
         content: "Network routes, distance, duration and operational status.",
       },
       {
         property: "og:title",
-        content: "Network Routes — Aerion AMS",
+        content: "Network Routes — AirHive AMS",
       },
       {
         property: "og:description",

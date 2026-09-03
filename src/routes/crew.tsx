@@ -7,12 +7,12 @@ import { GlassCard, Meter, PageHeader, SectionCard } from "@/components/ams/prim
 export const Route = createFileRoute("/crew")({
   head: () => ({
     meta: [
-      { title: "Crew Management — Aerion AMS" },
+      { title: "Crew Management — AirHive AMS" },
       {
         name: "description",
         content: "Crew availability, rest hours, rosters and medical clearance tracking.",
       },
-      { property: "og:title", content: "Crew Management — Aerion AMS" },
+      { property: "og:title", content: "Crew Management — AirHive AMS" },
       {
         property: "og:description",
         content: "Crew availability, rest hours and medical clearance tracking.",

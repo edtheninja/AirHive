@@ -28,12 +28,12 @@ import { OCCUPANCY_SERIES, REVENUE_SERIES } from "@/lib/ams/data";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Operations Dashboard — Aerion AMS" },
+      { title: "Operations Dashboard — AirHive AMS" },
       {
         name: "description",
         content: "Live airline operations: flights, delays, revenue, fleet availability and crew.",
       },
-      { property: "og:title", content: "Operations Dashboard — Aerion AMS" },
+      { property: "og:title", content: "Operations Dashboard — AirHive AMS" },
       {
         property: "og:description",
         content: "Live airline operations control centre for flights, fleet and crew.",

@@ -6,12 +6,12 @@ import { GlassCard, PageHeader, SectionCard } from "@/components/ams/primitives"
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "User Profile — Aerion AMS" },
+      { title: "User Profile — AirHive AMS" },
       {
         name: "description",
         content: "Operations account details, roles, permissions and recent activity.",
       },
-      { property: "og:title", content: "User Profile — Aerion AMS" },
+      { property: "og:title", content: "User Profile — AirHive AMS" },
       {
         property: "og:description",
         content: "Operations account details, roles and recent activity.",

@@ -7,12 +7,12 @@ import { PageHeader, SectionCard } from "@/components/ams/primitives";
 export const Route = createFileRoute("/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — Aerion AMS" },
+      { title: "Notifications — AirHive AMS" },
       {
         name: "description",
         content: "Live operational event feed: delays, gate changes, crew and readiness updates.",
       },
-      { property: "og:title", content: "Notifications — Aerion AMS" },
+      { property: "og:title", content: "Notifications — AirHive AMS" },
       { property: "og:description", content: "Live operational event feed for the whole network." },
     ],
   }),

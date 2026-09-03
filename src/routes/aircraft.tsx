@@ -15,14 +15,14 @@ import hangar from "@/assets/aircraft-hangar.jpg";
 export const Route = createFileRoute("/aircraft")({
   head: () => ({
     meta: [
-      { title: "Fleet & Aircraft — Aerion AMS" },
+      { title: "Fleet & Aircraft — AirHive AMS" },
       {
         name: "description",
         content: "Fleet aircraft, configuration and operational status.",
       },
       {
         property: "og:title",
-        content: "Fleet & Aircraft — Aerion AMS",
+        content: "Fleet & Aircraft — AirHive AMS",
       },
       {
         property: "og:description",

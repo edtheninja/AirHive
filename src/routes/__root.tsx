@@ -80,14 +80,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Aerion AMS — Airline Operations Platform" },
+      { title: "AirHive AMS — Airline Operations Platform" },
       {
         name: "description",
         content:
           "Enterprise airline management system for flights, fleet, crew and live operations.",
       },
-      { name: "author", content: "Aerion Airlines" },
-      { property: "og:title", content: "Aerion AMS — Airline Operations Platform" },
+      { name: "author", content: "AirHive" },
+      { property: "og:title", content: "AirHive AMS — Airline Operations Platform" },
       {
         property: "og:description",
         content:
@@ -96,7 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Aerion AMS — Airline Operations Platform" },
+      { name: "twitter:title", content: "AirHive AMS — Airline Operations Platform" },
       {
         name: "twitter:description",
         content:

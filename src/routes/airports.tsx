@@ -9,14 +9,14 @@ import { GlassCard, PageHeader } from "@/components/ams/primitives";
 export const Route = createFileRoute("/airports")({
   head: () => ({
     meta: [
-      { title: "Airports & Stations — Aerion AMS" },
+      { title: "Airports & Stations — AirHive AMS" },
       {
         name: "description",
         content: "Station status, terminal counts and daily movements across the network.",
       },
       {
         property: "og:title",
-        content: "Airports & Stations — Aerion AMS",
+        content: "Airports & Stations — AirHive AMS",
       },
       {
         property: "og:description",

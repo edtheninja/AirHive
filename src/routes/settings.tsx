@@ -7,12 +7,12 @@ import { Switch } from "@/components/ui/switch";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — Aerion AMS" },
+      { title: "Settings — AirHive AMS" },
       {
         name: "description",
         content: "Configure operations preferences, alert thresholds and integrations.",
       },
-      { property: "og:title", content: "Settings — Aerion AMS" },
+      { property: "og:title", content: "Settings — AirHive AMS" },
       {
         property: "og:description",
         content: "Configure operations preferences and alert thresholds.",

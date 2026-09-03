@@ -20,12 +20,12 @@ import {
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
-      { title: "Analytics — Aerion AMS" },
+      { title: "Analytics — AirHive AMS" },
       {
         name: "description",
         content: "Revenue, occupancy, flight completion, fuel burn and delay-cause analytics.",
       },
-      { property: "og:title", content: "Analytics — Aerion AMS" },
+      { property: "og:title", content: "Analytics — AirHive AMS" },
       {
         property: "og:description",
         content: "Revenue, occupancy, fuel burn and delay-cause analytics.",

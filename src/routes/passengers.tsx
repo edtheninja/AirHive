@@ -7,12 +7,12 @@ import { PageHeader, SectionCard } from "@/components/ams/primitives";
 export const Route = createFileRoute("/passengers")({
   head: () => ({
     meta: [
-      { title: "Passengers — Aerion AMS" },
+      { title: "Passengers — AirHive AMS" },
       {
         name: "description",
         content: "Passenger manifests, loyalty tier, check-in state and baggage per flight.",
       },
-      { property: "og:title", content: "Passengers — Aerion AMS" },
+      { property: "og:title", content: "Passengers — AirHive AMS" },
       {
         property: "og:description",
         content: "Passenger manifests, loyalty tier and check-in state.",

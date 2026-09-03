@@ -12,12 +12,12 @@ import { FlightsTable } from "@/components/ams/flights-table";
 export const Route = createFileRoute("/operations")({
   head: () => ({
     meta: [
-      { title: "Operations Control — Aerion AMS" },
+      { title: "Operations Control — AirHive AMS" },
       {
         name: "description",
         content: "Operations control centre view: airborne fleet, disruptions and live event feed.",
       },
-      { property: "og:title", content: "Operations Control — Aerion AMS" },
+      { property: "og:title", content: "Operations Control — AirHive AMS" },
       {
         property: "og:description",
         content: "Airborne fleet, disruptions and the live event feed.",

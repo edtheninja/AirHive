@@ -12,14 +12,14 @@ import { PageHeader, SectionCard } from "@/components/ams/primitives";
 export const Route = createFileRoute("/flights")({
   head: () => ({
     meta: [
-      { title: "Flight Operations — Aerion AMS" },
+      { title: "Flight Operations — AirHive AMS" },
       {
         name: "description",
         content: "Monitor and filter every scheduled, boarding, airborne and delayed flight.",
       },
       {
         property: "og:title",
-        content: "Flight Operations — Aerion AMS",
+        content: "Flight Operations — AirHive AMS",
       },
       {
         property: "og:description",
