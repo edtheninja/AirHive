@@ -7,7 +7,8 @@ import {
   type Flight,
   type OpsNotification,
 } from "./data";
-import { getFlights, type ApiFlight } from "@/lib/api/flights";
+import { connectToFlightUpdates, type FlightEvent } from "@/lib/api/websocket";
+import { getFlights, type Flight as ApiFlight } from "@/lib/api/flights";
 import { getAircraft } from "@/lib/api/aircraft";
 import { LiveOpsContext, type LiveOpsValue, type Kpis } from "./context";
 function mapApiFlight(flight: ApiFlight): Flight {
@@ -24,6 +25,12 @@ function mapApiFlight(flight: ApiFlight): Flight {
       hour: "2-digit",
       minute: "2-digit",
     }),
+    arrival: new Date(flight.scheduledArrival).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    scheduledDeparture: flight.scheduledDeparture,
+    scheduledArrival: flight.scheduledArrival,
     delay: 0,
     crew: "—",
     crewCount: 0,
@@ -135,6 +142,36 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
+  useEffect(() => {
+    const handleFlightEvent = (event: FlightEvent) => {
+      const updatedFlight = mapApiFlight(event.flight);
+
+      setFlights((currentFlights) => {
+        switch (event.eventType) {
+          case "FLIGHT_CREATED":
+            return [...currentFlights, updatedFlight];
+
+          case "FLIGHT_UPDATED":
+            return currentFlights.map((flight) =>
+              flight.id === updatedFlight.id ? updatedFlight : flight,
+            );
+
+          case "FLIGHT_DELETED":
+            return currentFlights.filter((flight) => flight.id !== updatedFlight.id);
+
+          default:
+            return currentFlights;
+        }
+      });
+    };
+
+    const disconnect = connectToFlightUpdates(handleFlightEvent);
+
+    return () => {
+      disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     const notify = setInterval(() => {
       const seed = NOTIFICATION_POOL[Math.floor(Math.random() * NOTIFICATION_POOL.length)];

@@ -5,7 +5,7 @@ import { Users, Plane } from "lucide-react";
 
 import { pageVariants, itemVariants, listVariants } from "@/lib/ams/motion";
 import { GlassCard, PageHeader } from "@/components/ams/primitives";
-import { getAircraft, type Aircraft } from "@/lib/api/aircraft";
+import { getAircraft, type ApiAircraft as Aircraft } from "@/lib/api/aircraft";
 import { getAircraftTypes, type AircraftType } from "@/lib/api/aircraft-types";
 
 import narrowbody from "@/assets/aircraft-narrowbody.jpg";
