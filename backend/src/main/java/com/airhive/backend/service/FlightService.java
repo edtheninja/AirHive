@@ -23,339 +23,327 @@ import com.airhive.backend.repository.RouteRepository;
 @Service
 public class FlightService {
 
-    private final FlightRepository flightRepository;
-    private final AircraftRepository aircraftRepository;
-    private final AirportRepository airportRepository;
-    private final RouteRepository routeRepository;
+        private final FlightRepository flightRepository;
+        private final AircraftRepository aircraftRepository;
+        private final AirportRepository airportRepository;
+        private final RouteRepository routeRepository;
+        private final FlightWebSocketService flightWebSocketService;
 
-    public FlightService(
-            FlightRepository flightRepository,
-            AircraftRepository aircraftRepository,
-            AirportRepository airportRepository,
-            RouteRepository routeRepository) {
+        public FlightService(
+                        FlightRepository flightRepository,
+                        AircraftRepository aircraftRepository,
+                        AirportRepository airportRepository,
+                        RouteRepository routeRepository,
+                        FlightWebSocketService flightWebSocketService) {
 
-        this.flightRepository = flightRepository;
-        this.aircraftRepository = aircraftRepository;
-        this.airportRepository = airportRepository;
-        this.routeRepository = routeRepository;
-    }
-
-    @CacheEvict(value = "flights", allEntries = true)
-    public FlightResponseDTO createFlight(FlightRequestDTO request) {
-
-        validateRequest(request);
-
-        if (flightRepository.existsByFlightNumber(
-                request.getFlightNumber())) {
-
-            throw new DuplicateResourceException(
-                    "Flight already exists: "
-                            + request.getFlightNumber());
+                this.flightRepository = flightRepository;
+                this.aircraftRepository = aircraftRepository;
+                this.airportRepository = airportRepository;
+                this.routeRepository = routeRepository;
+                this.flightWebSocketService = flightWebSocketService;
         }
 
-        Aircraft aircraft =
-                aircraftRepository.findById(request.getAircraftId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Aircraft not found with id: "
-                                                + request.getAircraftId()));
+        @CacheEvict(value = "flights", allEntries = true)
+        public FlightResponseDTO createFlight(FlightRequestDTO request) {
 
-        Airport departureAirport =
-                airportRepository.findById(
-                        request.getDepartureAirportId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Departure airport not found with id: "
-                                                + request.getDepartureAirportId()));
+                validateRequest(request);
 
-        Airport arrivalAirport =
-                airportRepository.findById(
-                        request.getArrivalAirportId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Arrival airport not found with id: "
-                                                + request.getArrivalAirportId()));
+                if (flightRepository.existsByFlightNumber(
+                                request.getFlightNumber())) {
 
-        Route route =
-                routeRepository.findById(request.getRouteId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Route not found with id: "
-                                                + request.getRouteId()));
+                        throw new DuplicateResourceException(
+                                        "Flight already exists: "
+                                                        + request.getFlightNumber());
+                }
 
-        validateRouteAirports(
-                route,
-                departureAirport,
-                arrivalAirport);
+                Aircraft aircraft = aircraftRepository.findById(request.getAircraftId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Aircraft not found with id: "
+                                                                + request.getAircraftId()));
 
-        long conflictCount =
-                flightRepository.countAircraftScheduleConflicts(
-                        request.getAircraftId(),
-                        request.getScheduledArrival(),
-                        request.getScheduledDeparture());
+                Airport departureAirport = airportRepository.findById(
+                                request.getDepartureAirportId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Departure airport not found with id: "
+                                                                + request.getDepartureAirportId()));
 
-        if (conflictCount > 0) {
-            throw new DuplicateResourceException(
-                    "Aircraft is already scheduled for another flight during this time");
+                Airport arrivalAirport = airportRepository.findById(
+                                request.getArrivalAirportId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Arrival airport not found with id: "
+                                                                + request.getArrivalAirportId()));
+
+                Route route = routeRepository.findById(request.getRouteId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Route not found with id: "
+                                                                + request.getRouteId()));
+
+                validateRouteAirports(
+                                route,
+                                departureAirport,
+                                arrivalAirport);
+
+                long conflictCount = flightRepository.countAircraftScheduleConflicts(
+                                request.getAircraftId(),
+                                request.getScheduledArrival(),
+                                request.getScheduledDeparture());
+
+                if (conflictCount > 0) {
+                        throw new DuplicateResourceException(
+                                        "Aircraft is already scheduled for another flight during this time");
+                }
+
+                Flight flight = new Flight();
+
+                flight.setFlightNumber(
+                                request.getFlightNumber());
+
+                flight.setAircraft(aircraft);
+
+                flight.setRoute(route);
+
+                flight.setDepartureAirport(
+                                departureAirport);
+
+                flight.setArrivalAirport(
+                                arrivalAirport);
+
+                flight.setScheduledDeparture(
+                                request.getScheduledDeparture());
+
+                flight.setScheduledArrival(
+                                request.getScheduledArrival());
+
+                flight.setStatus(
+                                request.getStatus());
+
+                Flight savedFlight = flightRepository.save(flight);
+
+                FlightResponseDTO response = FlightMapper.toResponse(savedFlight);
+                flightWebSocketService.publishFlightCreated(response);
+
+                return response;
         }
 
-        Flight flight = new Flight();
+        @Cacheable(value = "flights", key = "#id")
+        public FlightResponseDTO getFlightById(Long id) {
 
-        flight.setFlightNumber(
-                request.getFlightNumber());
+                Flight flight = flightRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Flight not found with id: " + id));
 
-        flight.setAircraft(aircraft);
-
-        flight.setRoute(route);
-
-        flight.setDepartureAirport(
-                departureAirport);
-
-        flight.setArrivalAirport(
-                arrivalAirport);
-
-        flight.setScheduledDeparture(
-                request.getScheduledDeparture());
-
-        flight.setScheduledArrival(
-                request.getScheduledArrival());
-
-        flight.setStatus(
-                request.getStatus());
-
-        Flight savedFlight =
-                flightRepository.save(flight);
-
-        return FlightMapper.toResponse(savedFlight);
-    }
-
-    @Cacheable(value = "flights", key = "#id")
-    public FlightResponseDTO getFlightById(Long id) {
-
-        Flight flight =
-                flightRepository.findById(id)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Flight not found with id: " + id));
-
-        return FlightMapper.toResponse(flight);
-    }
-
-    @Cacheable("flights")
-    public List<FlightResponseDTO> getAllFlights() {
-
-        return flightRepository.findAll()
-                .stream()
-                .map(FlightMapper::toResponse)
-                .toList();
-    }
-
-    @CacheEvict(value = "flights", allEntries = true)
-    public FlightResponseDTO updateFlight(
-            Long id,
-            FlightRequestDTO request) {
-
-        Flight existingFlight =
-                getFlightEntityById(id);
-
-        validateRequest(request);
-
-        if (!existingFlight.getFlightNumber()
-                .equals(request.getFlightNumber())
-                && flightRepository.existsByFlightNumber(
-                        request.getFlightNumber())) {
-
-            throw new DuplicateResourceException(
-                    "Flight already exists: "
-                            + request.getFlightNumber());
+                return FlightMapper.toResponse(flight);
         }
 
-        Aircraft aircraft =
-                aircraftRepository.findById(
-                        request.getAircraftId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Aircraft not found with id: "
-                                                + request.getAircraftId()));
+        @Cacheable("flights")
+        public List<FlightResponseDTO> getAllFlights() {
 
-        Airport departureAirport =
-                airportRepository.findById(
-                        request.getDepartureAirportId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Departure airport not found with id: "
-                                                + request.getDepartureAirportId()));
-
-        Airport arrivalAirport =
-                airportRepository.findById(
-                        request.getArrivalAirportId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Arrival airport not found with id: "
-                                                + request.getArrivalAirportId()));
-
-        Route route =
-                routeRepository.findById(
-                        request.getRouteId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Route not found with id: "
-                                                + request.getRouteId()));
-
-        validateRouteAirports(
-                route,
-                departureAirport,
-                arrivalAirport);
-
-        long conflictCount =
-                flightRepository.countAircraftScheduleConflictsForUpdate(
-                        request.getAircraftId(),
-                        id,
-                        request.getScheduledArrival(),
-                        request.getScheduledDeparture());
-
-        if (conflictCount > 0) {
-            throw new DuplicateResourceException(
-                    "Aircraft is already scheduled for another flight during this time");
+                return flightRepository.findAll()
+                                .stream()
+                                .map(FlightMapper::toResponse)
+                                .toList();
         }
 
-        existingFlight.setFlightNumber(
-                request.getFlightNumber());
+        @CacheEvict(value = "flights", allEntries = true)
+        public FlightResponseDTO updateFlight(
+                        Long id,
+                        FlightRequestDTO request) {
 
-        existingFlight.setAircraft(
-                aircraft);
+                Flight existingFlight = getFlightEntityById(id);
 
-        existingFlight.setDepartureAirport(
-                departureAirport);
+                validateRequest(request);
 
-        existingFlight.setArrivalAirport(
-                arrivalAirport);
+                if (!existingFlight.getFlightNumber()
+                                .equals(request.getFlightNumber())
+                                && flightRepository.existsByFlightNumber(
+                                                request.getFlightNumber())) {
 
-        existingFlight.setRoute(
-                route);
+                        throw new DuplicateResourceException(
+                                        "Flight already exists: "
+                                                        + request.getFlightNumber());
+                }
 
-        existingFlight.setScheduledDeparture(
-                request.getScheduledDeparture());
+                Aircraft aircraft = aircraftRepository.findById(
+                                request.getAircraftId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Aircraft not found with id: "
+                                                                + request.getAircraftId()));
 
-        existingFlight.setScheduledArrival(
-                request.getScheduledArrival());
+                Airport departureAirport = airportRepository.findById(
+                                request.getDepartureAirportId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Departure airport not found with id: "
+                                                                + request.getDepartureAirportId()));
 
-        existingFlight.setStatus(
-                request.getStatus());
+                Airport arrivalAirport = airportRepository.findById(
+                                request.getArrivalAirportId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Arrival airport not found with id: "
+                                                                + request.getArrivalAirportId()));
 
-        Flight updatedFlight =
-                flightRepository.save(existingFlight);
+                Route route = routeRepository.findById(
+                                request.getRouteId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Route not found with id: "
+                                                                + request.getRouteId()));
 
-        return FlightMapper.toResponse(updatedFlight);
-    }
+                validateRouteAirports(
+                                route,
+                                departureAirport,
+                                arrivalAirport);
 
-    @CacheEvict(value = "flights", allEntries = true)
-    public void deleteFlight(Long id) {
+                long conflictCount = flightRepository.countAircraftScheduleConflictsForUpdate(
+                                request.getAircraftId(),
+                                id,
+                                request.getScheduledArrival(),
+                                request.getScheduledDeparture());
 
-        Flight flight =
-                getFlightEntityById(id);
+                if (conflictCount > 0) {
+                        throw new DuplicateResourceException(
+                                        "Aircraft is already scheduled for another flight during this time");
+                }
 
-        flightRepository.delete(flight);
-    }
+                existingFlight.setFlightNumber(
+                                request.getFlightNumber());
 
-    private Flight getFlightEntityById(Long id) {
+                existingFlight.setAircraft(
+                                aircraft);
 
-        return flightRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Flight not found with id: " + id));
-    }
+                existingFlight.setDepartureAirport(
+                                departureAirport);
 
-    private void validateRequest(
-            FlightRequestDTO request) {
+                existingFlight.setArrivalAirport(
+                                arrivalAirport);
 
-        if (request == null) {
-            throw new IllegalArgumentException(
-                    "Flight request is required");
+                existingFlight.setRoute(
+                                route);
+
+                existingFlight.setScheduledDeparture(
+                                request.getScheduledDeparture());
+
+                existingFlight.setScheduledArrival(
+                                request.getScheduledArrival());
+
+                existingFlight.setStatus(
+                                request.getStatus());
+
+                Flight updatedFlight = flightRepository.save(existingFlight);
+
+                FlightResponseDTO response = FlightMapper.toResponse(updatedFlight);
+                flightWebSocketService.publishFlightUpdated(response);
+
+                return response;
         }
 
-        if (request.getFlightNumber() == null
-                || request.getFlightNumber().isBlank()) {
+        @CacheEvict(value = "flights", allEntries = true)
+        public void deleteFlight(Long id) {
 
-            throw new IllegalArgumentException(
-                    "Flight number is required");
+                Flight flight = getFlightEntityById(id);
+
+                FlightResponseDTO response = FlightMapper.toResponse(flight);
+
+                flightRepository.delete(flight);
+
+                flightWebSocketService.publishFlightDeleted(response);
         }
 
-        if (request.getAircraftId() == null) {
+        private Flight getFlightEntityById(Long id) {
 
-            throw new IllegalArgumentException(
-                    "Aircraft is required");
+                return flightRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Flight not found with id: " + id));
         }
 
-        if (request.getDepartureAirportId() == null) {
+        private void validateRequest(
+                        FlightRequestDTO request) {
 
-            throw new IllegalArgumentException(
-                    "Departure airport is required");
+                if (request == null) {
+                        throw new IllegalArgumentException(
+                                        "Flight request is required");
+                }
+
+                if (request.getFlightNumber() == null
+                                || request.getFlightNumber().isBlank()) {
+
+                        throw new IllegalArgumentException(
+                                        "Flight number is required");
+                }
+
+                if (request.getAircraftId() == null) {
+
+                        throw new IllegalArgumentException(
+                                        "Aircraft is required");
+                }
+
+                if (request.getDepartureAirportId() == null) {
+
+                        throw new IllegalArgumentException(
+                                        "Departure airport is required");
+                }
+
+                if (request.getArrivalAirportId() == null) {
+
+                        throw new IllegalArgumentException(
+                                        "Arrival airport is required");
+                }
+
+                if (request.getRouteId() == null) {
+
+                        throw new IllegalArgumentException(
+                                        "Route is required");
+                }
+
+                if (request.getScheduledDeparture() == null) {
+
+                        throw new IllegalArgumentException(
+                                        "Scheduled departure is required");
+                }
+
+                if (request.getScheduledArrival() == null) {
+
+                        throw new IllegalArgumentException(
+                                        "Scheduled arrival is required");
+                }
+
+                if (!request.getScheduledDeparture()
+                                .isBefore(request.getScheduledArrival())) {
+
+                        throw new IllegalArgumentException(
+                                        "Scheduled departure must be before scheduled arrival");
+                }
+
+                if (request.getStatus() == null
+                                || request.getStatus().isBlank()) {
+
+                        throw new IllegalArgumentException(
+                                        "Flight status is required");
+                }
+
+                if (request.getDepartureAirportId()
+                                .equals(request.getArrivalAirportId())) {
+
+                        throw new IllegalArgumentException(
+                                        "Departure and arrival airports cannot be the same");
+                }
         }
 
-        if (request.getArrivalAirportId() == null) {
+        private void validateRouteAirports(
+                        Route route,
+                        Airport departureAirport,
+                        Airport arrivalAirport) {
 
-            throw new IllegalArgumentException(
-                    "Arrival airport is required");
+                if (!route.getDepartureAirport().getId()
+                                .equals(departureAirport.getId())) {
+
+                        throw new IllegalArgumentException(
+                                        "Flight departure airport does not match route");
+                }
+
+                if (!route.getArrivalAirport().getId()
+                                .equals(arrivalAirport.getId())) {
+
+                        throw new IllegalArgumentException(
+                                        "Flight arrival airport does not match route");
+                }
         }
-
-        if (request.getRouteId() == null) {
-
-            throw new IllegalArgumentException(
-                    "Route is required");
-        }
-
-        if (request.getScheduledDeparture() == null) {
-
-            throw new IllegalArgumentException(
-                    "Scheduled departure is required");
-        }
-
-        if (request.getScheduledArrival() == null) {
-
-            throw new IllegalArgumentException(
-                    "Scheduled arrival is required");
-        }
-
-        if (!request.getScheduledDeparture()
-                .isBefore(request.getScheduledArrival())) {
-
-            throw new IllegalArgumentException(
-                    "Scheduled departure must be before scheduled arrival");
-        }
-
-        if (request.getStatus() == null
-                || request.getStatus().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "Flight status is required");
-        }
-
-        if (request.getDepartureAirportId()
-                .equals(request.getArrivalAirportId())) {
-
-            throw new IllegalArgumentException(
-                    "Departure and arrival airports cannot be the same");
-        }
-    }
-
-    private void validateRouteAirports(
-            Route route,
-            Airport departureAirport,
-            Airport arrivalAirport) {
-
-        if (!route.getDepartureAirport().getId()
-                .equals(departureAirport.getId())) {
-
-            throw new IllegalArgumentException(
-                    "Flight departure airport does not match route");
-        }
-
-        if (!route.getArrivalAirport().getId()
-                .equals(arrivalAirport.getId())) {
-
-            throw new IllegalArgumentException(
-                    "Flight arrival airport does not match route");
-        }
-    }
 }

@@ -45,6 +45,9 @@ class FlightServiceTest {
         @Mock
         private RouteRepository routeRepository;
 
+        @Mock
+        private FlightWebSocketService flightWebSocketService;
+
         @InjectMocks
         private FlightService flightService;
 
@@ -129,8 +132,7 @@ class FlightServiceTest {
                 when(flightRepository.save(any(Flight.class)))
                                 .thenReturn(savedFlight);
 
-                FlightResponseDTO result =
-                                flightService.createFlight(request);
+                FlightResponseDTO result = flightService.createFlight(request);
 
                 assertNotNull(result);
                 assertEquals("AI101", result.getFlightNumber());
@@ -140,6 +142,8 @@ class FlightServiceTest {
                 assertEquals("BOM", result.getArrivalAirportCode());
 
                 verify(flightRepository).save(any(Flight.class));
+                verify(flightWebSocketService)
+                                .publishFlightCreated(any(FlightResponseDTO.class));
         }
 
         @Test
@@ -264,8 +268,7 @@ class FlightServiceTest {
                 when(flightRepository.findById(1L))
                                 .thenReturn(Optional.of(flight));
 
-                FlightResponseDTO result =
-                                flightService.getFlightById(1L);
+                FlightResponseDTO result = flightService.getFlightById(1L);
 
                 assertNotNull(result);
                 assertEquals(1L, result.getId());
@@ -309,8 +312,7 @@ class FlightServiceTest {
                 when(flightRepository.findAll())
                                 .thenReturn(flights);
 
-                List<FlightResponseDTO> result =
-                                flightService.getAllFlights();
+                List<FlightResponseDTO> result = flightService.getAllFlights();
 
                 assertEquals(2, result.size());
                 assertEquals("AI101", result.get(0).getFlightNumber());
@@ -353,8 +355,7 @@ class FlightServiceTest {
                 when(flightRepository.save(existingFlight))
                                 .thenReturn(existingFlight);
 
-                FlightResponseDTO result =
-                                flightService.updateFlight(1L, request);
+                FlightResponseDTO result = flightService.updateFlight(1L, request);
 
                 assertNotNull(result);
                 assertEquals("AI101", result.getFlightNumber());
@@ -363,6 +364,8 @@ class FlightServiceTest {
                 assertEquals(1L, result.getRouteId());
 
                 verify(flightRepository).save(existingFlight);
+                verify(flightWebSocketService)
+                                .publishFlightUpdated(any(FlightResponseDTO.class));
         }
 
         @Test
@@ -539,6 +542,8 @@ class FlightServiceTest {
                 flightService.deleteFlight(1L);
 
                 verify(flightRepository).delete(existingFlight);
+                verify(flightWebSocketService)
+                                .publishFlightDeleted(any(FlightResponseDTO.class));
         }
 
         @Test
@@ -571,6 +576,7 @@ class FlightServiceTest {
                 return flight;
         }
 
+        @SuppressWarnings("UseSpecificCatch")
         private void setId(Object entity, long id) {
                 try {
                         Field f = entity.getClass().getDeclaredField("id");
@@ -581,4 +587,3 @@ class FlightServiceTest {
                 }
         }
 }
-
