@@ -67,7 +67,7 @@ function Dashboard() {
         description="Network-wide situational awareness, updating live."
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           index={0}
           label="Total Flights"
@@ -92,31 +92,15 @@ function Dashboard() {
           tone="warning"
           trend="Above 15 minutes"
         />
+
         <KpiCard
           index={3}
-          label="Revenue Today"
-          value={kpis.revenueToday}
-          icon={Wallet}
-          tone="success"
-          prefix="$"
-          trend="Net of refunds"
-        />
-        <KpiCard
-          index={4}
-          label="Passenger Count"
-          value={kpis.passengers}
-          icon={Users}
-          tone="accent"
-          trend="Checked in network-wide"
-        />
-        <KpiCard
-          index={5}
           label="Fleet Availability"
           value={kpis.fleetAvailability}
           icon={Gauge}
           tone="success"
           suffix="%"
-          trend="42 of 46 aircraft"
+          trend="Based on active fleet"
         />
       </div>
 
