@@ -1,53 +1,34 @@
 # ✈️ AirHive
 
-> **Modern Airline Management System for real-time airline operations**
+### Airline Operations & Management System
 
-AirHive is a full-stack **Airline Management System (AMS)** designed for airline administrators, airport staff, operations managers, supervisors, and operational teams.
+AirHive is a full-stack airline operations management system designed to provide a centralized platform for managing flights, aircraft, airports, routes, and real-time operational updates.
 
-Unlike a passenger booking website, AirHive focuses on the **operational side of an airline** — managing flights, aircraft, routes, airports, schedules, validations, caching, and real-time operational updates.
-
----
-
-## ✨ Highlights
-
-- 🛫 Flight Management
-- 🛩️ Aircraft Management
-- 🏢 Airport Management
-- 🗺️ Route Management
-- 📋 Aircraft Type Management
-- ⚙️ Business Rule Validation
-- 🔴 Redis Caching
-- ⚡ Real-Time WebSocket Updates
-- 🔄 STOMP Messaging
-- 🧪 Automated Backend Testing
-- 🎨 Premium Operations Dashboard
-- 📊 Operational KPIs
-- 🧩 Component-Driven React Architecture
-- 🌙 Dark Mode Support
-- 📱 Responsive Interface
+The project combines a modern React frontend with a Spring Boot backend, PostgreSQL for persistent storage, Redis for caching, and WebSockets for real-time flight updates.
 
 ---
 
-## 📑 Table of Contents
+## 📌 Table of Contents
 
 - [Overview](#-overview)
+- [Features](#-features)
 - [Architecture](#-architecture)
 - [Technology Stack](#-technology-stack)
-- [Features](#-features)
 - [Project Structure](#-project-structure)
 - [Prerequisites](#-prerequisites)
-- [Installation](#-installation)
-- [PostgreSQL Setup](#-postgresql-setup)
+- [Getting Started](#-getting-started)
+- [Database Setup](#-database-setup)
 - [Redis Setup](#-redis-setup)
 - [Running the Application](#-running-the-application)
+- [API Documentation](#-api-documentation)
 - [WebSocket Real-Time Updates](#-websocket-real-time-updates)
-- [API Overview](#-api-overview)
 - [Testing](#-testing)
-- [Development Workflow](#-development-workflow)
-- [Current Status](#-current-status)
+- [Frontend Development](#-frontend-development)
+- [Backend Development](#-backend-development)
+- [Git Workflow](#-git-workflow)
+- [Current Project Status](#-current-project-status)
 - [Roadmap](#-roadmap)
-- [Design Philosophy](#-design-philosophy)
-- [Live Application](#-live-application)
+- [Troubleshooting](#-troubleshooting)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -55,289 +36,241 @@ Unlike a passenger booking website, AirHive focuses on the **operational side of
 
 # 🌐 Overview
 
-AirHive provides a centralized platform for managing airline resources and flight operations.
+AirHive is built as a modular airline management platform.
 
-The system combines a modern React frontend with a Spring Boot backend, PostgreSQL persistence, Redis caching, and WebSocket-based real-time communication.
+The system currently provides functionality for:
 
-```text
-                    ┌──────────────────────────┐
-                    │      React Frontend      │
-                    │ React + TypeScript + Vite│
-                    └────────────┬─────────────┘
-                                 │
-                 ┌───────────────┴────────────────┐
-                 │                                │
-                 │ REST API                       │ WebSocket
-                 │                                │ / STOMP
-                 ▼                                ▼
-        ┌───────────────────┐           ┌───────────────────┐
-        │   Spring Boot     │           │  Live Operations  │
-        │     Backend       │           │     Updates       │
-        └─────────┬─────────┘           └───────────────────┘
-                  │
-          ┌───────┴────────┐
-          │                │
-          ▼                ▼
- ┌────────────────┐  ┌────────────────┐
- │   PostgreSQL   │  │     Redis      │
- │   Persistent   │  │     Caching    │
- │     Storage    │  │                │
- └────────────────┘  └────────────────┘
- 🏗️ Architecture
+- Airport management
+- Aircraft type management
+- Aircraft management
+- Route management
+- Flight management
+- Flight validation
+- Aircraft scheduling conflict detection
+- REST API communication
+- Redis caching
+- Real-time flight updates using WebSockets
+- Frontend/backend integration
+- Automated backend testing
+
+The project is being developed with an emphasis on:
+
+- Clean architecture
+- Separation of concerns
+- Validation
+- Performance
+- Real-time communication
+- Maintainability
+- Scalable API design
+- Modern user experience
+
+---
+
+# ✨ Features
+
+## 🛫 Flight Management
+
+Manage airline flights through the backend REST API and frontend operations interface.
+
+Supported operations include:
+
+- Create flights
+- View flights
+- View individual flights
+- Update flights
+- Delete flights
+- Flight status management
+- Aircraft assignment
+- Route assignment
+- Departure/arrival airport assignment
+- Scheduled departure and arrival times
+
+The system also performs business validation before accepting flight operations.
+
+---
+
+## ✈️ Aircraft Management
+
+AirHive maintains aircraft information including:
+
+- Aircraft registration
+- Aircraft type
+- Aircraft status
+- Aircraft assignments
+
+Duplicate aircraft registration numbers are prevented through backend validation.
+
+---
+
+## 🛩️ Aircraft Type Management
+
+Aircraft types can be managed independently from individual aircraft.
+
+Examples include:
+
+- Boeing 737-800
+- Airbus A320-200
+
+This allows aircraft to reference reusable aircraft type definitions.
+
+---
+
+## 🌍 Airport Management
+
+Airport records include information such as:
+
+- Airport name
+- IATA code
+- ICAO code
+- Location information
+
+The backend validates duplicate airport identifiers.
+
+---
+
+## 🗺️ Route Management
+
+Routes connect departure and arrival airports and provide the foundation for flight scheduling.
+
+Flight records can reference an existing route while maintaining their airport relationships.
+
+---
+
+## 🧠 Business Validation
+
+AirHive includes backend validation for operational consistency.
+
+Examples include:
+
+- Duplicate flight validation
+- Duplicate aircraft registration validation
+- Duplicate airport identifier validation
+- Aircraft existence validation
+- Airport existence validation
+- Route existence validation
+- Aircraft scheduling conflict detection
+- DTO validation
+
+---
+
+# 🏗️ Architecture
 
 AirHive follows a layered backend architecture:
 
+```text
+                    ┌─────────────────────┐
+                    │   React Frontend    │
+                    │ React + TypeScript  │
+                    └──────────┬──────────┘
+                               │
+                    REST API / WebSocket
+                               │
+             ┌─────────────────▼─────────────────┐
+             │          Spring Boot              │
+             │             Backend               │
+             └─────────────────┬─────────────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              │                │                │
+              ▼                ▼                ▼
+        Controllers        Services       WebSocket
+              │                │                │
+              ▼                ▼                ▼
+         DTO / Mapper     Repositories     STOMP Broker
+              │                │
+              └────────┬───────┘
+                       ▼
+                PostgreSQL
+                       │
+                       ▲
+                       │
+                 Redis Cache
+```
+
+### Backend Flow
+
+```text
+HTTP Request
+     │
+     ▼
 Controller
-    │
-    ▼
+     │
+     ▼
 Service
-    │
-    ▼
+     │
+     ├── Validation
+     ├── Business Rules
+     ├── Cache
+     └── WebSocket Events
+     │
+     ▼
 Repository
-    │
-    ▼
+     │
+     ▼
 PostgreSQL
+```
 
-Additional infrastructure:
+---
 
-Spring Boot
-    │
-    ├── REST APIs
-    │
-    ├── Validation
-    │
-    ├── Business Rules
-    │
-    ├── Redis Cache
-    │
-    └── WebSocket / STOMP
-             │
-             ▼
-       React Frontend
-REST Request Flow
-React
-  │
-  │ HTTP
-  ▼
-REST Controller
-  │
-  ▼
-Service Layer
-  │
-  ├── Validation
-  ├── Business Rules
-  └── Cache
-  │
-  ▼
-Repository
-  │
-  ▼
-PostgreSQL
-Real-Time Flow
-Flight Mutation
-      │
-      ▼
-FlightService
-      │
-      ▼
-FlightWebSocketService
-      │
-      ▼
-STOMP Broker
-      │
-      ▼
-/topic/flights
-      │
-      ▼
-React WebSocket Client
-      │
-      ▼
-Live Operations Dashboard
-🧰 Technology Stack
-Frontend
-Technology	Purpose
-React	UI framework
-TypeScript	Type-safe frontend development
-Vite	Frontend build tool
-Tailwind CSS	Styling
-Framer Motion	UI animations
-shadcn/ui	Reusable UI components
-Lucide React	Icons
-React Router	Client-side routing
-STOMP.js	WebSocket/STOMP client
-Backend
-Technology	Purpose
-Java 26	Backend language/runtime
-Spring Boot 4.1.0	Backend framework
-Spring Web	REST APIs
-Spring Data JPA	Database access
-Hibernate	ORM
-Spring Validation	Request validation
-Spring WebSocket	Real-time communication
-STOMP	WebSocket messaging protocol
-Maven	Build and dependency management
-Database & Infrastructure
-Technology	Purpose
-PostgreSQL	Primary relational database
-Redis	Application caching
-Spring Cache	Cache abstraction
-Git	Version control
-GitHub	Source-code hosting
-Testing
-Technology	Purpose
-JUnit	Unit testing
-Mockito	Mocking
-Spring Boot Test	Application/integration testing
-🚀 Features
-🛫 Flight Management
+# 🧰 Technology Stack
 
-AirHive currently supports:
+## Frontend
 
-Create flights
-Retrieve flights
-Retrieve individual flights
-Update flights
-Delete flights
-Flight status management
-Aircraft assignment
-Route assignment
-Departure/arrival airport validation
-Schedule validation
-Duplicate flight validation
-Aircraft scheduling conflict detection
+| Technology | Purpose |
+|---|---|
+| React | UI framework |
+| TypeScript | Type-safe development |
+| Vite | Development/build tooling |
+| Tailwind CSS | Styling |
+| Framer Motion | UI animations |
+| Lucide | Icons |
+| STOMP.js | WebSocket client |
 
-Supported statuses:
+## Backend
 
-SCHEDULED
-BOARDING
-IN_AIR
-LANDED
-DELAYED
-CANCELLED
-🛩️ Aircraft Management
+| Technology | Purpose |
+|---|---|
+| Java 26 | Backend language |
+| Spring Boot 4.1.0 | Application framework |
+| Spring Web | REST APIs |
+| Spring Data JPA | Database access |
+| Spring WebSocket | Real-time communication |
+| Spring Cache | Application caching |
+| Maven | Dependency/build management |
 
-Aircraft management includes:
+## Infrastructure
 
-Aircraft registration
-Aircraft type
-Aircraft status
-Aircraft assignment
-Duplicate registration validation
-Aircraft type relationships
-Redis caching
-🏢 Airport Management
+| Technology | Purpose |
+|---|---|
+| PostgreSQL | Primary relational database |
+| Redis | Caching |
+| Git | Version control |
+| GitHub | Source control and collaboration |
 
-Airport management includes:
+---
 
-Airport records
-IATA codes
-ICAO codes
-Airport validation
-Duplicate airport protection
-Redis caching
-🗺️ Route Management
+# 📁 Project Structure
 
-Routes connect operational airports and provide:
-
-Departure airport
-Arrival airport
-Route distance
-Estimated flight duration
-🔴 Redis Caching
-
-AirHive uses Redis to reduce unnecessary database queries.
-
-Caching has been implemented for:
-
-Airports
-Aircraft Types
-Aircraft
-Flights
-
-Spring Cache is used with Redis as the backing cache store.
-
-Cache Flow
-API Request
-    │
-    ▼
-Service
-    │
-    ▼
-Redis Cache
-    │
-    ├── HIT ──► Return cached DTO
-    │
-    └── MISS
-          │
-          ▼
-      PostgreSQL
-          │
-          ▼
-      Store in Redis
-
-Cached entries currently use a 10-minute TTL.
-
-Relevant cache entries are invalidated when data is created, updated, or deleted.
-
-⚡ WebSocket Real-Time Updates
-
-AirHive supports real-time flight updates using:
-
-Spring WebSocket
-STOMP
-STOMP.js
-/ws WebSocket endpoint
-/topic/flights subscription
-Flight Events
-
-The frontend currently receives:
-
-FLIGHT_CREATED
-FLIGHT_UPDATED
-FLIGHT_DELETED
-
-Example:
-
-{
-  "eventType": "FLIGHT_UPDATED",
-  "flight": {
-    "id": 1,
-    "flightNumber": "AH101",
-    "aircraftId": 2,
-    "aircraftRegistration": "VT-AIR01",
-    "departureAirportId": 2,
-    "departureAirportCode": "DEL",
-    "arrivalAirportId": 3,
-    "arrivalAirportCode": "BOM",
-    "routeId": 2,
-    "scheduledDeparture": "2026-08-17T09:00:00",
-    "scheduledArrival": "2026-08-17T11:15:00",
-    "status": "DELAYED"
-  }
-}
-
-The Operations Dashboard can process these events without requiring a page refresh.
-
-📁 Project Structure
+```text
 AirHive/
 │
 ├── backend/
 │   ├── src/
 │   │   ├── main/
-│   │   │   ├── java/com/airhive/backend/
-│   │   │   │
-│   │   │   ├── config/
-│   │   │   ├── controller/
-│   │   │   ├── dto/
-│   │   │   ├── entity/
-│   │   │   ├── exception/
-│   │   │   ├── mapper/
-│   │   │   ├── repository/
-│   │   │   └── service/
-│   │   │
-│   │   └── resources/
-│   │       └── application.yml
-│   │
+│   │   │   ├── java/
+│   │   │   │   └── com/airhive/backend/
+│   │   │   │       ├── config/
+│   │   │   │       ├── controller/
+│   │   │   │       ├── dto/
+│   │   │   │       ├── entity/
+│   │   │   │       ├── exception/
+│   │   │   │       ├── mapper/
+│   │   │   │       ├── repository/
+│   │   │   │       └── service/
+│   │   │   └── resources/
+│   │   │       └── application.yml
+│   │   └── test/
+│   │       └── java/
 │   ├── pom.xml
 │   ├── mvnw
 │   └── mvnw.cmd
@@ -352,659 +285,913 @@ AirHive/
 │
 ├── public/
 ├── package.json
+├── package-lock.json
 ├── vite.config.ts
 ├── tailwind.config.ts
-├── tsconfig.json
 └── README.md
-💻 Prerequisites
+```
 
-Before installing AirHive, install:
+---
 
-Git
-Node.js
-npm
-Java 26
-Maven
-PostgreSQL
-Redis
+# ⚙️ Prerequisites
 
-Check the installed versions:
+Before running AirHive, install:
 
-git --version
-node --version
-npm --version
-java --version
-mvn --version
+- Java 26
+- Maven
+- Node.js
+- npm
+- PostgreSQL
+- Redis
+- Git
+
+Verify installations:
+
+```bash
+java -version
+mvn -version
+node -v
+npm -v
 psql --version
-redis-cli --version
-📥 Installation
-1. Clone the Repository
+redis-server --version
+```
+
+---
+
+# 🚀 Getting Started
+
+## 1. Clone the Repository
+
+```bash
 git clone https://github.com/edtheninja/AirHive.git
-
-Enter the project:
-
 cd AirHive
-2. Install Frontend Dependencies
+```
 
-From the project root:
+---
 
-npm install
-3. Configure the Backend
+# 🗄️ Database Setup
 
-Move into the backend:
+AirHive uses PostgreSQL as its primary database.
 
-cd backend
+Create the database:
 
-Open:
+```sql
+CREATE DATABASE airhive;
+```
 
-src/main/resources/application.yml
+Create the application user:
 
-Configure PostgreSQL:
+```sql
+CREATE USER airhive_user WITH PASSWORD 'your_password';
+```
 
+Grant access:
+
+```sql
+GRANT ALL PRIVILEGES ON DATABASE airhive TO airhive_user;
+```
+
+Connect:
+
+```bash
+psql -U airhive_user -d airhive
+```
+
+## Database Configuration
+
+Configure:
+
+```text
+backend/src/main/resources/application.yml
+```
+
+Example:
+
+```yaml
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/airhive
     username: airhive_user
     password: your_password
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
+  jpa:
+    hibernate:
+      ddl-auto: update
+```
 
-Never commit real production passwords or secrets to GitHub.
+> Never commit real database credentials to Git.
 
-🗄️ PostgreSQL Setup
+---
 
-AirHive uses PostgreSQL as its primary persistent database.
+# 🔴 Redis Setup
 
-macOS / Homebrew
+AirHive uses Redis for caching frequently accessed backend data.
 
-Start PostgreSQL:
+Install on macOS with Homebrew:
 
-brew services start postgresql
-
-If using PostgreSQL 18:
-
-brew services start postgresql@18
-
-Verify:
-
-pg_isready
-
-Expected result should indicate that PostgreSQL is accepting connections.
-
-Create the AirHive Database
-
-Open PostgreSQL:
-
-psql postgres
-
-Create the database:
-
-CREATE DATABASE airhive;
-
-Create the application user:
-
-CREATE USER airhive_user WITH PASSWORD 'your_password';
-
-Grant database privileges:
-
-GRANT ALL PRIVILEGES ON DATABASE airhive TO airhive_user;
-
-Exit:
-
-\q
-
-Then configure the credentials in:
-
-backend/src/main/resources/application.yml
-🔴 Redis Setup
-
-Redis is required for AirHive's caching system.
-
-Install Redis
+```bash
 brew install redis
+```
 
 Start Redis:
 
+```bash
 brew services start redis
+```
 
 Verify:
 
+```bash
 redis-cli ping
+```
 
 Expected:
 
+```text
 PONG
+```
 
-AirHive uses:
+## Redis Configuration
 
+```yaml
 spring:
   data:
     redis:
       host: localhost
       port: 6379
-▶️ Running the Application
+```
 
-AirHive uses multiple services during local development.
+The default cache TTL is:
 
-┌─────────────────────────┐
-│ React / Vite            │
-│ localhost:5173          │
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│ Spring Boot             │
-│ localhost:8080          │
-└───────┬─────────┬───────┘
-        │         │
-        ▼         ▼
-┌────────────┐ ┌────────────┐
-│ PostgreSQL │ │   Redis    │
-│ :5432      │ │   :6379    │
-└────────────┘ └────────────┘
-Terminal 1 — PostgreSQL
+```text
+10 minutes
+```
 
-Make sure PostgreSQL is running:
+---
 
-pg_isready
-Terminal 2 — Redis
+# ▶️ Running the Application
 
-Verify Redis:
+AirHive requires the frontend and backend to run separately during development.
 
-redis-cli ping
-Terminal 3 — Backend
+## Start the Backend
 
-From the project root:
+Open Terminal 1:
 
-cd backend
+```bash
+cd AirHive/backend
+./mvnw clean install
 ./mvnw spring-boot:run
+```
 
-The backend runs on:
+Backend:
 
+```text
 http://localhost:8080
-Terminal 4 — Frontend
+```
 
-Open another terminal and return to the project root:
+## Start the Frontend
 
+Open Terminal 2:
+
+```bash
 cd AirHive
+npm install
 npm run dev
+```
 
-The frontend normally runs on:
+Frontend:
 
+```text
 http://localhost:5173
+```
 
-Open that address in your browser.
+---
 
-🔌 API Overview
+# 🔌 API Documentation
 
-The backend exposes REST APIs under:
+Base URL:
 
-/api
-Airports
-GET     /api/airports
-GET     /api/airports/{id}
-POST    /api/airports
-PUT     /api/airports/{id}
-DELETE  /api/airports/{id}
-Aircraft Types
-GET     /api/aircraft-types
-GET     /api/aircraft-types/{id}
-POST    /api/aircraft-types
-PUT     /api/aircraft-types/{id}
-DELETE  /api/aircraft-types/{id}
-Aircraft
-GET     /api/aircraft
-GET     /api/aircraft/{id}
-POST    /api/aircraft
-PUT     /api/aircraft/{id}
-DELETE  /api/aircraft/{id}
-Routes
-GET     /api/routes
-GET     /api/routes/{id}
-POST    /api/routes
-PUT     /api/routes/{id}
-DELETE  /api/routes/{id}
-Flights
-GET     /api/flights
-GET     /api/flights/{id}
-POST    /api/flights
-PUT     /api/flights/{id}
-DELETE  /api/flights/{id}
-📡 WebSocket Endpoint
+```text
+http://localhost:8080/api
+```
 
-The WebSocket endpoint is:
+## Airports
 
+```http
+GET    /api/airports
+GET    /api/airports/{id}
+POST   /api/airports
+PUT    /api/airports/{id}
+DELETE /api/airports/{id}
+```
+
+## Aircraft Types
+
+```http
+GET    /api/aircraft-types
+GET    /api/aircraft-types/{id}
+POST   /api/aircraft-types
+PUT    /api/aircraft-types/{id}
+DELETE /api/aircraft-types/{id}
+```
+
+## Aircraft
+
+```http
+GET    /api/aircraft
+GET    /api/aircraft/{id}
+POST   /api/aircraft
+PUT    /api/aircraft/{id}
+DELETE /api/aircraft/{id}
+```
+
+## Routes
+
+```http
+GET    /api/routes
+GET    /api/routes/{id}
+POST   /api/routes
+PUT    /api/routes/{id}
+DELETE /api/routes/{id}
+```
+
+## Flights
+
+```http
+GET    /api/flights
+GET    /api/flights/{id}
+POST   /api/flights
+PUT    /api/flights/{id}
+DELETE /api/flights/{id}
+```
+
+---
+
+# 🛰️ WebSocket Real-Time Updates
+
+AirHive supports real-time flight updates using:
+
+- Spring WebSocket
+- STOMP
+- STOMP.js
+
+## WebSocket Endpoint
+
+```text
 ws://localhost:8080/ws
+```
 
-Flight events are published to:
+## Flight Topic
 
+Clients subscribe to:
+
+```text
 /topic/flights
+```
 
-The frontend STOMP client connects to:
+Events currently supported:
 
-ws://localhost:8080/ws
+```text
+FLIGHT_CREATED
+FLIGHT_UPDATED
+FLIGHT_DELETED
+```
 
-and subscribes to:
+Example:
 
-/topic/flights
-🧪 Testing
-
-Run the complete backend test suite:
-
-cd backend
-./mvnw test
-
-Build the backend without tests:
-
-./mvnw clean package -DskipTests
-
-Run a specific test:
-
-./mvnw test -Dtest=FlightServiceTest
-Frontend Type Checking
-
-From the project root:
-
-npx tsc --noEmit
-
-A successful check produces no TypeScript error output.
-
-🔍 API Testing with cURL
-
-Retrieve all flights:
-
-curl http://localhost:8080/api/flights
-
-Retrieve a specific flight:
-
-curl http://localhost:8080/api/flights/1
-
-Create a flight:
-
-curl -X POST http://localhost:8080/api/flights \
-  -H "Content-Type: application/json" \
-  -d '{
-    "flightNumber": "AH999",
+```json
+{
+  "eventType": "FLIGHT_UPDATED",
+  "flight": {
+    "id": 1,
+    "flightNumber": "AH101",
     "aircraftId": 2,
-    "routeId": 2,
+    "aircraftRegistration": "VT-AIR01",
     "departureAirportId": 2,
+    "departureAirportCode": "DEL",
     "arrivalAirportId": 3,
-    "scheduledDeparture": "2026-08-25T09:00:00",
-    "scheduledArrival": "2026-08-25T11:15:00",
+    "arrivalAirportCode": "BOM",
+    "routeId": 2,
+    "scheduledDeparture": "2026-08-17T09:00:00",
+    "scheduledArrival": "2026-08-17T11:15:00",
     "status": "SCHEDULED"
-  }'
-🧹 Development Workflow
+  }
+}
+```
 
-Recommended workflow:
+The frontend receives these events and updates the live operations dashboard without requiring a page refresh.
 
-1. Pull latest changes
-        ↓
-2. Start PostgreSQL
-        ↓
-3. Start Redis
-        ↓
-4. Start Spring Boot
-        ↓
-5. Start Vite
-        ↓
-6. Develop
-        ↓
-7. Run TypeScript checks
-        ↓
-8. Run backend tests
-        ↓
-9. Review Git changes
-        ↓
-10. Commit
-        ↓
-11. Push
-Check Git Status
-git status
-Review Changes
-git diff
-Check for Whitespace Problems
-git diff --check
-Frontend Type Check
-npx tsc --noEmit
-Backend Tests
+---
+
+# ⚡ Caching
+
+Redis caching is implemented for:
+
+- Airports
+- Aircraft Types
+- Aircraft
+- Flights
+
+Cache flow:
+
+```text
+Request
+   │
+   ▼
+Redis Cache
+   │
+   ├── HIT ──► Return cached data
+   │
+   └── MISS
+         │
+         ▼
+     PostgreSQL
+         │
+         ▼
+     Store in Redis
+         │
+         ▼
+     Return response
+```
+
+Mutation operations invalidate relevant cache entries to prevent stale data.
+
+---
+
+# 🧪 Testing
+
+The backend contains tests covering:
+
+- Controllers
+- Services
+- Repositories
+- Validation
+- Exception handling
+- Redis behavior
+- WebSocket publishing
+- Flight business rules
+
+Run all backend tests:
+
+```bash
 cd backend
 ./mvnw test
-📊 Current Status
-Module	Status
-Core Architecture	✅ Complete
-PostgreSQL Database	✅ Complete
-Airport Management	✅ Complete
-Aircraft Type Management	✅ Complete
-Aircraft Management	✅ Complete
-Route Management	✅ Complete
-Flight Management	✅ Complete
-REST APIs	✅ Complete
-DTO Architecture	✅ Complete
-Validation	✅ Complete
-Business Rules	✅ Complete
-Exception Handling	✅ Complete
-Automated Testing	✅ Complete
-Frontend API Integration	✅ Complete
-Redis Caching	✅ Complete
-Flight WebSocket Updates	✅ Complete
-Aircraft WebSocket Updates	⏳ Planned
-Advanced Real-Time Operations	⏳ Planned
-UI Design-System Polish	⏳ Planned
-Authentication	⏳ Planned
-RBAC	⏳ Planned
-Docker	⏳ Planned
-CI/CD	⏳ Planned
-Production Deployment	⏳ Planned
-Final QA	⏳ Planned
-🗺️ Roadmap
-Phase 1 — Foundation
- Project architecture
- Database
- Core entities
- REST APIs
-Phase 2 — Business Logic
- DTOs
- Validation
- Duplicate-resource protection
- Scheduling conflict detection
- Exception handling
-Phase 3 — Frontend Integration
- API client
- Flight integration
- Aircraft integration
- Airport integration
- Route integration
- Operations dashboard integration
-Phase 4 — Performance
- Redis integration
- Cache configuration
- TTL
- Cache invalidation
- DTO-based caching
-Phase 5 — Real-Time Operations
- Spring WebSocket
- STOMP
- Flight events
- Frontend STOMP client
- Live dashboard updates
- Flight created events
- Flight updated events
- Flight deleted events
- Aircraft events
- Advanced operational event streams
-Phase 6 — Security
- Authentication
- JWT
- Role-based access control
- Admin roles
- Operations roles
- Airport staff roles
- Protected WebSocket channels
-Phase 7 — Deployment
- Docker
- Docker Compose
- CI/CD
- Production configuration
- Cloud deployment
- Monitoring
-Phase 8 — Finalization
- End-to-end QA
- Performance testing
- Security testing
- API documentation
- Developer documentation
- Deployment documentation
-🎨 Design Philosophy
+```
 
-AirHive's frontend follows a premium airline operations aesthetic inspired by modern desktop operating systems.
+At the current development checkpoint:
 
-Visual Principles
-Frosted glass surfaces
-Soft layered shadows
-Rounded cards
-Clean typography
-Spacious layouts
-Minimal visual clutter
-Clear information hierarchy
-Smooth animations
-Responsive layouts
-Color Palette
-Purpose	Color
-Background	#F6F7FB
-Primary	#1E3A8A
-Accent	#3B82F6
-Success	#22C55E
-Warning	#F59E0B
-Danger	#EF4444
-Text	#111827
-Secondary Text	#6B7280
-Dark Mode
-Background: #0F172A
-Glass: rgba(30,41,59,.65)
-🖥️ Operations Dashboard
+```text
+Tests: 172
+Failures: 0
+Errors: 0
+Skipped: 0
+```
 
-The Operations Dashboard is designed around airline operational workflows.
+> The test count may increase as development continues.
 
-Current dashboard concepts include:
+## Frontend Type Checking
 
-Total Flights
-Active Flights
-Delayed Flights
-Revenue
-Passenger Count
-Fleet Availability
-Live Flight Operations
-Notifications
-Aircraft information
-Operational actions
+```bash
+npx tsc --noEmit
+```
 
-The dashboard is designed to evolve into a complete airline operations center.
+A successful run should return without TypeScript errors.
 
-🔔 Live Operations
+---
 
-Real-time infrastructure allows the dashboard to react to backend events without refreshing the page.
+# 🛠️ Frontend Development
 
-Backend
-   │
-   │ Flight status changed
-   ▼
-Spring Boot
-   │
-   │ STOMP Event
-   ▼
-/topic/flights
-   │
-   ▼
-React
-   │
-   ▼
-Live Operations Table
+Frontend API communication is separated from UI components.
 
-This provides the foundation for:
+Important areas:
 
-Live aircraft tracking
-Gate changes
-Boarding updates
-Delay notifications
-Crew changes
-Maintenance alerts
-Operational announcements
-🌍 Future Expansion
+```text
+src/
+├── components/
+├── lib/
+│   ├── api/
+│   │   ├── aircraft.ts
+│   │   ├── flights.ts
+│   │   ├── websocket.ts
+│   │   └── ...
+│   └── ams/
+│       └── live-ops.tsx
+└── routes/
+    ├── aircraft.tsx
+    ├── flights.tsx
+    ├── routes.tsx
+    └── ...
+```
 
-The architecture is designed to support additional airline-management modules:
+Useful commands:
 
-👨‍✈️ Crew Management
-👥 Passenger Management
-🎫 Booking Management
-🔧 Maintenance Management
-🛬 Gate Management
-📊 Advanced Analytics
-🌍 Real-Time Aircraft Tracking
-🔔 Operational Notifications
-🔐 Enterprise Authentication
-🏢 Multi-Airport Operations
-📈 Revenue Analytics
-🌐 Live Application
+```bash
+npm install
+npm run dev
+npm run build
+npm run preview
+npx tsc --noEmit
+```
 
-The current frontend application is available at:
+---
 
-https://skyward-zenith-ops.lovable.app
+# ☕ Backend Development
 
-The live application represents the frontend experience. The complete local development environment includes the Spring Boot backend, PostgreSQL database, Redis cache, and WebSocket infrastructure.
+The backend follows:
 
-🧑‍💻 Lovable
+```text
+Controller
+    ↓
+Service
+    ↓
+Repository
+    ↓
+PostgreSQL
+```
 
-The original frontend was initially created using Lovable.
+DTOs and mappers prevent direct exposure of persistence entities through API responses.
 
-The project can still be accessed through the Lovable editor:
+```text
+Entity
+  ↓
+Mapper
+  ↓
+Response DTO
+  ↓
+REST API
+```
 
-https://lovable.dev/projects/df8b1868-feef-4438-9a0a-d5022b91e158
+---
 
-The project has since evolved into a full-stack application with:
+# 🔐 Security
 
-React frontend
-Spring Boot backend
-PostgreSQL database
-Redis caching
-WebSocket/STOMP infrastructure
-Automated backend testing
-🛠️ Troubleshooting
-<details> <summary><strong>Backend does not start</strong></summary>
+Spring Security infrastructure is present in the backend.
 
-Check whether port 8080 is already being used:
+The current configuration permits the existing development API endpoints for development and testing.
 
-lsof -i :8080
+Authentication and role-based authorization are planned for a later phase.
 
-Stop the conflicting process if necessary and restart Spring Boot.
+> Production deployment must not use the current permissive development security configuration.
 
-</details> <details> <summary><strong>PostgreSQL connection error</strong></summary>
+---
+
+# 🧑‍💻 Git Workflow
+
+Pull the latest changes:
+
+```bash
+git pull origin main
+```
+
+Run validation:
+
+```bash
+npx tsc --noEmit
+```
+
+Run backend tests:
+
+```bash
+cd backend
+./mvnw test
+```
+
+Check formatting:
+
+```bash
+git diff --check
+```
+
+Check Git status:
+
+```bash
+git status
+```
+
+Commit changes:
+
+```bash
+git add .
+git commit -m "type: description"
+```
+
+Push:
+
+```bash
+git push origin main
+```
+
+## Commit Convention
+
+| Prefix | Usage |
+|---|---|
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `test:` | Tests |
+| `refactor:` | Code restructuring |
+| `style:` | Formatting/UI-only changes |
+| `docs:` | Documentation |
+| `chore:` | Maintenance |
+
+Examples:
+
+```text
+feat: integrate flight websocket updates
+test: improve flight service validation coverage
+docs: update project README
+```
+
+---
+
+# 📊 Current Project Status
+
+| Area | Status |
+|---|---|
+| Core Architecture | ✅ Complete |
+| PostgreSQL Database | ✅ Complete |
+| Airport APIs | ✅ Complete |
+| Aircraft Type APIs | ✅ Complete |
+| Aircraft APIs | ✅ Complete |
+| Route APIs | ✅ Complete |
+| Flight APIs | ✅ Complete |
+| Business Validation | ✅ Complete |
+| Frontend API Integration | ✅ Complete |
+| Backend Testing | ✅ Complete |
+| Redis Caching | ✅ Complete |
+| Flight WebSockets | ✅ Complete |
+| Frontend Live Flight Updates | ✅ Complete |
+| UI/Design System Polish | 🔜 Planned |
+| Authentication | 🔜 Planned |
+| RBAC | 🔜 Planned |
+| Docker | 🔜 Planned |
+| CI/CD | 🔜 Planned |
+| Production Deployment | 🔜 Planned |
+| Final QA & Documentation | 🔜 Planned |
+
+---
+
+# 🗺️ Roadmap
+
+## Phase 1 — Core Architecture
+
+- [x] Project structure
+- [x] Frontend architecture
+- [x] Backend architecture
+- [x] Database model
+
+## Phase 2 — Database
+
+- [x] PostgreSQL integration
+- [x] Airport schema
+- [x] Aircraft type schema
+- [x] Aircraft schema
+- [x] Route schema
+- [x] Flight schema
+
+## Phase 3 — REST APIs
+
+- [x] Airport APIs
+- [x] Aircraft Type APIs
+- [x] Aircraft APIs
+- [x] Route APIs
+- [x] Flight APIs
+
+## Phase 4 — Business Logic
+
+- [x] Validation
+- [x] Duplicate detection
+- [x] Resource validation
+- [x] Aircraft scheduling conflict detection
+- [x] Exception handling
+
+## Phase 5 — Frontend Integration
+
+- [x] API client layer
+- [x] Flight integration
+- [x] Aircraft integration
+- [x] Route integration
+- [x] Live operations integration
+
+## Phase 6 — Testing
+
+- [x] Service tests
+- [x] Controller tests
+- [x] Repository tests
+- [x] Validation tests
+- [x] WebSocket tests
+
+## Phase 7 — Redis
+
+- [x] Redis integration
+- [x] Airport caching
+- [x] Aircraft type caching
+- [x] Aircraft caching
+- [x] Flight caching
+- [x] Cache invalidation
+- [x] TTL verification
+
+## Phase 8 — Real-Time Operations
+
+- [x] Spring WebSocket
+- [x] STOMP broker
+- [x] Flight event DTO
+- [x] Flight created events
+- [x] Flight updated events
+- [x] Flight deleted events
+- [x] Frontend STOMP client
+- [x] Live flight dashboard updates
+
+## Phase 9 — UI & Design System
+
+- [ ] Design system refinement
+- [ ] Responsive improvements
+- [ ] Advanced dashboard interactions
+- [ ] Loading states
+- [ ] Empty states
+- [ ] Error states
+- [ ] Accessibility improvements
+
+## Phase 10 — Security
+
+- [ ] Authentication
+- [ ] JWT/session strategy
+- [ ] Role-based access control
+- [ ] Protected endpoints
+- [ ] WebSocket authorization
+- [ ] Production security configuration
+
+## Phase 11 — Deployment
+
+- [ ] Docker configuration
+- [ ] Production environment configuration
+- [ ] CI/CD pipeline
+- [ ] Automated deployment
+- [ ] Monitoring
+- [ ] Production database strategy
+
+## Phase 12 — Finalization
+
+- [ ] End-to-end QA
+- [ ] Performance testing
+- [ ] Security review
+- [ ] API documentation
+- [ ] Developer documentation
+- [ ] Final project report
+
+---
+
+# 🧰 Useful Commands
+
+## Frontend
+
+```bash
+npm install
+npm run dev
+npm run build
+npm run preview
+npx tsc --noEmit
+```
+
+## Backend
+
+```bash
+cd backend
+./mvnw clean install
+./mvnw spring-boot:run
+./mvnw test
+./mvnw clean
+```
+
+## PostgreSQL
+
+```bash
+psql --version
+psql -U airhive_user -d airhive
+```
+
+## Redis
+
+```bash
+redis-cli ping
+redis-cli KEYS '*'
+redis-cli FLUSHDB
+```
+
+> Use `FLUSHDB` carefully because it removes all keys from the currently selected Redis database.
+
+---
+
+# 🐛 Troubleshooting
+
+<details>
+<summary><strong>Backend cannot connect to PostgreSQL</strong></summary>
 
 Check PostgreSQL:
 
-pg_isready
+```bash
+brew services list
+```
 
-Check available databases:
+Test the database:
 
-psql -l
+```bash
+psql -U airhive_user -d airhive
+```
 
-Verify the credentials in:
+Then verify the credentials and URL in:
 
+```text
 backend/src/main/resources/application.yml
-</details> <details> <summary><strong>Redis connection error</strong></summary>
+```
 
-Check Redis:
+</details>
 
+<details>
+<summary><strong>Redis connection fails</strong></summary>
+
+Check:
+
+```bash
 redis-cli ping
+```
 
 Expected:
 
+```text
 PONG
+```
 
 Start Redis if necessary:
 
+```bash
 brew services start redis
-</details> <details> <summary><strong>Frontend cannot connect to backend</strong></summary>
+```
 
-Verify the backend:
+</details>
 
-curl http://localhost:8080/api/flights
+<details>
+<summary><strong>Port 8080 is already in use</strong></summary>
 
-Then start the frontend:
+Find the process:
 
-npm run dev
-</details> <details> <summary><strong>WebSocket is not connecting</strong></summary>
+```bash
+lsof -i :8080
+```
 
-Verify that Spring Boot is running on port 8080.
+Stop it if appropriate:
+
+```bash
+kill <PID>
+```
+
+Then restart Spring Boot.
+
+</details>
+
+<details>
+<summary><strong>WebSocket does not connect</strong></summary>
+
+Verify the backend is running:
+
+```text
+http://localhost:8080
+```
 
 WebSocket endpoint:
 
+```text
 ws://localhost:8080/ws
+```
 
 Flight topic:
 
+```text
 /topic/flights
+```
 
-Browser Developer Tools → Network → WS can be used to inspect the connection.
+Browser debugging:
+
+```text
+Developer Tools → Network → WS
+```
 
 </details>
-🔐 Production Considerations
 
-AirHive currently runs primarily as a development environment.
+<details>
+<summary><strong>Redis returns unexpected cached data</strong></summary>
 
-Before production deployment, the following should be implemented:
+Clear the development Redis database:
 
-Production database credentials
-Environment-specific configuration
-Authentication
-Authorization
-JWT
-HTTPS
-Secure WebSocket configuration
-Production Redis configuration
-Database migrations
-Docker
-CI/CD
-Monitoring
-Structured logging
-Rate limiting
-Secret management
-Production backups
-🤝 Contributing
-Fork the repository.
-Create a feature branch:
-git checkout -b feature/your-feature
-Make your changes.
-Run frontend checks:
-npx tsc --noEmit
-Run backend tests:
-cd backend
-./mvnw test
-Check formatting:
-git diff --check
-Review your changes:
-git diff
-Commit:
-git add .
-git commit -m "feat: describe your change"
-Push:
-git push origin feature/your-feature
-📄 License
+```bash
+redis-cli FLUSHDB
+```
 
-This project is currently under development.
+Restart the backend if necessary.
 
-License information will be added before the first production release.
+</details>
 
-✈️ AirHive
-From airline data to live operations.
+---
+
+# 🌎 Live Application
+
+Frontend deployment:
+
+https://skyward-zenith-ops.lovable.app
+
+The deployed frontend represents the current user-facing airline operations experience.
+
+The local development environment remains the primary environment for backend, API, database, Redis, and WebSocket development.
+
+---
+
+# 📚 Project History
+
+AirHive started as a frontend-focused airline operations interface and was subsequently expanded into a full-stack application.
+
+The project evolved through:
+
+```text
+Frontend Prototype
+       ↓
+React AMS Interface
+       ↓
+Spring Boot Backend
+       ↓
+PostgreSQL
+       ↓
+REST API Integration
+       ↓
+Automated Testing
+       ↓
+Redis Caching
+       ↓
+WebSocket Real-Time Operations
+```
+
+The current architecture is designed to support future authentication, authorization, deployment, and advanced operational features.
+
+---
+
+# 🎯 Design Philosophy
+
+### 1. Separation of Concerns
+
+Frontend, API, business logic, persistence, caching, and real-time communication are kept as separate layers.
+
+### 2. API-First Development
+
+The backend exposes structured REST APIs consumed by the frontend.
+
+### 3. Validation at the Service Layer
+
+Business rules are enforced independently of the UI.
+
+### 4. Performance Through Caching
+
+Redis reduces unnecessary database reads for frequently requested resources.
+
+### 5. Real-Time Operations
+
+WebSockets allow operational changes to reach connected clients without requiring page refreshes.
+
+### 6. Test-Driven Stabilization
+
+Major backend functionality is supported by automated tests before progressing to subsequent development phases.
+
+---
+
+# 📄 License
+
+This project is currently maintained as an academic/development project.
+
+License terms can be added when the project is formally released.
+
+---
+
+# 👥 Development
+
+## AirHive
+
+**Airline Operations & Management System**
 
 Built with:
 
+```text
 React
 TypeScript
-Vite
-Tailwind CSS
-Framer Motion
-shadcn/ui
-Lucide React
-React Router
 Spring Boot
-Java 26
-Spring Data JPA
-Hibernate
+Java
 PostgreSQL
 Redis
-Spring Cache
-WebSocket
+WebSockets
 STOMP
 Maven
-JUnit
-Mockito
-Git
-GitHub
+Vite
+```
 
-### One important change from the old README
+---
 
-I intentionally removed the old **"Build with Lovable" as the main project identity**. Lovable is now documented as part of the project's history, while the README presents AirHive accurately as the **full-stack Spring Boot + React + PostgreSQL + Redis + WebSocket system** it has become.
+<p align="center">
+  ✈️ <strong>AirHive</strong><br>
+  <em>Modern airline operations, connected in real time.</em>
+</p>
