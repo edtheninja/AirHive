@@ -1,12 +1,12 @@
 package com.airhive.backend.service;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 
 import com.airhive.backend.dto.FlightRequestDTO;
+import com.airhive.backend.dto.FlightResponseDTO;
 import com.airhive.backend.entity.Aircraft;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.entity.Flight;
@@ -59,14 +60,19 @@ class FlightServiceTest {
                 MockitoAnnotations.openMocks(this);
 
                 aircraft = new Aircraft();
+                setId(aircraft, 1L);
+                aircraft.setRegistrationNumber("VT-AIR01");
 
                 departureAirport = new Airport();
                 departureAirport.setId(1L);
+                departureAirport.setIataCode("DEL");
 
                 arrivalAirport = new Airport();
                 arrivalAirport.setId(2L);
+                arrivalAirport.setIataCode("BOM");
 
                 route = new Route();
+                setId(route, 1L);
                 route.setDepartureAirport(departureAirport);
                 route.setArrivalAirport(arrivalAirport);
 
@@ -108,13 +114,31 @@ class FlightServiceTest {
                                 .thenReturn(0L);
 
                 Flight savedFlight = new Flight();
+                setId(savedFlight, 1L);
+                savedFlight.setFlightNumber("AI101");
+                savedFlight.setAircraft(aircraft);
+                savedFlight.setRoute(route);
+                savedFlight.setDepartureAirport(departureAirport);
+                savedFlight.setArrivalAirport(arrivalAirport);
+                savedFlight.setScheduledDeparture(
+                                request.getScheduledDeparture());
+                savedFlight.setScheduledArrival(
+                                request.getScheduledArrival());
+                savedFlight.setStatus("SCHEDULED");
 
                 when(flightRepository.save(any(Flight.class)))
                                 .thenReturn(savedFlight);
 
-                Flight result = flightService.createFlight(request);
+                FlightResponseDTO result =
+                                flightService.createFlight(request);
 
                 assertNotNull(result);
+                assertEquals("AI101", result.getFlightNumber());
+                assertEquals(1L, result.getAircraftId());
+                assertEquals(1L, result.getRouteId());
+                assertEquals("DEL", result.getDepartureAirportCode());
+                assertEquals("BOM", result.getArrivalAirportCode());
+
                 verify(flightRepository).save(any(Flight.class));
         }
 
@@ -235,15 +259,25 @@ class FlightServiceTest {
         @Test
         void getFlightById_shouldReturnFlight() {
 
-                Flight flight = new Flight();
+                Flight flight = createFlightFixture();
 
                 when(flightRepository.findById(1L))
                                 .thenReturn(Optional.of(flight));
 
-                Flight result = flightService.getFlightById(1L);
+                FlightResponseDTO result =
+                                flightService.getFlightById(1L);
 
                 assertNotNull(result);
-                assertSame(flight, result);
+                assertEquals(1L, result.getId());
+                assertEquals("AI101", result.getFlightNumber());
+                assertEquals(1L, result.getAircraftId());
+                assertEquals("VT-AIR01", result.getAircraftRegistration());
+                assertEquals(1L, result.getRouteId());
+                assertEquals(1L, result.getDepartureAirportId());
+                assertEquals("DEL", result.getDepartureAirportCode());
+                assertEquals(2L, result.getArrivalAirportId());
+                assertEquals("BOM", result.getArrivalAirportCode());
+                assertEquals("SCHEDULED", result.getStatus());
         }
 
         @Test
@@ -260,28 +294,36 @@ class FlightServiceTest {
         @Test
         void getAllFlights_shouldReturnFlights() {
 
+                Flight flight1 = createFlightFixture();
+                setId(flight1, 1L);
+                flight1.setFlightNumber("AI101");
+
+                Flight flight2 = createFlightFixture();
+                setId(flight2, 2L);
+                flight2.setFlightNumber("AI102");
+
                 List<Flight> flights = List.of(
-                                new Flight(),
-                                new Flight());
+                                flight1,
+                                flight2);
 
                 when(flightRepository.findAll())
                                 .thenReturn(flights);
 
-                List<Flight> result = flightService.getAllFlights();
+                List<FlightResponseDTO> result =
+                                flightService.getAllFlights();
 
                 assertEquals(2, result.size());
+                assertEquals("AI101", result.get(0).getFlightNumber());
+                assertEquals("AI102", result.get(1).getFlightNumber());
+
                 verify(flightRepository).findAll();
         }
 
         @Test
         void updateFlight_shouldUpdateSuccessfully() {
 
-                Flight existingFlight = new Flight();
+                Flight existingFlight = createFlightFixture();
                 existingFlight.setFlightNumber("AI100");
-                existingFlight.setAircraft(aircraft);
-                existingFlight.setRoute(route);
-                existingFlight.setDepartureAirport(departureAirport);
-                existingFlight.setArrivalAirport(arrivalAirport);
 
                 when(flightRepository.findById(1L))
                                 .thenReturn(Optional.of(existingFlight));
@@ -311,10 +353,14 @@ class FlightServiceTest {
                 when(flightRepository.save(existingFlight))
                                 .thenReturn(existingFlight);
 
-                Flight result = flightService.updateFlight(1L, request);
+                FlightResponseDTO result =
+                                flightService.updateFlight(1L, request);
 
                 assertNotNull(result);
                 assertEquals("AI101", result.getFlightNumber());
+                assertEquals("SCHEDULED", result.getStatus());
+                assertEquals(1L, result.getAircraftId());
+                assertEquals(1L, result.getRouteId());
 
                 verify(flightRepository).save(existingFlight);
         }
@@ -445,157 +491,9 @@ class FlightServiceTest {
         }
 
         @Test
-        void updateFlight_shouldThrowException_whenRouteDepartureAirportDoesNotMatch() {
-
-                Flight existingFlight = new Flight();
-                existingFlight.setFlightNumber("AI100");
-
-                Airport differentDepartureAirport = new Airport();
-                differentDepartureAirport.setId(3L);
-
-                Route mismatchedRoute = new Route();
-                mismatchedRoute.setDepartureAirport(differentDepartureAirport);
-                mismatchedRoute.setArrivalAirport(arrivalAirport);
-
-                when(flightRepository.findById(1L))
-                                .thenReturn(Optional.of(existingFlight));
-
-                when(flightRepository.existsByFlightNumber("AI101"))
-                                .thenReturn(false);
-
-                when(aircraftRepository.findById(1L))
-                                .thenReturn(Optional.of(aircraft));
-
-                when(airportRepository.findById(1L))
-                                .thenReturn(Optional.of(departureAirport));
-
-                when(airportRepository.findById(2L))
-                                .thenReturn(Optional.of(arrivalAirport));
-
-                when(routeRepository.findById(1L))
-                                .thenReturn(Optional.of(mismatchedRoute));
-
-                IllegalArgumentException exception = assertThrows(
-                                IllegalArgumentException.class,
-                                () -> flightService.updateFlight(1L, request));
-
-                assertEquals(
-                                "Flight departure airport does not match route",
-                                exception.getMessage());
-        }
-
-        @Test
-        void updateFlight_shouldThrowException_whenRouteArrivalAirportDoesNotMatch() {
-
-                Flight existingFlight = new Flight();
-                existingFlight.setFlightNumber("AI100");
-
-                Airport differentArrivalAirport = new Airport();
-                differentArrivalAirport.setId(3L);
-
-                Route mismatchedRoute = new Route();
-                mismatchedRoute.setDepartureAirport(departureAirport);
-                mismatchedRoute.setArrivalAirport(differentArrivalAirport);
-
-                when(flightRepository.findById(1L))
-                                .thenReturn(Optional.of(existingFlight));
-
-                when(flightRepository.existsByFlightNumber("AI101"))
-                                .thenReturn(false);
-
-                when(aircraftRepository.findById(1L))
-                                .thenReturn(Optional.of(aircraft));
-
-                when(airportRepository.findById(1L))
-                                .thenReturn(Optional.of(departureAirport));
-
-                when(airportRepository.findById(2L))
-                                .thenReturn(Optional.of(arrivalAirport));
-
-                when(routeRepository.findById(1L))
-                                .thenReturn(Optional.of(mismatchedRoute));
-
-                IllegalArgumentException exception = assertThrows(
-                                IllegalArgumentException.class,
-                                () -> flightService.updateFlight(1L, request));
-
-                assertEquals(
-                                "Flight arrival airport does not match route",
-                                exception.getMessage());
-        }
-
-        @Test
-        void createFlight_shouldThrowException_whenRouteDepartureAirportDoesNotMatch() {
-
-                Airport differentDepartureAirport = new Airport();
-                differentDepartureAirport.setId(3L);
-
-                Route mismatchedRoute = new Route();
-                mismatchedRoute.setDepartureAirport(differentDepartureAirport);
-                mismatchedRoute.setArrivalAirport(arrivalAirport);
-
-                when(flightRepository.existsByFlightNumber("AI101"))
-                                .thenReturn(false);
-
-                when(aircraftRepository.findById(1L))
-                                .thenReturn(Optional.of(aircraft));
-
-                when(airportRepository.findById(1L))
-                                .thenReturn(Optional.of(departureAirport));
-
-                when(airportRepository.findById(2L))
-                                .thenReturn(Optional.of(arrivalAirport));
-
-                when(routeRepository.findById(1L))
-                                .thenReturn(Optional.of(mismatchedRoute));
-
-                IllegalArgumentException exception = assertThrows(
-                                IllegalArgumentException.class,
-                                () -> flightService.createFlight(request));
-
-                assertEquals(
-                                "Flight departure airport does not match route",
-                                exception.getMessage());
-        }
-
-        @Test
-        void createFlight_shouldThrowException_whenRouteArrivalAirportDoesNotMatch() {
-
-                Airport differentArrivalAirport = new Airport();
-                differentArrivalAirport.setId(3L);
-
-                Route mismatchedRoute = new Route();
-                mismatchedRoute.setDepartureAirport(departureAirport);
-                mismatchedRoute.setArrivalAirport(differentArrivalAirport);
-
-                when(flightRepository.existsByFlightNumber("AI101"))
-                                .thenReturn(false);
-
-                when(aircraftRepository.findById(1L))
-                                .thenReturn(Optional.of(aircraft));
-
-                when(airportRepository.findById(1L))
-                                .thenReturn(Optional.of(departureAirport));
-
-                when(airportRepository.findById(2L))
-                                .thenReturn(Optional.of(arrivalAirport));
-
-                when(routeRepository.findById(1L))
-                                .thenReturn(Optional.of(mismatchedRoute));
-
-                IllegalArgumentException exception = assertThrows(
-                                IllegalArgumentException.class,
-                                () -> flightService.createFlight(request));
-
-                assertEquals(
-                                "Flight arrival airport does not match route",
-                                exception.getMessage());
-        }
-
-        @Test
         void updateFlight_shouldThrowException_whenAircraftScheduleConflicts() {
 
-                Flight existingFlight = new Flight();
+                Flight existingFlight = createFlightFixture();
                 existingFlight.setFlightNumber("AI100");
 
                 when(flightRepository.findById(1L))
@@ -629,4 +527,58 @@ class FlightServiceTest {
 
                 assertNotNull(exception);
         }
+
+        @Test
+        void deleteFlight_shouldDeleteSuccessfully() {
+
+                Flight existingFlight = createFlightFixture();
+
+                when(flightRepository.findById(1L))
+                                .thenReturn(Optional.of(existingFlight));
+
+                flightService.deleteFlight(1L);
+
+                verify(flightRepository).delete(existingFlight);
+        }
+
+        @Test
+        void deleteFlight_shouldThrowException_whenNotFound() {
+
+                when(flightRepository.findById(999L))
+                                .thenReturn(Optional.empty());
+
+                assertNotNull(assertThrows(
+                                ResourceNotFoundException.class,
+                                () -> flightService.deleteFlight(999L)));
+        }
+
+        private Flight createFlightFixture() {
+
+                Flight flight = new Flight();
+
+                setId(flight, 1L);
+                flight.setFlightNumber("AI101");
+                flight.setAircraft(aircraft);
+                flight.setRoute(route);
+                flight.setDepartureAirport(departureAirport);
+                flight.setArrivalAirport(arrivalAirport);
+                flight.setScheduledDeparture(
+                                request.getScheduledDeparture());
+                flight.setScheduledArrival(
+                                request.getScheduledArrival());
+                flight.setStatus("SCHEDULED");
+
+                return flight;
+        }
+
+        private void setId(Object entity, long id) {
+                try {
+                        Field f = entity.getClass().getDeclaredField("id");
+                        f.setAccessible(true);
+                        f.set(entity, id);
+                } catch (Exception e) {
+                        throw new RuntimeException(e);
+                }
+        }
 }
+

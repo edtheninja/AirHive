@@ -1,14 +1,20 @@
 package com.airhive.backend.service;
 
+import java.util.List;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.airhive.backend.dto.FlightRequestDTO;
+import com.airhive.backend.dto.FlightResponseDTO;
 import com.airhive.backend.entity.Aircraft;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.entity.Flight;
 import com.airhive.backend.entity.Route;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
+import com.airhive.backend.mapper.FlightMapper;
 import com.airhive.backend.repository.AircraftRepository;
 import com.airhive.backend.repository.AirportRepository;
 import com.airhive.backend.repository.FlightRepository;
@@ -34,7 +40,8 @@ public class FlightService {
         this.routeRepository = routeRepository;
     }
 
-    public Flight createFlight(FlightRequestDTO request) {
+    @CacheEvict(value = "flights", allEntries = true)
+    public FlightResponseDTO createFlight(FlightRequestDTO request) {
 
         validateRequest(request);
 
@@ -81,7 +88,6 @@ public class FlightService {
                 departureAirport,
                 arrivalAirport);
 
-        // Aircraft scheduling conflict check
         long conflictCount =
                 flightRepository.countAircraftScheduleConflicts(
                         request.getAircraftId(),
@@ -90,7 +96,7 @@ public class FlightService {
 
         if (conflictCount > 0) {
             throw new DuplicateResourceException(
-        "Aircraft is already scheduled for another flight during this time");
+                    "Aircraft is already scheduled for another flight during this time");
         }
 
         Flight flight = new Flight();
@@ -117,28 +123,40 @@ public class FlightService {
         flight.setStatus(
                 request.getStatus());
 
-        return flightRepository.save(flight);
+        Flight savedFlight =
+                flightRepository.save(flight);
+
+        return FlightMapper.toResponse(savedFlight);
     }
 
-    public Flight getFlightById(Long id) {
+    @Cacheable(value = "flights", key = "#id")
+    public FlightResponseDTO getFlightById(Long id) {
 
-        return flightRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Flight not found with id: " + id));
+        Flight flight =
+                flightRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Flight not found with id: " + id));
+
+        return FlightMapper.toResponse(flight);
     }
 
-    public java.util.List<Flight> getAllFlights() {
+    @Cacheable("flights")
+    public List<FlightResponseDTO> getAllFlights() {
 
-        return flightRepository.findAll();
+        return flightRepository.findAll()
+                .stream()
+                .map(FlightMapper::toResponse)
+                .toList();
     }
 
-    public Flight updateFlight(
+    @CacheEvict(value = "flights", allEntries = true)
+    public FlightResponseDTO updateFlight(
             Long id,
             FlightRequestDTO request) {
 
         Flight existingFlight =
-                getFlightById(id);
+                getFlightEntityById(id);
 
         validateRequest(request);
 
@@ -189,7 +207,6 @@ public class FlightService {
                 departureAirport,
                 arrivalAirport);
 
-        // Aircraft scheduling conflict check
         long conflictCount =
                 flightRepository.countAircraftScheduleConflictsForUpdate(
                         request.getAircraftId(),
@@ -226,16 +243,27 @@ public class FlightService {
         existingFlight.setStatus(
                 request.getStatus());
 
-        return flightRepository.save(
-                existingFlight);
+        Flight updatedFlight =
+                flightRepository.save(existingFlight);
+
+        return FlightMapper.toResponse(updatedFlight);
     }
 
+    @CacheEvict(value = "flights", allEntries = true)
     public void deleteFlight(Long id) {
 
         Flight flight =
-                getFlightById(id);
+                getFlightEntityById(id);
 
         flightRepository.delete(flight);
+    }
+
+    private Flight getFlightEntityById(Long id) {
+
+        return flightRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Flight not found with id: " + id));
     }
 
     private void validateRequest(

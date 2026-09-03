@@ -23,10 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.airhive.backend.entity.Aircraft;
-import com.airhive.backend.entity.Airport;
-import com.airhive.backend.entity.Flight;
-import com.airhive.backend.entity.Route;
+import com.airhive.backend.dto.FlightResponseDTO;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.service.FlightService;
@@ -41,42 +38,34 @@ class FlightControllerTest {
     @MockitoBean
     private FlightService flightService;
 
-    private Flight flight;
-    private Aircraft aircraft;
-    private Route route;
-    private Airport departureAirport;
-    private Airport arrivalAirport;
+    private FlightResponseDTO flight;
 
     @BeforeEach
     @SuppressWarnings("unused")
     void setUp() {
 
-        departureAirport = new Airport();
-        departureAirport.setIataCode("DEL");
+        flight = new FlightResponseDTO();
 
-        arrivalAirport = new Airport();
-        arrivalAirport.setIataCode("BOM");
-
-        aircraft = new Aircraft();
-        aircraft.setRegistrationNumber("VT-AIR01");
-
-        route = new Route();
-        route.setDepartureAirport(departureAirport);
-        route.setArrivalAirport(arrivalAirport);
-        route.setDistanceKm(1150.0);
-        route.setEstimatedDurationMinutes(135);
-        route.setStatus("ACTIVE");
-
-        flight = new Flight();
+        flight.setId(1L);
         flight.setFlightNumber("AI101");
-        flight.setAircraft(aircraft);
-        flight.setRoute(route);
-        flight.setDepartureAirport(departureAirport);
-        flight.setArrivalAirport(arrivalAirport);
+
+        flight.setAircraftId(1L);
+        flight.setAircraftRegistration("VT-AIR01");
+
+        flight.setRouteId(1L);
+
+        flight.setDepartureAirportId(1L);
+        flight.setDepartureAirportCode("DEL");
+
+        flight.setArrivalAirportId(2L);
+        flight.setArrivalAirportCode("BOM");
+
         flight.setScheduledDeparture(
                 LocalDateTime.of(2026, 8, 27, 10, 0));
+
         flight.setScheduledArrival(
                 LocalDateTime.of(2026, 8, 27, 12, 15));
+
         flight.setStatus("SCHEDULED");
     }
 
@@ -389,7 +378,11 @@ class FlightControllerTest {
         mockMvc.perform(put("/api/flights/999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status")
+                        .value(404))
+                .andExpect(jsonPath("$.message")
+                        .value("Flight not found with id: 999"));
     }
 
     @Test
@@ -411,7 +404,11 @@ class FlightControllerTest {
                 .deleteFlight(999L);
 
         mockMvc.perform(delete("/api/flights/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status")
+                        .value(404))
+                .andExpect(jsonPath("$.message")
+                        .value("Flight not found with id: 999"));
     }
 }
 

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.airhive.backend.dto.FlightRequestDTO;
 import com.airhive.backend.dto.FlightResponseDTO;
-import com.airhive.backend.mapper.FlightMapper;
 import com.airhive.backend.service.FlightService;
 
 import jakarta.validation.Valid;
@@ -35,9 +34,6 @@ public class FlightController {
 
         return ResponseEntity.ok(
                 flightService.getAllFlights()
-                        .stream()
-                        .map(FlightMapper::toResponse)
-                        .toList()
         );
     }
 
@@ -46,9 +42,7 @@ public class FlightController {
             @PathVariable Long id) {
 
         return ResponseEntity.ok(
-                FlightMapper.toResponse(
-                        flightService.getFlightById(id)
-                )
+                flightService.getFlightById(id)
         );
     }
 
@@ -58,11 +52,7 @@ public class FlightController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(
-                        FlightMapper.toResponse(
-                                flightService.createFlight(request)
-                        )
-                );
+                .body(flightService.createFlight(request));
     }
 
     @PutMapping("/{id}")
@@ -71,9 +61,7 @@ public class FlightController {
             @Valid @RequestBody FlightRequestDTO request) {
 
         return ResponseEntity.ok(
-                FlightMapper.toResponse(
-                        flightService.updateFlight(id, request)
-                )
+                flightService.updateFlight(id, request)
         );
     }
 
