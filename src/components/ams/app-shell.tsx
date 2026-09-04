@@ -228,7 +228,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="px-4 pt-4 pb-28 lg:pb-10">{children}</main>
+        <main className="px-4 pt-4 pb-36 lg:pb-10">{children}</main>
       </motion.div>
 
       {/* Mobile floating navigation */}
