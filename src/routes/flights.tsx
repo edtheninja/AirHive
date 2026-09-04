@@ -87,13 +87,13 @@ function FlightsPage() {
           loading ? "Loading flights..." : `${visible.length} flights matching current filters`
         }
         action={
-          <div className="flex items-center gap-2 rounded-2xl bg-foreground/4 px-3 py-2 text-sm">
+          <div className="flex items-center gap-2 rounded-2xl bg-foreground/5 px-3 py-2 text-sm">
             <Search className="h-4 w-4 text-muted-foreground" strokeWidth={1.7} />
 
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search flight or airport"
+              placeholder="Search flight, aircraft or airport"
               className="w-52 bg-transparent outline-none placeholder:text-muted-foreground"
             />
           </div>
