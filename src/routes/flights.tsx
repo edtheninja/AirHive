@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-
+import { useMemo, useState } from "react";
+import { useLiveOps } from "@/lib/ams/hooks";
 import { pageVariants } from "@/lib/ams/motion";
-import { getFlights } from "@/lib/api/flights";
 import type { Flight } from "@/lib/ams/data";
 import { FlightsTable } from "@/components/ams/flights-table";
 import { PageHeader, SectionCard } from "@/components/ams/primitives";
@@ -39,59 +38,26 @@ const FILTERS = [
   { label: "Delayed", value: "DELAYED" },
 ] as const;
 
+const STATUS_MAP: Record<Exclude<(typeof FILTERS)[number]["value"], "ALL">, Flight["status"]> = {
+  SCHEDULED: "Scheduled",
+  BOARDING: "Boarding",
+  IN_AIR: "In Air",
+  LANDED: "Landed",
+  DELAYED: "Delayed",
+};
+
 function FlightsPage() {
-  const [flights, setFlights] = useState<Flight[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { flights, loading, error } = useLiveOps();
 
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["value"]>("ALL");
 
   const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    async function loadFlights() {
-      try {
-        setLoading(true);
-        setError("");
-
-        const data = await getFlights();
-
-        setFlights(
-          data.map((f) => ({
-            id: String(f.id),
-            number: f.flightNumber,
-            aircraft: f.aircraftRegistration,
-            aircraftModel: "",
-            origin: f.departureAirportCode,
-            destination: f.arrivalAirportCode,
-            scheduledDeparture: f.scheduledDeparture,
-            scheduledArrival: f.scheduledArrival,
-            departure: f.scheduledDeparture,
-            arrival: f.scheduledArrival,
-            gate: "",
-            boarding: 0,
-            delay: 0,
-            crew: "",
-            crewCount: 0,
-            pax: 0,
-            status: f.status as Flight["status"],
-          })),
-        );
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load flights.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadFlights();
-  }, []);
-
   const visible = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
     return flights.filter((flight) => {
-      const matchesStatus = filter === "ALL" || flight.status === (filter as Flight["status"]);
+      const matchesStatus = filter === "ALL" || flight.status === STATUS_MAP[filter];
 
       const searchable = [flight.number, flight.aircraft, flight.origin, flight.destination]
         .join(" ")
