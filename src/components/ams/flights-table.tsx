@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { spring } from "@/lib/ams/motion";
 import { StatusPill } from "@/components/ams/primitives";
 import type { Flight } from "@/lib/ams/data";
+import { useLiveOps } from "@/lib/ams/hooks";
 
 const HEAD = [
   "Flight",
@@ -58,11 +59,16 @@ function formatTime(dateTime: string) {
 }
 
 export function FlightsTable({ flights }: { flights: Flight[] }) {
+  const { loading, error } = useLiveOps();
   return (
     <div className="-mx-2 overflow-x-auto px-2">
-      {flights.length === 0 ? (
+      {loading ? (
+        <div className="px-3 py-8 text-sm text-muted-foreground"> Loading flight operations…</div>
+      ) : error ? (
+        <div className="px-3 py-8 text-sm text-destructive"> {error} </div>
+      ) : flights.length === 0 ? (
         <div className="px-3 py-8 text-sm text-muted-foreground">
-          No flights match the current filters.
+          No flight operations are currently available.
         </div>
       ) : (
         <table className="w-full min-w-[900px] border-separate border-spacing-y-1 text-sm">

@@ -97,10 +97,14 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
     passengers: 0,
     fleetAvailability: 0,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
 
     async function loadDashboardData() {
+      setLoading(true);
+      setError(null);
       try {
         const [flightData, aircraftData] = await Promise.all([getFlights(), getAircraft()]);
 
@@ -133,6 +137,11 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
         });
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
+        setError("Unable to load live operations data.");
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
@@ -190,13 +199,15 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
       flights,
       notifications,
       kpis,
+      loading,
+      error,
       dismiss: (id) => setNotifications((prev) => prev.filter((n) => n.id !== id)),
       push: (n) =>
         setNotifications((prev) =>
           [{ ...n, id: `N${Date.now()}`, time: "just now" }, ...prev].slice(0, 12),
         ),
     }),
-    [flights, notifications, kpis],
+    [flights, notifications, kpis, loading, error],
   );
 
   return <LiveOpsContext.Provider value={value}>{children}</LiveOpsContext.Provider>;

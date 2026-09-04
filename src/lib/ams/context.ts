@@ -14,6 +14,8 @@ export type LiveOpsValue = {
   flights: Flight[];
   notifications: OpsNotification[];
   kpis: Kpis;
+  loading: boolean;
+  error: string | null;
   dismiss: (id: string) => void;
   push: (n: Omit<OpsNotification, "id" | "time">) => void;
 };
