@@ -74,7 +74,11 @@ function PassengersPage() {
                   <td className="num px-3 py-3 text-muted-foreground">{p.bags}</td>
                   <td className="rounded-r-2xl px-3 py-3">
                     <span
-                      className={`text-xs ${p.checkedIn ? "text-success" : "text-muted-foreground"}`}
+                      className={`rounded-full px-2.5 py-1 text-xs ${
+                        p.checkedIn
+                          ? "bg-success/14 text-success"
+                          : "bg-foreground/6 text-muted-foreground"
+                      }`}
                     >
                       {p.checkedIn ? "Checked in" : "Pending"}
                     </span>

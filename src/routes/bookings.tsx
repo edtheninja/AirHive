@@ -73,7 +73,9 @@ function BookingsPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() =>
-              toast("Export queued", { description: "CSV will be emailed to ops@aerion.example" })
+              toast("Export unavailable", {
+                description: "Booking export will be available when the bookings API is connected.",
+              })
             }
             className="glass flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium"
           >

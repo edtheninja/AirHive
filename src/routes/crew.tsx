@@ -37,10 +37,7 @@ function CrewPage() {
       animate="animate"
       className="mx-auto max-w-[1600px] space-y-6 py-6"
     >
-      <PageHeader
-        title="Crew"
-        description="Rostering, duty limits and readiness across all bases."
-      />
+      <PageHeader title="Crew" description="Crew roster, readiness and duty information." />
 
       <motion.div
         variants={listVariants}
@@ -82,7 +79,10 @@ function CrewPage() {
         ))}
       </motion.div>
 
-      <SectionCard title="Crew roster" subtitle="Upcoming assignments and clearances">
+      <SectionCard
+        title="Crew roster"
+        subtitle="Prototype roster — live crew data will be available when the crew API is connected"
+      >
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] border-separate border-spacing-y-1 text-sm">
             <thead>
