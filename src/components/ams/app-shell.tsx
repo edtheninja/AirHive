@@ -236,6 +236,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => setMobileOpen(true)}
+          aria-label="Open navigation"
           className="glass flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-lift"
         >
           <LayoutDashboard className="h-4 w-4" strokeWidth={1.7} />
@@ -260,6 +261,19 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={(e) => e.stopPropagation()}
               className="glass absolute inset-x-4 bottom-4 max-h-[72vh] overflow-y-auto rounded-3xl p-4"
             >
+              <div className="mb-3 flex items-center justify-between px-1">
+                <span className="text-sm font-semibold">Navigation</span>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  aria-label="Close navigation menu"
+                  className="rounded-xl p-2 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+                >
+                  <ChevronLeft className="h-4 w-4 rotate-180" />
+                </button>
+              </div>
+
               <NavItems collapsed={false} onNavigate={() => setMobileOpen(false)} />
             </motion.div>
           </motion.div>
