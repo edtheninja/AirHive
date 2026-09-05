@@ -8,7 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-
+import { MotionConfig } from "motion/react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/ams/app-shell";
@@ -153,11 +153,13 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LiveOpsProvider>
-        <AppShell>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </AppShell>
-        <Toaster position="top-right" />
+        <MotionConfig reducedMotion="user">
+          <AppShell>
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+          </AppShell>
+          <Toaster position="top-right" />
+        </MotionConfig>
       </LiveOpsProvider>
     </QueryClientProvider>
   );
