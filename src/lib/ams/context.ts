@@ -5,8 +5,6 @@ export type Kpis = {
   totalFlights: number;
   activeFlights: number;
   delayedFlights: number;
-  revenueToday: number;
-  passengers: number;
   fleetAvailability: number;
 };
 

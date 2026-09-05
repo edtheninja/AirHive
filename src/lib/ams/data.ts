@@ -469,42 +469,6 @@ export const MAINTENANCE = [
   },
 ];
 
-export const REVENUE_SERIES = [
-  { label: "Mon", revenue: 412, target: 380 },
-  { label: "Tue", revenue: 458, target: 400 },
-  { label: "Wed", revenue: 396, target: 410 },
-  { label: "Thu", revenue: 512, target: 430 },
-  { label: "Fri", revenue: 604, target: 470 },
-  { label: "Sat", revenue: 688, target: 520 },
-  { label: "Sun", revenue: 622, target: 500 },
-];
-
-export const OCCUPANCY_SERIES = [
-  { label: "Economy", value: 92 },
-  { label: "Premium", value: 78 },
-  { label: "Business", value: 84 },
-  { label: "First", value: 61 },
-];
-
-export const DELAY_SERIES = [
-  { label: "Weather", value: 34 },
-  { label: "Technical", value: 21 },
-  { label: "ATC", value: 18 },
-  { label: "Crew", value: 12 },
-  { label: "Ground Ops", value: 15 },
-];
-
-export const FUEL_SERIES = Array.from({ length: 12 }, (_, i) => ({
-  label: `${i + 1}`,
-  burn: 240 + Math.round(Math.sin(i / 1.6) * 40) + i * 4,
-  planned: 250 + i * 4,
-}));
-
-export const COMPLETION_SERIES = Array.from({ length: 12 }, (_, i) => ({
-  label: `W${i + 1}`,
-  completion: 92 + Math.round(Math.sin(i / 2) * 4),
-}));
-
 function seedTime(hour: number, i: number) {
   return `${String(hour).padStart(2, "0")}:${(i % 6) * 10 || "05"}`.slice(0.5);
 }

@@ -2,20 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { pageVariants } from "@/lib/ams/motion";
 import { PageHeader, SectionCard } from "@/components/ams/primitives";
-import {
-  CompletionChart,
-  DelayChart,
-  FuelChart,
-  OccupancyChart,
-  RevenueChart,
-} from "@/components/ams/charts";
-import {
-  COMPLETION_SERIES,
-  DELAY_SERIES,
-  FUEL_SERIES,
-  OCCUPANCY_SERIES,
-  REVENUE_SERIES,
-} from "@/lib/ams/data";
+import { useLiveOps } from "@/lib/ams/hooks";
 
 export const Route = createFileRoute("/analytics")({
   head: () => ({
@@ -23,12 +10,12 @@ export const Route = createFileRoute("/analytics")({
       { title: "Analytics — AirHive AMS" },
       {
         name: "description",
-        content: "Revenue, occupancy, flight completion, fuel burn and delay-cause analytics.",
+        content: "Operational flight and fleet analytics across the network.",
       },
       { property: "og:title", content: "Analytics — AirHive AMS" },
       {
         property: "og:description",
-        content: "Revenue, occupancy, fuel burn and delay-cause analytics.",
+        content: "Operational flight and fleet analytics across the network.",
       },
     ],
   }),
@@ -36,6 +23,22 @@ export const Route = createFileRoute("/analytics")({
 });
 
 function AnalyticsPage() {
+  const { flights, kpis, loading, error } = useLiveOps();
+
+  const flightStatusCounts = flights.reduce<Record<string, number>>((counts, flight) => {
+    counts[flight.status] = (counts[flight.status] ?? 0) + 1;
+    return counts;
+  }, {});
+
+  const statusRows = [
+    ["Scheduled", flightStatusCounts.Scheduled ?? 0],
+    ["Boarding", flightStatusCounts.Boarding ?? 0],
+    ["In air", flightStatusCounts["In Air"] ?? 0],
+    ["Landed", flightStatusCounts.Landed ?? 0],
+    ["Delayed", flightStatusCounts.Delayed ?? 0],
+    ["Cancelled", flightStatusCounts.Cancelled ?? 0],
+  ] as const;
+
   return (
     <motion.div
       variants={pageVariants}
@@ -45,29 +48,82 @@ function AnalyticsPage() {
     >
       <PageHeader
         title="Analytics"
-        description="Commercial and operational performance across the network."
+        description="Operational performance across the AirHive network."
       />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <SectionCard title="Revenue" subtitle="Daily revenue against target, thousands USD">
-          <RevenueChart data={REVENUE_SERIES} />
+
+      {loading ? (
+        <SectionCard title="Operational analytics" subtitle="Loading live flight data">
+          <p className="text-sm text-muted-foreground">Loading analytics…</p>
         </SectionCard>
-        <SectionCard title="Occupancy" subtitle="Load factor by cabin class">
-          <OccupancyChart data={OCCUPANCY_SERIES} />
+      ) : error ? (
+        <SectionCard title="Operational analytics" subtitle="Live data unavailable">
+          <p className="text-sm text-destructive">{error}</p>
         </SectionCard>
-        <SectionCard title="Flight completion" subtitle="Weekly completion factor">
-          <CompletionChart data={COMPLETION_SERIES} />
-        </SectionCard>
-        <SectionCard title="Fuel usage" subtitle="Burn versus plan, tonnes per rolling day">
-          <FuelChart data={FUEL_SERIES} />
-        </SectionCard>
-        <SectionCard
-          title="Delay analysis"
-          subtitle="Root cause distribution, percent of delays"
-          className="lg:col-span-2"
-        >
-          <DelayChart data={DELAY_SERIES} />
-        </SectionCard>
-      </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <SectionCard title="Total flights" subtitle="Current network">
+              <p className="num mt-4 text-3xl font-semibold">{kpis.totalFlights}</p>
+            </SectionCard>
+
+            <SectionCard title="Currently airborne" subtitle="Flights in air">
+              <p className="num mt-4 text-3xl font-semibold">{kpis.activeFlights}</p>
+            </SectionCard>
+
+            <SectionCard title="Currently delayed" subtitle="Active delays">
+              <p className="num mt-4 text-3xl font-semibold">{kpis.delayedFlights}</p>
+            </SectionCard>
+
+            <SectionCard title="Fleet availability" subtitle="Based on active fleet">
+              <p className="num mt-4 text-3xl font-semibold">{kpis.fleetAvailability}%</p>
+            </SectionCard>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <SectionCard title="Flight status" subtitle="Current distribution across the network">
+              <dl className="space-y-3 text-sm">
+                {statusRows.map(([label, value]) => (
+                  <div key={label} className="flex items-center justify-between">
+                    <dt className="text-muted-foreground">{label}</dt>
+                    <dd className="num font-medium">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </SectionCard>
+
+            <SectionCard title="Operational snapshot" subtitle="Live network indicators">
+              <dl className="space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <dt className="text-muted-foreground">Flights tracked</dt>
+                  <dd className="num font-medium">{flights.length}</dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-muted-foreground">Airborne share</dt>
+                  <dd className="num font-medium">
+                    {kpis.totalFlights > 0
+                      ? Math.round((kpis.activeFlights / kpis.totalFlights) * 100)
+                      : 0}
+                    %
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-muted-foreground">Delayed share</dt>
+                  <dd className="num font-medium">
+                    {kpis.totalFlights > 0
+                      ? Math.round((kpis.delayedFlights / kpis.totalFlights) * 100)
+                      : 0}
+                    %
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-muted-foreground">Fleet availability</dt>
+                  <dd className="num font-medium">{kpis.fleetAvailability}%</dd>
+                </div>
+              </dl>
+            </SectionCard>
+          </div>
+        </>
+      )}
     </motion.div>
   );
 }

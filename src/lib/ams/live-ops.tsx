@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import {
-  FLIGHT_STATUS_FLOW,
-  FLIGHTS,
-  NOTIFICATION_POOL,
-  SEED_NOTIFICATIONS,
-  type Flight,
-  type OpsNotification,
-} from "./data";
+import { NOTIFICATION_POOL, SEED_NOTIFICATIONS, type Flight, type OpsNotification } from "./data";
 import { connectToFlightUpdates, type FlightEvent } from "@/lib/api/websocket";
 import { getFlights, type Flight as ApiFlight } from "@/lib/api/flights";
 import { getAircraft } from "@/lib/api/aircraft";
@@ -66,26 +59,6 @@ function normalizeStatus(status: string): Flight["status"] {
   }
 }
 
-function advance(flight: Flight): Flight {
-  if (flight.status === "Cancelled") return flight;
-  if (flight.status === "Boarding" && flight.boarding < 100) {
-    return {
-      ...flight,
-      boarding: Math.min(100, flight.boarding + 6 + Math.round(Math.random() * 9)),
-    };
-  }
-  if (flight.status === "Delayed") {
-    return Math.random() > 0.75 ? { ...flight, status: "Boarding", boarding: 10 } : flight;
-  }
-  const idx = FLIGHT_STATUS_FLOW.indexOf(flight.status);
-  if (idx === -1 || idx === FLIGHT_STATUS_FLOW.length - 1) return flight;
-  if (Math.random() > 0.55) {
-    const next = FLIGHT_STATUS_FLOW[idx + 1];
-    return { ...flight, status: next, boarding: next === "Boarding" ? 8 : flight.boarding };
-  }
-  return flight;
-}
-
 export function LiveOpsProvider({ children }: { children: ReactNode }) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [notifications, setNotifications] = useState<OpsNotification[]>(SEED_NOTIFICATIONS);
@@ -93,8 +66,6 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
     totalFlights: 0,
     activeFlights: 0,
     delayedFlights: 0,
-    revenueToday: 0,
-    passengers: 0,
     fleetAvailability: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -131,8 +102,6 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
           totalFlights,
           activeFlights,
           delayedFlights,
-          revenueToday: 0,
-          passengers: 0,
           fleetAvailability,
         });
       } catch (error) {

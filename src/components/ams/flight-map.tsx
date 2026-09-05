@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { useLiveOps } from "@/lib/ams/hooks";
 
 const PATHS = [
   { d: "M 90 210 C 260 90, 520 90, 700 170", dur: 9 },
@@ -16,6 +17,8 @@ const HUBS = [
 ];
 
 export function FlightMap() {
+  const { loading, kpis } = useLiveOps();
+
   return (
     <div className="relative h-[340px] w-full overflow-hidden rounded-2xl bg-foreground/3">
       <svg
@@ -107,7 +110,9 @@ export function FlightMap() {
         className="glass absolute bottom-4 left-4 rounded-2xl px-4 py-2.5 text-xs"
       >
         <p className="text-muted-foreground">Live tracking preview</p>
-        <p className="num mt-0.5 text-sm">64 aircraft airborne</p>
+        <p className="num mt-0.5 text-sm">
+          {loading ? "—" : `${kpis.activeFlights} flights airborne`}
+        </p>
       </motion.div>
     </div>
   );
