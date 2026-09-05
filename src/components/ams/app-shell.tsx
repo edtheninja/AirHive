@@ -232,11 +232,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       </motion.div>
 
       {/* Mobile floating navigation */}
-      <div className="fixed inset-x-0 bottom-0 z-40 flex justify-center p-4 lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 flex justify-center p-3 lg:hidden">
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => setMobileOpen(true)}
-          className="glass flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium shadow-lift"
+          className="glass flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-lift"
         >
           <LayoutDashboard className="h-4 w-4" strokeWidth={1.7} />
           {current}
