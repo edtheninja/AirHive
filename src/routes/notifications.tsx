@@ -29,7 +29,7 @@ function NotificationsPage() {
     >
       <PageHeader
         title="Notifications"
-        description="Everything happening across the operation, as it happens."
+        description="Operational events and alerts from the current operations feed."
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <NotificationsPanel limit={12} />

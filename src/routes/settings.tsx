@@ -39,7 +39,7 @@ function SettingsPage() {
       className="mx-auto max-w-[1000px] space-y-6 py-6"
     >
       <PageHeader title="Settings" description="Operational defaults for the control centre." />
-      <SectionCard title="Automation" subtitle="How the platform reacts to operational events">
+      <SectionCard title="Automation" subtitle="Prototype operational automation settings">
         <ul className="divide-y divide-border">
           {TOGGLES.map(([title, detail, on]) => (
             <li key={title} className="flex items-center justify-between gap-6 py-4">
@@ -52,13 +52,13 @@ function SettingsPage() {
           ))}
         </ul>
       </SectionCard>
-      <SectionCard title="Integrations" subtitle="Systems connected to the operations platform">
+      <SectionCard title="Integrations" subtitle="Current and planned platform connections">
         <ul className="space-y-3 text-sm">
           {[
-            ["Departure control system", "Connected"],
-            ["Crew rostering", "Connected"],
-            ["Maintenance ERP", "Connected"],
-            ["Backend API", "Ready for Spring Boot service"],
+            ["Departure control system", "Planned"],
+            ["Crew rostering", "Planned"],
+            ["Maintenance ERP", "Planned"],
+            ["Backend API", "Connected"],
           ].map(([k, v]) => (
             <li key={k} className="flex items-center justify-between">
               <span className="text-muted-foreground">{k}</span>

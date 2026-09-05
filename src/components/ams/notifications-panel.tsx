@@ -26,7 +26,7 @@ export function NotificationsPanel({
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-muted-foreground" strokeWidth={1.7} />
-          <h2 className="text-base font-semibold">Live events</h2>
+          <h2 className="text-base font-semibold">Operational events</h2>
         </div>
         <span className="num rounded-full bg-foreground/5 px-2.5 py-1 text-xs text-muted-foreground">
           {notifications.length}
