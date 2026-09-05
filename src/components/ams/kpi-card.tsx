@@ -36,14 +36,14 @@ export function KpiCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, type: "spring", stiffness: 220, damping: 26 }}
     >
-      <GlassCard className="p-5">
+      <GlassCard className="p-4 sm:p-5">
         <div className="flex items-start justify-between">
           <span className="text-sm text-muted-foreground">{label}</span>
           <span className={cn("flex h-9 w-9 items-center justify-center rounded-2xl", toneClass)}>
             <Icon className="h-4.5 w-4.5" strokeWidth={1.7} />
           </span>
         </div>
-        <p className="mt-6 text-3xl font-semibold">
+        <p className="mt-4 text-3xl font-semibold sm:mt-6">
           <CountUp value={value} prefix={prefix} suffix={suffix} />
         </p>
         {trend ? <p className="mt-1.5 text-xs text-muted-foreground">{trend}</p> : null}

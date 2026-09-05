@@ -186,11 +186,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="text-xs text-muted-foreground">AirHive</span>
               <span className="truncate text-sm font-semibold">{current}</span>
             </div>
-            <div className="flex flex-1 items-center gap-2 rounded-2xl bg-foreground/4 px-3 py-2 text-sm text-muted-foreground">
-              <Search className="h-4 w-4" strokeWidth={1.7} />
+            <div className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-2xl bg-foreground/4 px-3 text-sm text-muted-foreground">
+              <Search className="h-4 w-4 shrink-0" strokeWidth={1.7} />
               <input
                 placeholder="Search flights, aircraft, crew…"
-                className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                className="h-5 min-w-0 truncate w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
               <kbd className="hidden rounded-md border border-border px-1.5 py-0.5 text-[10px] sm:block">
                 ⌘K
