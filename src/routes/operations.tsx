@@ -51,7 +51,7 @@ function OperationsPage() {
         <KpiCard
           index={1}
           label="Disruptions"
-          value={kpis.delayedFlights}
+          value={disrupted.length}
           icon={Clock3}
           tone="warning"
         />
@@ -63,7 +63,13 @@ function OperationsPage() {
           icon={Gauge}
           tone="success"
         />
-        <KpiCard index={3} label="Safety events" value={0} icon={ShieldCheck} tone="primary" />
+        <KpiCard
+          index={3}
+          label="Tracked flights"
+          value={kpis.totalFlights}
+          icon={ShieldCheck}
+          tone="primary"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
