@@ -22,8 +22,6 @@ import { FlightsTable } from "@/components/ams/flights-table";
 import { FlightMap } from "@/components/ams/flight-map";
 import { NotificationsPanel } from "@/components/ams/notifications-panel";
 import { PageHeader, SectionCard } from "@/components/ams/primitives";
-import { RevenueChart, OccupancyChart } from "@/components/ams/charts";
-import { OCCUPANCY_SERIES, REVENUE_SERIES } from "@/lib/ams/data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -54,7 +52,10 @@ const QUICK_ACTIONS = [
 
 function Dashboard() {
   const { kpis, flights } = useLiveOps();
-
+  const flightStatusCounts = flights.reduce<Record<string, number>>((counts, flight) => {
+    counts[flight.status] = (counts[flight.status] ?? 0) + 1;
+    return counts;
+  }, {});
   return (
     <motion.div
       variants={pageVariants}
@@ -74,7 +75,7 @@ function Dashboard() {
           value={kpis.totalFlights}
           icon={PlaneTakeoff}
           tone="primary"
-          trend="Scheduled today"
+          trend="Scheduled flights"
         />
         <KpiCard
           index={1}
@@ -90,7 +91,7 @@ function Dashboard() {
           value={kpis.delayedFlights}
           icon={Clock3}
           tone="warning"
-          trend="Above 15 minutes"
+          trend="Currently delayed"
         />
 
         <KpiCard
@@ -103,7 +104,6 @@ function Dashboard() {
           trend="Based on active fleet"
         />
       </div>
-
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
           <SectionCard
@@ -116,17 +116,7 @@ function Dashboard() {
           <SectionCard title="Live world map" subtitle="Real-time aircraft tracking preview">
             <FlightMap />
           </SectionCard>
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <SectionCard title="Revenue" subtitle="Last 7 days, thousands USD">
-              <RevenueChart data={REVENUE_SERIES} />
-            </SectionCard>
-            <SectionCard title="Cabin occupancy" subtitle="Average load factor by cabin">
-              <OccupancyChart data={OCCUPANCY_SERIES} />
-            </SectionCard>
-          </div>
         </div>
-
         <div className="space-y-6">
           <SectionCard
             title="Quick actions"
@@ -150,25 +140,25 @@ function Dashboard() {
               ))}
             </div>
           </SectionCard>
-
-          <NotificationsPanel />
-
-          <SectionCard title="Today at a glance" subtitle="Network operating summary">
+          <SectionCard title="Network status" subtitle="Current flight distribution">
             <dl className="space-y-3 text-sm">
               {[
-                ["On-time performance", "94.2%"],
-                ["Average delay", "11 min"],
-                ["Aircraft in maintenance", "3"],
-                ["Crew on duty", "218"],
-                ["Diversions", "0"],
-              ].map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between">
-                  <dt className="text-muted-foreground">{k}</dt>
-                  <dd className="num font-medium">{v}</dd>
+                ["Scheduled", flightStatusCounts.Scheduled ?? 0],
+                ["Boarding", flightStatusCounts.Boarding ?? 0],
+                ["In air", flightStatusCounts["In Air"] ?? 0],
+                ["Landed", flightStatusCounts.Landed ?? 0],
+                ["Delayed", flightStatusCounts.Delayed ?? 0],
+                ["Cancelled", flightStatusCounts.Cancelled ?? 0],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="num font-medium">{value}</dd>
                 </div>
               ))}
             </dl>
           </SectionCard>
+
+          <NotificationsPanel />
         </div>
       </div>
     </motion.div>
