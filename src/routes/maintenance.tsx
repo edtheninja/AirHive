@@ -34,8 +34,14 @@ function MaintenancePage() {
       animate="animate"
       className="mx-auto max-w-[1600px] space-y-6 py-6"
     >
-      <PageHeader title="Maintenance" description="Open work orders and engineering compliance." />
-      <SectionCard title="Work orders" subtitle={`${MAINTENANCE.length} open items`}>
+      <PageHeader
+        title="Maintenance"
+        description="Maintenance work orders, severity and completion progress."
+      />
+      <SectionCard
+        title="Work orders"
+        subtitle={`Prototype data · ${MAINTENANCE.length} sample items`}
+      >
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] border-separate border-spacing-y-1 text-sm">
             <thead>

@@ -29,7 +29,7 @@ function ProfilePage() {
       animate="animate"
       className="mx-auto max-w-[1000px] space-y-6 py-6"
     >
-      <PageHeader title="User Profile" description="Your operations account and permissions." />
+      <PageHeader title="User Profile" description="Operations profile and access overview." />
       <GlassCard hover={false} className="flex flex-wrap items-center gap-5 p-6">
         <span className="num flex h-16 w-16 items-center justify-center rounded-3xl bg-primary text-lg font-semibold text-primary-foreground">
           NK
@@ -46,7 +46,7 @@ function ProfilePage() {
       </GlassCard>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <SectionCard title="Permissions" subtitle="Granted operational scopes">
+        <SectionCard title="Permissions" subtitle="Prototype access configuration">
           <ul className="space-y-3 text-sm">
             {[
               "Flight dispatch",
@@ -64,7 +64,7 @@ function ProfilePage() {
             ))}
           </ul>
         </SectionCard>
-        <SectionCard title="Recent activity" subtitle="Last actions in this console">
+        <SectionCard title="Recent activity" subtitle="Prototype activity feed">
           <ul className="space-y-3 text-sm">
             {[
               ["Published delay for AI302", "12 min ago"],
