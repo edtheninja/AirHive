@@ -209,6 +209,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
             <Link
               to="/notifications"
+              aria-label="Open Notifications"
               className="relative rounded-2xl p-2 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
             >
               <Bell className="h-4.5 w-4.5" strokeWidth={1.7} />
