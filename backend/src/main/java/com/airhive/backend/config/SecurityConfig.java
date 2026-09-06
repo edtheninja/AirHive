@@ -6,41 +6,67 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.airhive.backend.security.JwtAuthenticationConverter;
+
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                   "/ws",
-                                "/api/airports/**",
-                                "/api/aircraft-types/**",
-                                "/api/aircraft/**",
-                                "/api/flights/**",
-                                "/api/routes/**"
-                        ).permitAll()
-                          .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/**"
-                        ).permitAll()
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/**"
-                        ).permitAll()
-                        .requestMatchers(
-                                HttpMethod.PUT,
-                                "/api/**"
-                        ).permitAll()
-                        .requestMatchers(
-                                HttpMethod.DELETE,
-                                "/api/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                );
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http,
+                        JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
 
-        return http.build();
-    }
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .oauth2ResourceServer(oauth2 -> oauth2
+                                                .jwt(jwt -> jwt
+                                                                .jwtAuthenticationConverter(
+                                                                                jwtAuthenticationConverter)))
+                                .authorizeHttpRequests(auth -> auth
+
+                                                // Public endpoints
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/auth/login")
+                                                .permitAll()
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/actuator/health")
+                                                .permitAll()
+
+                                                // Temporarily keep WebSocket handshake public.
+                                                // JWT authentication for WebSockets will be handled
+                                                // in the dedicated WebSocket security milestone.
+                                                .requestMatchers("/ws/**").permitAll()
+
+                                                // Read access
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/**")
+                                                .hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
+
+                                                // Create access
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/**")
+                                                .hasAnyRole("OPERATOR", "ADMIN")
+
+                                                // Update access
+                                                .requestMatchers(
+                                                                HttpMethod.PUT,
+                                                                "/api/**")
+                                                .hasAnyRole("OPERATOR", "ADMIN")
+
+                                                // Delete access
+                                                .requestMatchers(
+                                                                HttpMethod.DELETE,
+                                                                "/api/**")
+                                                .hasRole("ADMIN")
+
+                                                // Everything else
+                                                .anyRequest().authenticated());
+
+                return http.build();
+        }
 }

@@ -29,3 +29,8 @@ spring:
   logging:
    level:
     org.springframework.security: TRACE      
+airhive:
+  security:
+    jwt:
+      secret: ${AIRHIVE_JWT_SECRET:airhive-development-secret-key-change-this-in-production-2026}
+      expiration-ms: 86400000
