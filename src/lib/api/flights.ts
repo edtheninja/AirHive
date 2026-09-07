@@ -24,14 +24,6 @@ export type Flight = {
   status: string;
 };
 
-const API_BASE_URL = "http://localhost:8080";
-
 export async function getFlights(): Promise<Flight[]> {
-  const response = await fetch(`${API_BASE_URL}/api/flights`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch flights: ${response.status}`);
-  }
-
-  return response.json();
+  return apiRequest<Flight[]>("/flights");
 }

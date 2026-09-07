@@ -14,7 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/ams/app-shell";
 import { LiveOpsProvider } from "@/lib/ams/live-ops";
 import { Toaster } from "@/components/ui/sonner";
-
+import { AuthProvider } from "@/lib/auth/auth-context";
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -75,7 +75,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+}>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -152,15 +154,17 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LiveOpsProvider>
-        <MotionConfig reducedMotion="user">
-          <AppShell>
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <Outlet />
-          </AppShell>
-          <Toaster position="top-right" />
-        </MotionConfig>
-      </LiveOpsProvider>
+      <AuthProvider>
+        <LiveOpsProvider>
+          <MotionConfig reducedMotion="user">
+            <AppShell>
+              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+              <Outlet />
+            </AppShell>
+            <Toaster position="top-right" />
+          </MotionConfig>
+        </LiveOpsProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

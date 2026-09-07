@@ -16,6 +16,7 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as FlightsRouteImport } from './routes/flights'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OperationsRouteImport } from './routes/operations'
@@ -57,6 +58,11 @@ const CrewRoute = CrewRouteImport.update({
 const FlightsRoute = FlightsRouteImport.update({
   id: '/flights',
   path: '/flights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaintenanceRoute = MaintenanceRouteImport.update({
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/bookings': typeof BookingsRoute
   '/crew': typeof CrewRoute
   '/flights': typeof FlightsRoute
+  '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/notifications': typeof NotificationsRoute
   '/operations': typeof OperationsRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/bookings': typeof BookingsRoute
   '/crew': typeof CrewRoute
   '/flights': typeof FlightsRoute
+  '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/notifications': typeof NotificationsRoute
   '/operations': typeof OperationsRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/bookings': typeof BookingsRoute
   '/crew': typeof CrewRoute
   '/flights': typeof FlightsRoute
+  '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/notifications': typeof NotificationsRoute
   '/operations': typeof OperationsRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/crew'
     | '/flights'
+    | '/login'
     | '/maintenance'
     | '/notifications'
     | '/operations'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/crew'
     | '/flights'
+    | '/login'
     | '/maintenance'
     | '/notifications'
     | '/operations'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/crew'
     | '/flights'
+    | '/login'
     | '/maintenance'
     | '/notifications'
     | '/operations'
@@ -203,6 +215,7 @@ export interface RootRouteChildren {
   BookingsRoute: typeof BookingsRoute
   CrewRoute: typeof CrewRoute
   FlightsRoute: typeof FlightsRoute
+  LoginRoute: typeof LoginRoute
   MaintenanceRoute: typeof MaintenanceRoute
   NotificationsRoute: typeof NotificationsRoute
   OperationsRoute: typeof OperationsRoute
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/flights'
       fullPath: '/flights'
       preLoaderRoute: typeof FlightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maintenance': {
@@ -323,6 +343,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookingsRoute: BookingsRoute,
   CrewRoute: CrewRoute,
   FlightsRoute: FlightsRoute,
+  LoginRoute: LoginRoute,
   MaintenanceRoute: MaintenanceRoute,
   NotificationsRoute: NotificationsRoute,
   OperationsRoute: OperationsRoute,

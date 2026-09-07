@@ -3,10 +3,7 @@ import { Client, type IMessage } from "@stomp/stompjs";
 const WS_URL = "ws://localhost:8080/ws";
 const FLIGHTS_TOPIC = "/topic/flights";
 
-export type FlightEventType =
-  | "FLIGHT_CREATED"
-  | "FLIGHT_UPDATED"
-  | "FLIGHT_DELETED";
+export type FlightEventType = "FLIGHT_CREATED" | "FLIGHT_UPDATED" | "FLIGHT_DELETED";
 
 export type FlightEvent = {
   eventType: FlightEventType;
@@ -38,17 +35,12 @@ const client = new Client({
 
 let subscription: ReturnType<Client["subscribe"]> | null = null;
 
-export function connectToFlightUpdates(
-  onMessage: (event: FlightEvent) => void,
-) {
+export function connectToFlightUpdates(onMessage: (event: FlightEvent) => void) {
   client.onConnect = () => {
-    subscription = client.subscribe(
-      FLIGHTS_TOPIC,
-      (message: IMessage) => {
-        const event = JSON.parse(message.body) as FlightEvent;
-        onMessage(event);
-      },
-    );
+    subscription = client.subscribe(FLIGHTS_TOPIC, (message: IMessage) => {
+      const event = JSON.parse(message.body) as FlightEvent;
+      onMessage(event);
+    });
   };
 
   client.activate();

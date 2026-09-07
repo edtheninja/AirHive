@@ -1,9 +1,14 @@
+import { getToken } from "../auth/session";
+
 const API_BASE_URL = "http://localhost:8080/api";
 
 export async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options?.headers ?? {}),
     },
     ...options,
