@@ -39,6 +39,16 @@ public class SecurityConfig {
                 // Read access
                 .requestMatchers(
                         HttpMethod.GET,
+                        "/api/users")
+                .hasRole("ADMIN")
+
+                .requestMatchers(
+                        HttpMethod.PATCH,
+                        "/api/users/**")
+                .hasRole("ADMIN")
+
+                .requestMatchers(
+                        HttpMethod.GET,
                         "/api/**")
                 .hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
                 // Create access

@@ -1,12 +1,16 @@
 package com.airhive.backend.service;
 
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.airhive.backend.dto.CreateUserRequest;
+import com.airhive.backend.dto.UpdateUserStatusRequest;
 import com.airhive.backend.dto.UserResponse;
 import com.airhive.backend.entity.AppUser;
 import com.airhive.backend.exception.DuplicateResourceException;
+import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AppUserRepository;
 
 @Service
@@ -22,12 +26,21 @@ public class UserManagementService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserResponse createUser(CreateUserRequest request) {
+    public List<UserResponse> getAllUsers() {
+        return appUserRepository.findAll()
+                .stream()
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getRole(),
+                        user.isEnabled()))
+                .toList();
+    }
 
+    public UserResponse createUser(CreateUserRequest request) {
         if (appUserRepository.existsByUsername(request.username())) {
             throw new DuplicateResourceException(
-                    "User already exists with username: " + request.username()
-            );
+                    "User already exists with username: " + request.username());
         }
 
         AppUser user = new AppUser();
@@ -42,7 +55,25 @@ public class UserManagementService {
                 savedUser.getId(),
                 savedUser.getUsername(),
                 savedUser.getRole(),
-                savedUser.isEnabled()
-        );
+                savedUser.isEnabled());
+    }
+
+    public UserResponse updateUserStatus(
+            Long userId,
+            UpdateUserStatusRequest request) {
+
+        AppUser user = appUserRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found with id: " + userId));
+
+        user.setEnabled(request.enabled());
+
+        AppUser savedUser = appUserRepository.save(user);
+
+        return new UserResponse(
+                savedUser.getId(),
+                savedUser.getUsername(),
+                savedUser.getRole(),
+                savedUser.isEnabled());
     }
 }
