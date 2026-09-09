@@ -32,5 +32,5 @@ spring:
 airhive:
   security:
     jwt:
-      secret: ${AIRHIVE_JWT_SECRET:airhive-development-secret-key-change-this-in-production-2026}
-      expiration-ms: 86400000
+      secret: ${AIRHIVE_JWT_SECRET}
+      expiration-ms: 3600000

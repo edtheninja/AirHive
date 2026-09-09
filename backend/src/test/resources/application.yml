@@ -1,0 +1,5 @@
+airhive:
+  security:
+    jwt:
+      secret: test-only-airhive-jwt-secret-key-32-bytes-minimum
+      expiration-ms: 3600000
