@@ -12,70 +12,73 @@ import com.airhive.backend.security.JwtAuthenticationConverter;
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http,
+                        JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
 
-        http
-                .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
-                .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt
-                .jwtAuthenticationConverter(
-                        jwtAuthenticationConverter)))
-                .authorizeHttpRequests(auth -> auth
-                // Public endpoints
-                .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/auth/login")
-                .permitAll()
-                .requestMatchers(
-                        HttpMethod.GET,
-                        "/actuator/health")
-                .permitAll()
-                // Temporarily keep WebSocket handshake public.
-                // JWT authentication for WebSockets will be handled
-                // in the dedicated WebSocket security milestone.
-                .requestMatchers("/ws/**").permitAll()
-                // Read access
-                .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/users")
-                .hasRole("ADMIN")
+                http
+                                .cors(Customizer.withDefaults())
+                                .csrf(csrf -> csrf.disable())
+                                .oauth2ResourceServer(oauth2 -> oauth2
+                                                .jwt(jwt -> jwt
+                                                                .jwtAuthenticationConverter(
+                                                                                jwtAuthenticationConverter)))
+                                .authorizeHttpRequests(auth -> auth
 
-                .requestMatchers(
-                        HttpMethod.PATCH,
-                        "/api/users/**")
-                .hasRole("ADMIN")
+                                                // CORS preflight
+                                                .requestMatchers(
+                                                                HttpMethod.OPTIONS,
+                                                                "/**")
+                                                .permitAll()
 
-                .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/**")
-                .hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
-                // Create access
-                .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/users")
-                .hasRole("ADMIN")
+                                                // Public endpoints
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/auth/login")
+                                                .permitAll()
+                                                // Temporarily keep WebSocket handshake public.
+                                                // JWT authentication for WebSockets will be handled
+                                                // in the dedicated WebSocket security milestone.
+                                                .requestMatchers("/ws/**").permitAll()
+                                                // Read access
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/users")
+                                                .hasRole("ADMIN")
 
-                .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/**")
-                .hasAnyRole("OPERATOR", "ADMIN")
-                // Update access
-                .requestMatchers(
-                        HttpMethod.PUT,
-                        "/api/**")
-                .hasAnyRole("OPERATOR", "ADMIN")
-                // Delete access
-                .requestMatchers(
-                        HttpMethod.DELETE,
-                        "/api/**")
-                .hasRole("ADMIN")
-                // Everything else
-                .anyRequest().authenticated());
+                                                .requestMatchers(
+                                                                HttpMethod.PATCH,
+                                                                "/api/users/**")
+                                                .hasRole("ADMIN")
 
-        return http.build();
-    }
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/**")
+                                                .hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
+                                                // Create access
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/users")
+                                                .hasRole("ADMIN")
+
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/**")
+                                                .hasAnyRole("OPERATOR", "ADMIN")
+                                                // Update access
+                                                .requestMatchers(
+                                                                HttpMethod.PUT,
+                                                                "/api/**")
+                                                .hasAnyRole("OPERATOR", "ADMIN")
+                                                // Delete access
+                                                .requestMatchers(
+                                                                HttpMethod.DELETE,
+                                                                "/api/**")
+                                                .hasRole("ADMIN")
+                                                // Everything else
+                                                .anyRequest().authenticated());
+
+                return http.build();
+        }
 }

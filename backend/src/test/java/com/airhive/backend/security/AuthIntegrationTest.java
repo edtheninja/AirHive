@@ -1,4 +1,5 @@
 package com.airhive.backend.security;
+
 import org.json.JSONObject;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -153,6 +154,36 @@ class AuthIntegrationTest {
                         }
                         """))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void previouslyIssuedTokenRemainsValidAfterUserIsDisabled() throws Exception {
+
+        String response = mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "username": "integration-viewer",
+                            "password": "password123"
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String token = new JSONObject(response).getString("token");
+
+        AppUser user = appUserRepository.findByUsername("integration-viewer")
+                .orElseThrow();
+
+        user.setEnabled(false);
+        appUserRepository.saveAndFlush(user);
+
+        mockMvc.perform(get("/api/airports")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
     }
 
     @Test

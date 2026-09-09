@@ -1,4 +1,4 @@
-import { getToken } from "../auth/session";
+import { clearSession, getToken } from "../auth/session";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -25,6 +25,15 @@ export async function apiRequest<T>(endpoint: string, options?: RequestInit): Pr
       }
     } catch {
       // Ignore invalid/non-JSON error responses.
+    }
+
+    if (response.status === 401) {
+      clearSession();
+      message = "Your session has expired. Please log in again.";
+    }
+
+    if (response.status === 403) {
+      message = "You do not have permission to perform this action.";
     }
 
     throw new Error(message);
