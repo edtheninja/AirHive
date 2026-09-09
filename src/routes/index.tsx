@@ -26,10 +26,6 @@ import { PageHeader, SectionCard } from "@/components/ams/primitives";
 
 export const Route = createFileRoute("/")({
   beforeLoad: () => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
     if (!getSession()) {
       throw redirect({
         to: "/login",

@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 import {
@@ -20,10 +20,12 @@ import {
   UserRound,
   Users,
   Wrench,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/ams/motion";
 import { useLiveOps } from "@/lib/ams/hooks";
+import { useAuth } from "@/lib/auth/auth-context";
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -127,6 +129,8 @@ function NavItems({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: 
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+  const { session, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { dark, toggle } = useTheme();
   const isDesktop = useIsDesktop();
@@ -213,19 +217,52 @@ export function AppShell({ children }: { children: ReactNode }) {
               className="relative rounded-2xl p-2 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
             >
               <Bell className="h-4.5 w-4.5" strokeWidth={1.7} />
+
               {notifications.length ? (
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
               ) : null}
             </Link>
-            <Link
-              to="/profile"
-              className="flex items-center gap-2 rounded-2xl py-1 pr-2 pl-1 hover:bg-foreground/5"
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                NK
-              </span>
-              <span className="hidden text-sm sm:block">N. Kaur</span>
-            </Link>
+
+            <div className="relative">
+              <details className="group">
+                <summary className="flex cursor-pointer list-none items-center gap-2 rounded-2xl py-1 pr-2 pl-1 hover:bg-foreground/5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    {session?.username?.slice(0, 2).toUpperCase() ?? "AH"}
+                  </span>
+
+                  <span className="hidden text-sm sm:block"> {session?.username ?? "User"} </span>
+                </summary>
+
+                <div className="absolute right-0 top-12 z-50 w-56 rounded-2xl border border-border/60 bg-background p-2 shadow-xl">
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-medium">{session?.username ?? "User"}</p>
+
+                    <p className="text-xs text-muted-foreground">{session?.role ?? "USER"}</p>
+                  </div>
+
+                  <div className="my-1 h-px bg-border/60" />
+
+                  <Link
+                    to="/profile"
+                    className="block rounded-xl px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
+                  >
+                    User Profile
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout();
+                      navigate({ to: "/login" });
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                  >
+                    <LogOut className="h-4 w-4" strokeWidth={1.7} />
+                    Sign out
+                  </button>
+                </div>
+              </details>
+            </div>
           </div>
         </header>
 
