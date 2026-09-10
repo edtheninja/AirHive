@@ -120,6 +120,16 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    setKpis((current) => ({
+      ...current,
+      totalFlights: flights.length,
+      activeFlights: flights.filter((flight) => flight.status === "In Air").length,
+      delayedFlights: flights.filter((flight) => flight.status === "Delayed").length,
+    }));
+  }, [flights]);
+
   useEffect(() => {
     const handleFlightEvent = (event: FlightEvent) => {
       const updatedFlight = mapApiFlight(event.flight);
