@@ -38,19 +38,22 @@ public class FlightService {
         private final AirportRepository airportRepository;
         private final RouteRepository routeRepository;
         private final FlightWebSocketService flightWebSocketService;
+        private final FlightNotificationService flightNotificationService;
 
         public FlightService(
                         FlightRepository flightRepository,
                         AircraftRepository aircraftRepository,
                         AirportRepository airportRepository,
                         RouteRepository routeRepository,
-                        FlightWebSocketService flightWebSocketService) {
+                        FlightWebSocketService flightWebSocketService,
+                        FlightNotificationService flightNotificationService) {
 
                 this.flightRepository = flightRepository;
                 this.aircraftRepository = aircraftRepository;
                 this.airportRepository = airportRepository;
                 this.routeRepository = routeRepository;
                 this.flightWebSocketService = flightWebSocketService;
+                this.flightNotificationService = flightNotificationService;
         }
 
         @CacheEvict(value = "flights", allEntries = true)
@@ -172,6 +175,7 @@ public class FlightService {
                         FlightRequestDTO request) {
 
                 Flight existingFlight = getFlightEntityById(id);
+                String previousStatus = existingFlight.getStatus();
 
                 validateRequest(request);
 
@@ -252,6 +256,11 @@ public class FlightService {
                 Flight updatedFlight = flightRepository.save(existingFlight);
 
                 FlightResponseDTO response = FlightMapper.toResponse(updatedFlight);
+
+                flightNotificationService.notifyFlightStatusChange(
+                                response,
+                                previousStatus);
+
                 flightWebSocketService.publishFlightUpdated(response);
 
                 return response;

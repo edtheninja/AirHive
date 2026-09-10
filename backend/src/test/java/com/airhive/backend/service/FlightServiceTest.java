@@ -48,6 +48,9 @@ class FlightServiceTest {
         @Mock
         private FlightWebSocketService flightWebSocketService;
 
+        @Mock
+        private FlightNotificationService flightNotificationService;
+
         @InjectMocks
         private FlightService flightService;
 
