@@ -37,11 +37,36 @@ let subscription: ReturnType<Client["subscribe"]> | null = null;
 
 export function connectToFlightUpdates(onMessage: (event: FlightEvent) => void) {
   client.onConnect = () => {
-    subscription = client.subscribe(FLIGHTS_TOPIC, (message: IMessage) => {
-      const event = JSON.parse(message.body) as FlightEvent;
-      onMessage(event);
-    });
-  };
+  subscription = client.subscribe(FLIGHTS_TOPIC, (message: IMessage) => {
+    try {
+      const parsed: unknown = JSON.parse(message.body);
+
+      if (!parsed || typeof parsed !== "object") {
+        throw new Error("Invalid flight event payload");
+      }
+
+      const event = parsed as Partial<FlightEvent>;
+
+      if (
+        event.eventType !== "FLIGHT_CREATED" &&
+        event.eventType !== "FLIGHT_UPDATED" &&
+        event.eventType !== "FLIGHT_DELETED"
+      ) {
+        throw new Error(`Unknown flight event type: ${String(event.eventType)}`);
+      }
+
+      if (!event.flight || typeof event.flight !== "object") {
+        throw new Error("Flight event is missing flight data");
+      }
+
+      onMessage(event as FlightEvent);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("[STOMP] Failed to process flight event:", error);
+      }
+    }
+  });
+};
 
   client.activate();
 
