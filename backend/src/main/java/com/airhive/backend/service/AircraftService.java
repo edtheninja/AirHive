@@ -44,7 +44,7 @@ public class AircraftService {
         );
     }
 
-    @CacheEvict(value = "aircraft", allEntries = true)
+    @CacheEvict(value = {"aircraft", "flights"}, allEntries = true)
     public AircraftResponseDTO createAircraft(Aircraft aircraft) {
         if (aircraftRepository.existsByRegistrationNumber(
                 aircraft.getRegistrationNumber())) {
@@ -57,14 +57,14 @@ public class AircraftService {
         return AircraftMapper.toResponse(aircraftRepository.save(aircraft));
     }
 
-    @CacheEvict(value = "aircraft", allEntries = true)
+    @CacheEvict(value = {"aircraft", "flights"}, allEntries = true)
     public AircraftResponseDTO createAircraft(AircraftRequestDTO request) {
         Aircraft aircraft = new Aircraft();
         applyRequest(aircraft, request);
         return createAircraft(aircraft);
     }
 
-    @CacheEvict(value = "aircraft", allEntries = true)
+    @CacheEvict(value = {"aircraft", "flights"}, allEntries = true)
     public AircraftResponseDTO updateAircraft(Long id, Aircraft updatedAircraft) {
 
         Aircraft aircraft = getAircraftEntityById(id);
@@ -81,7 +81,7 @@ public class AircraftService {
         return AircraftMapper.toResponse(aircraftRepository.save(aircraft));
     }
 
-    @CacheEvict(value = "aircraft", allEntries = true)
+    @CacheEvict(value = {"aircraft", "flights"}, allEntries = true)
     public AircraftResponseDTO updateAircraft(Long id, AircraftRequestDTO request) {
         Aircraft aircraft = getAircraftEntityById(id);
         applyRequest(aircraft, request);
@@ -109,7 +109,7 @@ public class AircraftService {
                         request.getAircraftTypeId()));
     }
 
-    @CacheEvict(value = "aircraft", allEntries = true)
+    @CacheEvict(value = {"aircraft", "flights"}, allEntries = true)
     public void deleteAircraft(Long id) {
         Aircraft aircraft = getAircraftEntityById(id);
         aircraftRepository.delete(aircraft);

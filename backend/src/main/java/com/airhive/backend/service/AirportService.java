@@ -42,7 +42,7 @@ public class AirportService {
         return AirportMapper.toResponse(airport);
     }
 
-    @CacheEvict(value = "airports", allEntries = true)
+    @CacheEvict(value = {"airports", "flights"}, allEntries = true)
     public AirportResponseDTO createAirport(AirportRequestDTO request) {
 
         validateAirport(request);
@@ -68,7 +68,7 @@ public class AirportService {
         return AirportMapper.toResponse(savedAirport);
     }
 
-    @CacheEvict(value = "airports", allEntries = true)
+    @CacheEvict(value = {"airports", "flights"}, allEntries = true)
     public AirportResponseDTO updateAirport(
             Long id,
             AirportRequestDTO request) {
@@ -105,7 +105,7 @@ public class AirportService {
         return AirportMapper.toResponse(updatedAirport);
     }
 
-    @CacheEvict(value = "airports", allEntries = true)
+    @CacheEvict(value = {"airports", "flights"}, allEntries = true)
     public void deleteAirport(Long id) {
 
         Airport airport = airportRepository.findById(id)
