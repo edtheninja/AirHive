@@ -40,10 +40,19 @@ function normalizeStatus(status: string): Flight["status"] {
     case "BOARDING":
       return "Boarding";
 
+    case "TAXIING":
+      return "Taxiing";
+
+    case "DEPARTED":
+      return "Departed";
+
     case "IN_AIR":
     case "IN AIR":
     case "AIRBORNE":
       return "In Air";
+
+    case "LANDING":
+      return "Landing";
 
     case "LANDED":
       return "Landed";

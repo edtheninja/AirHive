@@ -1,6 +1,7 @@
 package com.airhive.backend.service;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -22,7 +23,16 @@ import com.airhive.backend.repository.RouteRepository;
 
 @Service
 public class FlightService {
-
+        private static final Set<String> VALID_FLIGHT_STATUSES = Set.of(
+                        "SCHEDULED",
+                        "BOARDING",
+                        "TAXIING",
+                        "DEPARTED",
+                        "IN AIR",
+                        "LANDED",
+                        "DELAYED",
+                        "CANCELLED",
+                        "LANDING");
         private final FlightRepository flightRepository;
         private final AircraftRepository aircraftRepository;
         private final AirportRepository airportRepository;
@@ -47,6 +57,18 @@ public class FlightService {
         public FlightResponseDTO createFlight(FlightRequestDTO request) {
 
                 validateRequest(request);
+                if (request.getStatus() == null
+                                || request.getStatus().isBlank()) {
+
+                        throw new IllegalArgumentException(
+                                        "Flight status is required");
+                }
+                if (!VALID_FLIGHT_STATUSES.contains(
+                                request.getStatus().trim().toUpperCase())) {
+
+                        throw new IllegalArgumentException(
+                                        "Invalid flight status: " + request.getStatus());
+                }
 
                 if (flightRepository.existsByFlightNumber(
                                 request.getFlightNumber())) {
