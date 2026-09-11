@@ -1,20 +1,11 @@
 import { AnimatePresence, motion } from "motion/react";
-import {
-  AlertTriangle,
-  Bell,
-  CheckCircle2,
-  Info,
-  OctagonAlert,
-} from "lucide-react";
+import { AlertTriangle, Bell, CheckCircle2, CheckCheck, Info, OctagonAlert } from "lucide-react";
 import { useNotifications } from "@/lib/notifications/notification-context";
 import { spring } from "@/lib/ams/motion";
 import { cn } from "@/lib/utils";
 import type { NotificationSeverity } from "@/lib/api/notifications";
 
-const toneMap: Record<
-  NotificationSeverity,
-  { icon: typeof Info; className: string }
-> = {
+const toneMap: Record<NotificationSeverity, { icon: typeof Info; className: string }> = {
   INFO: { icon: Info, className: "text-info bg-info/12" },
   WARNING: { icon: AlertTriangle, className: "text-warning bg-warning/16" },
   CRITICAL: {
@@ -30,7 +21,7 @@ export function NotificationsPanel({
   limit?: number;
   className?: string;
 }) {
-  const { notifications, loading, markAsRead } = useNotifications();
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
 
   return (
     <div className={cn("glass overflow-hidden rounded-3xl", className)}>
@@ -38,11 +29,24 @@ export function NotificationsPanel({
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-muted-foreground" strokeWidth={1.7} />
           <h2 className="text-base font-semibold">Notifications</h2>
+
+          {unreadCount > 0 && (
+            <span className="num rounded-full bg-foreground/5 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {unreadCount} unread
+            </span>
+          )}
         </div>
 
-        <span className="num rounded-full bg-foreground/5 px-2.5 py-1 text-xs text-muted-foreground">
-          {notifications.length}
-        </span>
+        {unreadCount > 0 && (
+          <button
+            type="button"
+            onClick={() => void markAllAsRead()}
+            className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-foreground/6 hover:text-foreground"
+          >
+            <CheckCheck className="h-3.5 w-3.5" strokeWidth={1.8} />
+            Mark all read
+          </button>
+        )}
       </div>
 
       <div className="max-h-105 space-y-2 overflow-y-auto px-4 pb-5">
@@ -84,13 +88,9 @@ export function NotificationsPanel({
                   </span>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {notification.title}
-                    </p>
+                    <p className="truncate text-sm font-medium">{notification.title}</p>
 
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {notification.message}
-                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{notification.message}</p>
 
                     <p className="num mt-1 text-[11px] text-muted-foreground/80">
                       {new Date(notification.createdAt).toLocaleString()}
@@ -99,6 +99,7 @@ export function NotificationsPanel({
 
                   {!notification.read && (
                     <button
+                      type="button"
                       onClick={() => void markAsRead(notification.id)}
                       aria-label={`Mark ${notification.title} as read`}
                       className="rounded-lg p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-foreground/6"

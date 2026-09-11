@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { spring } from "@/lib/ams/motion";
 import { useLiveOps } from "@/lib/ams/hooks";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useNotifications } from "@/lib/notifications/notification-context";
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -135,6 +136,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { dark, toggle } = useTheme();
   const isDesktop = useIsDesktop();
   const { notifications } = useLiveOps();
+  const { unreadCount } = useNotifications();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const current = NAV.find((n) => n.to === pathname)?.label ?? "Dashboard";
 
@@ -218,8 +220,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell className="h-4.5 w-4.5" strokeWidth={1.7} />
 
-              {notifications.length ? (
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
+              {unreadCount > 0 ? (
+                <span
+                  className="absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-semibold leading-none text-destructive-foreground"
+                  aria-label={`${unreadCount} unread notifications`}
+                >
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
               ) : null}
             </Link>
 
