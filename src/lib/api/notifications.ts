@@ -46,6 +46,12 @@ export async function markNotificationAsRead(
   });
 }
 
+export async function clearNotifications(): Promise<void> {
+  await apiRequest<void>("/notifications", {
+    method: "DELETE",
+  });
+}
+
 export async function markAllNotificationsAsRead(): Promise<number> {
   return apiRequest<number>("/notifications/read-all", {
     method: "PATCH",

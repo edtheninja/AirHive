@@ -86,7 +86,11 @@ public class NotificationService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
+    public void clearNotifications(Long userId) {
+        notificationRepository.deleteByUserId(userId);
+    }
+
     public long getUnreadCount(Long userId) {
         ensureUserExists(userId);
 

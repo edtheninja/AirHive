@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,6 +64,15 @@ public class NotificationController {
 
         return ResponseEntity.ok(
                 notificationService.markAsRead(userId, id));
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> clearNotifications(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        Long userId = jwt.getClaim("userId");
+        notificationService.clearNotifications(userId);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/read-all")

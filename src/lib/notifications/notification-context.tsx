@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import {
+  clearNotifications,
   getNotifications,
   getUnreadNotificationCount,
   markAllNotificationsAsRead,
@@ -26,6 +27,7 @@ type NotificationContextValue = {
   refresh: () => Promise<void>;
   markAsRead: (id: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  clearAllNotifications: () => Promise<void>;
 };
 
 const NotificationContext = createContext<NotificationContextValue | undefined>(undefined);
@@ -112,6 +114,21 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     }
   }, []);
 
+  const clearAllNotifications = useCallback(async () => {
+    try {
+      await clearNotifications();
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to clear notifications.",
+      );
+      throw err;
+    }
+  }, []);
+
   const markAllAsRead = useCallback(async () => {
     try {
       await markAllNotificationsAsRead();
@@ -140,8 +157,18 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       refresh,
       markAsRead,
       markAllAsRead,
+      clearAllNotifications,
     }),
-    [notifications, unreadCount, loading, error, refresh, markAsRead, markAllAsRead],
+    [
+      notifications,
+      unreadCount,
+      loading,
+      error,
+      refresh,
+      markAsRead,
+      markAllAsRead,
+      clearAllNotifications,
+    ],
   );
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

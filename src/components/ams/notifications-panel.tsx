@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
 import { AlertTriangle, Bell, CheckCircle2, CheckCheck, Info, OctagonAlert } from "lucide-react";
 import { useNotifications } from "@/lib/notifications/notification-context";
 import { spring } from "@/lib/ams/motion";
@@ -21,8 +22,10 @@ export function NotificationsPanel({
   limit?: number;
   className?: string;
 }) {
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, clearAllNotifications } =
+    useNotifications();
 
+  const [clearing, setClearing] = useState(false);
   return (
     <div className={cn("glass overflow-hidden rounded-3xl", className)}>
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
@@ -37,16 +40,40 @@ export function NotificationsPanel({
           )}
         </div>
 
-        {unreadCount > 0 && (
-          <button
-            type="button"
-            onClick={() => void markAllAsRead()}
-            className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-foreground/6 hover:text-foreground"
-          >
-            <CheckCheck className="h-3.5 w-3.5" strokeWidth={1.8} />
-            Mark all read
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={() => void markAllAsRead()}
+              className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-foreground/6 hover:text-foreground"
+            >
+              <CheckCheck className="h-3.5 w-3.5" strokeWidth={1.8} />
+              Mark all read
+            </button>
+          )}
+
+          {notifications.length > 0 && (
+            <button
+              type="button"
+              disabled={clearing}
+              onClick={async () => {
+                if (!window.confirm("Clear all notifications? This cannot be undone.")) {
+                  return;
+                }
+                setClearing(true);
+
+                try {
+                  await clearAllNotifications();
+                } finally {
+                  setClearing(false);
+                }
+              }}
+              className="rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-destructive/8 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {clearing ? "Clearing..." : "Clear"}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="max-h-105 space-y-2 overflow-y-auto px-4 pb-5">
