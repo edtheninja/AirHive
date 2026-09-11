@@ -23,6 +23,7 @@ import com.airhive.backend.entity.Role;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.notification.NotificationSeverity;
 import com.airhive.backend.notification.NotificationType;
+import com.airhive.backend.notification.NotificationWebSocketService;
 import com.airhive.backend.repository.AppUserRepository;
 import com.airhive.backend.repository.NotificationRepository;
 
@@ -35,6 +36,9 @@ class NotificationServiceTest {
     @Mock
     private AppUserRepository appUserRepository;
 
+    @Mock
+    private NotificationWebSocketService notificationWebSocketService;
+
     private NotificationService notificationService;
 
     private AppUser user;
@@ -42,9 +46,10 @@ class NotificationServiceTest {
     @BeforeEach
     void setUp() {
         notificationService =
-                new NotificationService(
-                        notificationRepository,
-                        appUserRepository);
+        new NotificationService(
+                notificationRepository,
+                appUserRepository,
+                notificationWebSocketService);
 
         user = new AppUser();
         user.setId(1L);

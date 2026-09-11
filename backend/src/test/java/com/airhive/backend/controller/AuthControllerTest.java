@@ -50,6 +50,7 @@ class AuthControllerTest {
 
         when(authService.login(any()))
                 .thenReturn(new LoginResponse(
+                        67L,
                         "test-jwt-token",
                         "admin",
                         "ADMIN"));

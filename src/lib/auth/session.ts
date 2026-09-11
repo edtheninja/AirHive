@@ -3,6 +3,7 @@ import type { LoginResponse, UserRole } from "./types";
 const SESSION_KEY = "airhive_auth";
 
 export type AuthSession = {
+  userId: number;
   token: string;
   username: string;
   role: UserRole;
@@ -14,6 +15,7 @@ export function saveSession(response: LoginResponse) {
   }
 
   const session: AuthSession = {
+    userId: response.userId,
     token: response.token,
     username: response.username,
     role: response.role,

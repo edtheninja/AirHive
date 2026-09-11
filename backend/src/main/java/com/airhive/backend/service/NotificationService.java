@@ -12,6 +12,7 @@ import com.airhive.backend.entity.Notification;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.notification.NotificationSeverity;
 import com.airhive.backend.notification.NotificationType;
+import com.airhive.backend.notification.NotificationWebSocketService;
 import com.airhive.backend.repository.AppUserRepository;
 import com.airhive.backend.repository.NotificationRepository;
 
@@ -20,12 +21,15 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final AppUserRepository appUserRepository;
+    private final NotificationWebSocketService notificationWebSocketService;
 
     public NotificationService(
             NotificationRepository notificationRepository,
-            AppUserRepository appUserRepository) {
+            AppUserRepository appUserRepository,
+            NotificationWebSocketService notificationWebSocketService) {
         this.notificationRepository = notificationRepository;
         this.appUserRepository = appUserRepository;
+        this.notificationWebSocketService = notificationWebSocketService;
     }
 
     @Transactional
@@ -53,7 +57,11 @@ public class NotificationService {
         notification.setRead(false);
         notification.setCreatedAt(LocalDateTime.now());
 
-        return toResponse(notificationRepository.save(notification));
+        NotificationResponseDTO response = toResponse(notificationRepository.save(notification));
+
+        notificationWebSocketService.publishNotification(response);
+
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -102,8 +110,7 @@ public class NotificationService {
     public int markAllAsRead(Long userId) {
         ensureUserExists(userId);
 
-        List<Notification> notifications =
-                notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
+        List<Notification> notifications = notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
 
         LocalDateTime readAt = LocalDateTime.now();
 
@@ -122,8 +129,7 @@ public class NotificationService {
             Long notificationId) {
 
         return notificationRepository.findById(notificationId)
-                .filter(notification ->
-                        notification.getUser().getId().equals(userId))
+                .filter(notification -> notification.getUser().getId().equals(userId))
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Notification not found with id: " + notificationId));
     }

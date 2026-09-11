@@ -30,6 +30,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     saveSession(response);
 
     const nextSession: AuthSession = {
+      userId: response.userId,
       token: response.token,
       username: response.username,
       role: response.role,

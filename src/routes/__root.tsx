@@ -15,6 +15,7 @@ import { AppShell } from "@/components/ams/app-shell";
 import { LiveOpsProvider } from "@/lib/ams/live-ops";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { NotificationProvider } from "@/lib/notifications/notification-context";
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -156,13 +157,15 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LiveOpsProvider>
-          <MotionConfig reducedMotion="user">
-            <AppShell>
-              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-              <Outlet />
-            </AppShell>
-            <Toaster position="top-right" />
-          </MotionConfig>
+          <NotificationProvider>
+            <MotionConfig reducedMotion="user">
+              <AppShell>
+                {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+                <Outlet />
+              </AppShell>
+              <Toaster position="top-right" />
+            </MotionConfig>
+          </NotificationProvider>
         </LiveOpsProvider>
       </AuthProvider>
     </QueryClientProvider>

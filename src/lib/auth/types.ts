@@ -6,6 +6,7 @@ export type LoginRequest = {
 };
 
 export type LoginResponse = {
+  userId: number;
   token: string;
   username: string;
   role: UserRole;
