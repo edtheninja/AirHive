@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AlertTriangle, Bell, CheckCircle2, CheckCheck, Info, OctagonAlert } from "lucide-react";
 import { useNotifications } from "@/lib/notifications/notification-context";
@@ -26,6 +27,22 @@ export function NotificationsPanel({
     useNotifications();
 
   const [clearing, setClearing] = useState(false);
+  const navigate = useNavigate();
+
+  async function handleNotificationClick(
+    notificationId: number,
+    read: boolean,
+    relatedEntityType?: string,
+  ) {
+    if (!read) {
+      await markAsRead(notificationId);
+    }
+
+    if (relatedEntityType === "FLIGHT") {
+      await navigate({ to: "/flights" });
+    }
+  }
+
   return (
     <div className={cn("glass overflow-hidden rounded-3xl", className)}>
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
@@ -91,6 +108,42 @@ export function NotificationsPanel({
                 <motion.div
                   key={notification.id}
                   layout
+                  role={
+                    notification.relatedEntityType === "FLIGHT"
+                      ? "button"
+                      : undefined
+                  }
+                  tabIndex={
+                    notification.relatedEntityType === "FLIGHT" ? 0 : undefined
+                  }
+                  onClick={() => {
+                    if (notification.relatedEntityType === "FLIGHT") {
+                      void handleNotificationClick(
+                        notification.id,
+                        notification.read,
+                        notification.relatedEntityType,
+                      );
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (
+                      notification.relatedEntityType === "FLIGHT" &&
+                      (event.key === "Enter" || event.key === " ")
+                    ) {
+                      event.preventDefault();
+                      void handleNotificationClick(
+                        notification.id,
+                        notification.read,
+                        notification.relatedEntityType,
+                      );
+                    }
+                  }}
+                  className={cn(
+                    "group flex items-start gap-3 rounded-2xl px-3 py-3 transition-colors hover:bg-foreground/4",
+                    !notification.read && "bg-foreground/3",
+                    notification.relatedEntityType === "FLIGHT" &&
+                      "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                  )}
                   initial={{ opacity: 0, x: 40, filter: "blur(6px)" }}
                   animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
                   exit={{
@@ -100,10 +153,7 @@ export function NotificationsPanel({
                     marginBottom: 0,
                   }}
                   transition={spring}
-                  className={cn(
-                    "group flex items-start gap-3 rounded-2xl px-3 py-3 transition-colors hover:bg-foreground/4",
-                    !notification.read && "bg-foreground/3",
-                  )}
+
                 >
                   <span
                     className={cn(
