@@ -31,12 +31,12 @@ function AnalyticsPage() {
   }, {});
 
   const statusRows = [
-    ["Scheduled", flightStatusCounts.Scheduled ?? 0],
-    ["Boarding", flightStatusCounts.Boarding ?? 0],
-    ["In air", flightStatusCounts["In Air"] ?? 0],
-    ["Landed", flightStatusCounts.Landed ?? 0],
-    ["Delayed", flightStatusCounts.Delayed ?? 0],
-    ["Cancelled", flightStatusCounts.Cancelled ?? 0],
+    ["Scheduled", flightStatusCounts.SCHEDULED ?? 0],
+    ["Boarding", flightStatusCounts.BOARDING ?? 0],
+    ["In air", flightStatusCounts["IN AIR"] ?? 0],
+    ["Landed", flightStatusCounts.LANDED ?? 0],
+    ["Delayed", flightStatusCounts.DELAYED ?? 0],
+    ["Cancelled", flightStatusCounts.CANCELLED ?? 0],
   ] as const;
 
   return (
