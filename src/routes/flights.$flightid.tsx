@@ -3,7 +3,7 @@ import { ArrowLeft, Clock3, Plane, Route as RouteIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 
-import { getFlightById, type Flight } from "@/lib/api/flights";
+import { getFlightById, updateFlightStatus, type Flight } from "@/lib/api/flights";
 import { pageVariants } from "@/lib/ams/motion";
 import { GlassCard, PageHeader, StatusPill } from "@/components/ams/primitives";
 import type { FlightStatus } from "@/lib/ams/data";
@@ -48,6 +48,18 @@ function normalizeStatus(status: string): FlightStatus {
   }
 }
 
+const flightStatusOptions = [
+  { label: "Scheduled", value: "SCHEDULED" },
+  { label: "Boarding", value: "BOARDING" },
+  { label: "Taxiing", value: "TAXIING" },
+  { label: "Departed", value: "DEPARTED" },
+  { label: "In Air", value: "IN AIR" },
+  { label: "Landing", value: "LANDING" },
+  { label: "Landed", value: "LANDED" },
+  { label: "Delayed", value: "DELAYED" },
+  { label: "Cancelled", value: "CANCELLED" },
+];
+
 function formatDateTime(value: string) {
   const date = new Date(value);
 
@@ -71,12 +83,15 @@ function DetailItem({ label, value }: { label: string; value: string | number })
 }
 
 function FlightDetailPage() {
-  console.log("FLIGHT DETAIL PAGE LOADED");
   const params = Route.useParams();
   const flightId = params.flightid;
+
   const [flight, setFlight] = useState<Flight | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -85,11 +100,13 @@ function FlightDetailPage() {
       try {
         setLoading(true);
         setError("");
+        setStatusMessage("");
 
         const data = await getFlightById(Number(flightId));
 
         if (!cancelled) {
           setFlight(data);
+          setSelectedStatus(data.status);
         }
       } catch (err) {
         if (!cancelled) {
@@ -108,6 +125,28 @@ function FlightDetailPage() {
       cancelled = true;
     };
   }, [flightId]);
+
+  async function handleStatusUpdate() {
+    if (!flight || !selectedStatus || selectedStatus === flight.status) {
+      return;
+    }
+
+    try {
+      setUpdatingStatus(true);
+      setStatusMessage("");
+      setError("");
+
+      const updatedFlight = await updateFlightStatus(flight, selectedStatus);
+
+      setFlight(updatedFlight);
+      setSelectedStatus(updatedFlight.status);
+      setStatusMessage("Flight status updated successfully.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update flight status.");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
 
   return (
     <motion.div
@@ -150,6 +189,10 @@ function FlightDetailPage() {
 
       {!loading && !error && flight && (
         <>
+          {statusMessage && (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400">{statusMessage}</p>
+          )}
+
           <GlassCard hover={false} className="overflow-hidden">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 px-6 py-5">
               <div className="flex items-center gap-3">
@@ -163,7 +206,35 @@ function FlightDetailPage() {
                 </div>
               </div>
 
-              <StatusPill status={normalizeStatus(flight.status)} />
+              <div className="flex flex-wrap items-center gap-3">
+                <StatusPill status={normalizeStatus(flight.status)} />
+
+                <select
+                  value={selectedStatus}
+                  onChange={(event) => {
+                    setSelectedStatus(event.target.value);
+                    setStatusMessage("");
+                  }}
+                  disabled={updatingStatus}
+                  aria-label="Select flight status"
+                  className="rounded-full border border-border/60 bg-background px-3 py-2 text-sm font-medium outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {flightStatusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={handleStatusUpdate}
+                  disabled={updatingStatus || !selectedStatus || selectedStatus === flight.status}
+                  className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {updatingStatus ? "Updating..." : "Update Status"}
+                </button>
+              </div>
             </div>
 
             <div className="grid gap-4 p-6 md:grid-cols-[1fr_auto_1fr] md:items-center">
