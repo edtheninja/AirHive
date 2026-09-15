@@ -1,11 +1,7 @@
 import { apiRequest } from "./client";
 
 export type NotificationType =
-  | "FLIGHT_DELAYED"
-  | "FLIGHT_CANCELLED"
-  | "FLIGHT_STATUS_CHANGED"
-  | "SCHEDULE_CONFLICT"
-  | "SYSTEM";
+  "FLIGHT_DELAYED" | "FLIGHT_CANCELLED" | "FLIGHT_STATUS_CHANGED" | "SCHEDULE_CONFLICT" | "SYSTEM";
 
 export type NotificationSeverity = "INFO" | "WARNING" | "CRITICAL";
 
@@ -38,9 +34,7 @@ export async function getUnreadNotificationCount(): Promise<number> {
   return apiRequest<number>("/notifications/unread/count");
 }
 
-export async function markNotificationAsRead(
-  id: number,
-): Promise<Notification> {
+export async function markNotificationAsRead(id: number): Promise<Notification> {
   return apiRequest<Notification>(`/notifications/${id}/read`, {
     method: "PATCH",
   });

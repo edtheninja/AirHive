@@ -108,14 +108,8 @@ export function NotificationsPanel({
                 <motion.div
                   key={notification.id}
                   layout
-                  role={
-                    notification.relatedEntityType === "FLIGHT"
-                      ? "button"
-                      : undefined
-                  }
-                  tabIndex={
-                    notification.relatedEntityType === "FLIGHT" ? 0 : undefined
-                  }
+                  role={notification.relatedEntityType === "FLIGHT" ? "button" : undefined}
+                  tabIndex={notification.relatedEntityType === "FLIGHT" ? 0 : undefined}
                   onClick={() => {
                     if (notification.relatedEntityType === "FLIGHT") {
                       void handleNotificationClick(
@@ -153,7 +147,6 @@ export function NotificationsPanel({
                     marginBottom: 0,
                   }}
                   transition={spring}
-
                 >
                   <span
                     className={cn(

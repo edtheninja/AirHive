@@ -30,8 +30,11 @@ export async function apiRequest<T>(endpoint: string, options?: RequestInit): Pr
     if (response.status === 401) {
       clearSession();
       message = "Your session has expired. Please log in again.";
-    }
 
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        window.location.assign("/login");
+      }
+    }
     if (response.status === 403) {
       message = "You do not have permission to perform this action.";
     }

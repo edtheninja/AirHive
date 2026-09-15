@@ -120,11 +120,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setNotifications([]);
       setUnreadCount(0);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to clear notifications.",
-      );
+      setError(err instanceof Error ? err.message : "Failed to clear notifications.");
       throw err;
     }
   }, []);
