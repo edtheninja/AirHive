@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 import { login as loginRequest } from "./api";
 import { clearSession, getSession, saveSession, type AuthSession } from "./session";
@@ -18,11 +18,7 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [session, setSession] = useState<AuthSession | null>(null);
-
-  useEffect(() => {
-    setSession(getSession());
-  }, []);
+  const [session, setSession] = useState<AuthSession | null>(() => getSession());
 
   async function login(request: LoginRequest) {
     const response = await loginRequest(request);
