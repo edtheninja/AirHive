@@ -33,4 +33,4 @@ airhive:
   security:
     jwt:
       secret: ${AIRHIVE_JWT_SECRET}
-      expiration-ms: 3600000
+      expiration-ms: 604800000
