@@ -801,32 +801,48 @@ test: improve flight service validation coverage
 docs: update project README
 ```
 
----
-
 # 📊 Current Project Status
 
-| Area | Status |
-|---|---|
-| Core Architecture | ✅ Complete |
-| PostgreSQL Database | ✅ Complete |
-| Airport APIs | ✅ Complete |
-| Aircraft Type APIs | ✅ Complete |
-| Aircraft APIs | ✅ Complete |
-| Route APIs | ✅ Complete |
-| Flight APIs | ✅ Complete |
-| Business Validation | ✅ Complete |
-| Frontend API Integration | ✅ Complete |
-| Backend Testing | ✅ Complete |
-| Redis Caching | ✅ Complete |
-| Flight WebSockets | ✅ Complete |
-| Frontend Live Flight Updates | ✅ Complete |
-| UI/Design System Polish | 🔜 Planned |
-| Authentication | 🔜 Planned |
-| RBAC | 🔜 Planned |
-| Docker | 🔜 Planned |
-| CI/CD | 🔜 Planned |
-| Production Deployment | 🔜 Planned |
-| Final QA & Documentation | 🔜 Planned |
+| Area                            | Status                  |
+| ------------------------------- | ----------------------- |
+| Core Architecture               | ✅ Complete              |
+| PostgreSQL Database             | ✅ Complete              |
+| Airport APIs                    | ✅ Complete              |
+| Aircraft Type APIs              | ✅ Complete              |
+| Aircraft APIs                   | ✅ Complete              |
+| Route APIs                      | ✅ Complete              |
+| Flight APIs                     | ✅ Complete              |
+| Business Validation             | ✅ Complete              |
+| Frontend API Integration        | ✅ Complete              |
+| Backend Testing                 | ✅ Complete              |
+| Redis Integration               | ✅ Complete              |
+| Airport Caching                 | ✅ Complete              |
+| Aircraft Type Caching           | ✅ Complete              |
+| Aircraft Caching                | ✅ Complete              |
+| Flight DTO Caching              | ⚠️ Temporarily Disabled |
+| Cache Invalidation              | ✅ Complete              |
+| TTL Verification                | ✅ Complete              |
+| Flight WebSockets               | ✅ Complete              |
+| Frontend Live Flight Updates    | ✅ Complete              |
+| Authentication                  | ✅ Complete              |
+| JWT Security                    | ✅ Complete              |
+| Role-Based Access Control       | ✅ Complete              |
+| Protected API Endpoints         | ✅ Complete              |
+| Security Hardening              | ✅ Complete              |
+| Notification System             | ✅ Complete              |
+| Real-Time Notification Delivery | ✅ Complete              |
+| Notification Read/Unread UX     | ✅ Complete              |
+| Notification Clearing           | ✅ Complete              |
+| Flight Notification Navigation  | ✅ Complete              |
+| Flight Detail View              | ✅ Complete              |
+| UI/Design System Polish         | 🔄 In Progress          |
+| Advanced Flight Operations      | 🔄 In Progress          |
+| Analytics Dashboard             | 🔜 Planned              |
+| AI Features                     | 🔜 Planned              |
+| Docker                          | 🔜 Planned              |
+| CI/CD                           | 🔜 Planned              |
+| Production Deployment           | 🔜 Planned              |
+| Final QA & Documentation        | 🔜 Planned              |
 
 ---
 
@@ -834,111 +850,188 @@ docs: update project README
 
 ## Phase 1 — Core Architecture
 
-- [x] Project structure
-- [x] Frontend architecture
-- [x] Backend architecture
-- [x] Database model
+* [x] Project structure
+* [x] Frontend architecture
+* [x] Backend architecture
+* [x] Database model
+* [x] API client structure
+* [x] Shared frontend components
 
 ## Phase 2 — Database
 
-- [x] PostgreSQL integration
-- [x] Airport schema
-- [x] Aircraft type schema
-- [x] Aircraft schema
-- [x] Route schema
-- [x] Flight schema
+* [x] PostgreSQL integration
+* [x] Airport schema
+* [x] Aircraft type schema
+* [x] Aircraft schema
+* [x] Route schema
+* [x] Flight schema
+* [x] User and role schema
+* [x] Notification schema
 
 ## Phase 3 — REST APIs
 
-- [x] Airport APIs
-- [x] Aircraft Type APIs
-- [x] Aircraft APIs
-- [x] Route APIs
-- [x] Flight APIs
+* [x] Airport APIs
+* [x] Aircraft Type APIs
+* [x] Aircraft APIs
+* [x] Route APIs
+* [x] Flight APIs
+* [x] Authentication APIs
+* [x] User management APIs
+* [x] Notification APIs
 
 ## Phase 4 — Business Logic
 
-- [x] Validation
-- [x] Duplicate detection
-- [x] Resource validation
-- [x] Aircraft scheduling conflict detection
-- [x] Exception handling
+* [x] Request validation
+* [x] Duplicate detection
+* [x] Resource validation
+* [x] Aircraft scheduling conflict detection
+* [x] Exception handling
+* [x] Flight status validation
+* [x] User lifecycle validation
+* [x] Role and permission validation
 
 ## Phase 5 — Frontend Integration
 
-- [x] API client layer
-- [x] Flight integration
-- [x] Aircraft integration
-- [x] Route integration
-- [x] Live operations integration
+* [x] API client layer
+* [x] Flight integration
+* [x] Aircraft integration
+* [x] Route integration
+* [x] Live operations integration
+* [x] Authentication flow
+* [x] Session handling
+* [x] Protected frontend routes
+* [x] Notification panel
+* [x] Flight detail page
+* [x] Flight detail navigation
 
 ## Phase 6 — Testing
 
-- [x] Service tests
-- [x] Controller tests
-- [x] Repository tests
-- [x] Validation tests
-- [x] WebSocket tests
+* [x] Service tests
+* [x] Controller tests
+* [x] Repository tests
+* [x] Validation tests
+* [x] Authentication tests
+* [x] RBAC tests
+* [x] WebSocket tests
+* [x] Notification tests
+* [x] Regression testing
 
-## Phase 7 — Redis
+## Phase 7 — Redis and Caching
 
-- [x] Redis integration
-- [x] Airport caching
-- [x] Aircraft type caching
-- [x] Aircraft caching
-- [x] Flight caching
-- [x] Cache invalidation
-- [x] TTL verification
+* [x] Redis integration
+* [x] Airport caching
+* [x] Aircraft type caching
+* [x] Aircraft caching
+* [x] Cache invalidation
+* [x] TTL verification
+* [x] Redis health verification
+* [ ] Correctly typed flight DTO caching
+* [ ] Flight cache serialization review
+
+> Flight DTO caching is currently disabled because the Redis JSON serializer was returning cached values as `LinkedHashMap` instead of `FlightResponseDTO`. The flight APIs currently load flight data directly from PostgreSQL.
 
 ## Phase 8 — Real-Time Operations
 
-- [x] Spring WebSocket
-- [x] STOMP broker
-- [x] Flight event DTO
-- [x] Flight created events
-- [x] Flight updated events
-- [x] Flight deleted events
-- [x] Frontend STOMP client
-- [x] Live flight dashboard updates
+* [x] Spring WebSocket
+* [x] STOMP broker
+* [x] Flight event DTO
+* [x] Flight created events
+* [x] Flight updated events
+* [x] Flight deleted events
+* [x] Frontend STOMP client
+* [x] Live flight dashboard updates
+* [x] Real-time notification delivery
+* [x] Notification read/unread state
+* [x] Notification clearing
+* [x] Flight notification navigation
 
-## Phase 9 — UI & Design System
+## Phase 9 — UI and Design System
 
-- [ ] Design system refinement
-- [ ] Responsive improvements
-- [ ] Advanced dashboard interactions
-- [ ] Loading states
-- [ ] Empty states
-- [ ] Error states
-- [ ] Accessibility improvements
+* [x] macOS-inspired application shell
+* [x] Shared design primitives
+* [x] Glass-style cards
+* [x] Status pills
+* [x] Responsive layout foundation
+* [x] Loading states
+* [x] Empty states
+* [x] Error states
+* [x] Accessibility improvements
+* [ ] Final design system refinement
+* [ ] Advanced dashboard interactions
+* [ ] Full responsive QA
+* [ ] Visual consistency review
 
 ## Phase 10 — Security
 
-- [ ] Authentication
-- [ ] JWT/session strategy
-- [ ] Role-based access control
-- [ ] Protected endpoints
-- [ ] WebSocket authorization
-- [ ] Production security configuration
+* [x] Authentication
+* [x] JWT/session strategy
+* [x] Role-based access control
+* [x] Protected endpoints
+* [x] User lifecycle management
+* [x] Password security
+* [x] Security exception handling
+* [x] WebSocket security foundation
+* [x] Production security configuration foundation
+* [ ] Final security audit
 
-## Phase 11 — Deployment
+## Phase 11 — Advanced Flight Operations
 
-- [ ] Docker configuration
-- [ ] Production environment configuration
-- [ ] CI/CD pipeline
-- [ ] Automated deployment
-- [ ] Monitoring
-- [ ] Production database strategy
+* [x] Dynamic flight detail route
+* [x] Flight detail information view
+* [x] Flight schedule information
+* [x] Aircraft information display
+* [x] Flight status display
+* [ ] Flight status update from detail page
+* [ ] Flight activity timeline
+* [ ] Delay and cancellation reasons
+* [ ] Aircraft and route detail links
+* [ ] Operational action permissions
+* [ ] Advanced flight filtering
+* [ ] Flight history
 
-## Phase 12 — Finalization
+## Phase 12 — Analytics
 
-- [ ] End-to-end QA
-- [ ] Performance testing
-- [ ] Security review
-- [ ] API documentation
-- [ ] Developer documentation
-- [ ] Final project report
+* [ ] Operations dashboard analytics
+* [ ] Flight status distribution
+* [ ] Delay analytics
+* [ ] Airport activity analytics
+* [ ] Aircraft utilization analytics
+* [ ] Route performance analytics
+* [ ] Historical reporting
+* [ ] Exportable reports
 
----
+## Phase 13 — AI Features
+
+* [ ] AI-assisted operational insights
+* [ ] Delay prediction
+* [ ] Flight disruption analysis
+* [ ] Natural-language operations search
+* [ ] AI recommendations
+* [ ] AI monitoring and evaluation
+
+## Phase 14 — Deployment and Observability
+
+* [ ] Docker configuration
+* [ ] Production environment configuration
+* [ ] CI/CD pipeline
+* [ ] Automated deployment
+* [ ] Application monitoring
+* [ ] Logging and tracing
+* [ ] Production database strategy
+* [ ] Backup and recovery strategy
+* [ ] Redis production configuration
+
+## Phase 15 — Finalization
+
+* [ ] End-to-end QA
+* [ ] Performance testing
+* [ ] Security review
+* [ ] API documentation
+* [ ] Developer documentation
+* [ ] Deployment documentation
+* [ ] Final project report
+* [ ] Final presentation
+
 
 # 🧰 Useful Commands
 
