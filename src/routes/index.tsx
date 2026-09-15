@@ -1,6 +1,5 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { getSession } from "@/lib/auth/session";
 import {
   AlertOctagon,
   ClipboardList,
@@ -21,13 +20,6 @@ import { NotificationsPanel } from "@/components/ams/notifications-panel";
 import { PageHeader, SectionCard } from "@/components/ams/primitives";
 
 export const Route = createFileRoute("/")({
-  beforeLoad: () => {
-    if (typeof window !== "undefined" && !getSession()) {
-      throw redirect({
-        to: "/login",
-      });
-    }
-  },
   head: () => ({
     meta: [
       { title: "Operations Dashboard — AirHive AMS" },

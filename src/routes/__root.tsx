@@ -6,7 +6,9 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  redirect,
 } from "@tanstack/react-router";
+import { getSession } from "@/lib/auth/session";
 import { useEffect, type ReactNode } from "react";
 import { MotionConfig } from "motion/react";
 import appCss from "../styles.css?url";
@@ -79,6 +81,14 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
+  beforeLoad: ({ location }) => {
+    if (typeof window !== "undefined" && location.pathname !== "/login" && !getSession()) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+  },
+
   head: () => ({
     meta: [
       { charSet: "utf-8" },
