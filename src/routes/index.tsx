@@ -1,7 +1,6 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { getSession } from "@/lib/auth/session";
-import { toast } from "sonner";
 import {
   AlertOctagon,
   ClipboardList,
@@ -47,15 +46,26 @@ export const Route = createFileRoute("/")({
 });
 
 const QUICK_ACTIONS = [
-  { label: "Add Flight", icon: PlaneTakeoff, tone: "text-accent" },
-  { label: "Assign Aircraft", icon: Plane, tone: "text-accent" },
-  { label: "Schedule Crew", icon: UserPlus, tone: "text-accent" },
-  { label: "Generate Report", icon: ClipboardList, tone: "text-muted-foreground" },
-  { label: "Emergency Alert", icon: AlertOctagon, tone: "text-destructive" },
-  { label: "Publish Delay", icon: Megaphone, tone: "text-warning" },
+  { label: "Add Flight", icon: PlaneTakeoff, tone: "text-accent", path: "/flights" },
+  { label: "Assign Aircraft", icon: Plane, tone: "text-accent", path: "/aircraft" },
+  { label: "Schedule Crew", icon: UserPlus, tone: "text-accent", path: "/crew" },
+  {
+    label: "Generate Report",
+    icon: ClipboardList,
+    tone: "text-muted-foreground",
+    path: "/analytics",
+  },
+  {
+    label: "Emergency Alert",
+    icon: AlertOctagon,
+    tone: "text-destructive",
+    path: "/notifications",
+  },
+  { label: "Publish Delay", icon: Megaphone, tone: "text-warning", path: "/flights" },
 ];
 
 function Dashboard() {
+  const navigate = useNavigate();
   const { kpis, flights } = useLiveOps();
   const flightStatusCounts = flights.reduce<Record<string, number>>((counts, flight) => {
     counts[flight.status] = (counts[flight.status] ?? 0) + 1;
@@ -134,9 +144,7 @@ function Dashboard() {
                   key={a.label}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() =>
-                    toast(a.label, { description: "Action queued in the operations centre." })
-                  }
+                  onClick={() => navigate({ to: a.path })}
                   className="flex flex-col items-start gap-3 rounded-2xl border border-border/60 bg-foreground/3 p-3 text-left text-sm transition-colors hover:bg-foreground/6"
                 >
                   <a.icon className={`h-4.5 w-4.5 ${a.tone}`} strokeWidth={1.7} />
