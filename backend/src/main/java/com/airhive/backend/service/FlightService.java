@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.airhive.backend.dto.FlightRequestDTO;
@@ -150,7 +149,6 @@ public class FlightService {
                 return response;
         }
 
-        @Cacheable(value = "flights", key = "#id")
         public FlightResponseDTO getFlightById(Long id) {
 
                 Flight flight = flightRepository.findById(id)
@@ -160,7 +158,6 @@ public class FlightService {
                 return FlightMapper.toResponse(flight);
         }
 
-        @Cacheable("flights")
         public List<FlightResponseDTO> getAllFlights() {
 
                 return flightRepository.findAll()

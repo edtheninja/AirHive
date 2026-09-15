@@ -5,6 +5,7 @@ import type { Flight } from "@/lib/ams/data";
 import { useLiveOps } from "@/lib/ams/hooks";
 import { getFlightById, updateFlightStatus } from "@/lib/api/flights";
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 const HEAD = [
   "Flight",
@@ -131,7 +132,15 @@ export function FlightsTable({ flights }: { flights: Flight[] }) {
                   exit={{ opacity: 0 }}
                   className="group rounded-2xl transition-colors hover:bg-foreground/4"
                 >
-                  <td className="num rounded-l-2xl px-3 py-3 font-medium">{flight.number}</td>
+                  <td className="num rounded-l-2xl px-3 py-3 font-medium">
+                    <Link
+                      to="/flights/$flightid"
+                      params={{ flightid: String(flight.id) }}
+                      className="relative z-10 inline-block cursor-pointer hover:text-primary hover:underline"
+                    >
+                      {flight.number}
+                    </Link>
+                  </td>
 
                   <td className="px-3 py-3">
                     <div className="num text-[13px]">{flight.aircraft}</div>
