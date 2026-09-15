@@ -156,12 +156,12 @@ function Dashboard() {
           <SectionCard title="Network status" subtitle="Current flight distribution">
             <dl className="space-y-3 text-sm">
               {[
-                ["Scheduled", flightStatusCounts.SCHEDULED ?? 0],
-                ["Boarding", flightStatusCounts.BOARDING ?? 0],
-                ["In air", flightStatusCounts["IN AIR"] ?? 0],
-                ["Landed", flightStatusCounts.LANDED ?? 0],
-                ["Delayed", flightStatusCounts.DELAYED ?? 0],
-                ["Cancelled", flightStatusCounts.CANCELLED ?? 0],
+                ["Scheduled", flightStatusCounts.Scheduled ?? 0],
+                ["Boarding", flightStatusCounts.Boarding ?? 0],
+                ["In air", flightStatusCounts["In Air"] ?? 0],
+                ["Landed", flightStatusCounts.Landed ?? 0],
+                ["Delayed", flightStatusCounts.Delayed ?? 0],
+                ["Cancelled", flightStatusCounts.Cancelled ?? 0],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-center justify-between">
                   <dt className="text-muted-foreground">{label}</dt>
