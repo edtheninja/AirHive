@@ -3,7 +3,13 @@ import { ArrowLeft, Clock3, Plane, Route as RouteIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 
-import { getFlightById, updateFlightStatus, type Flight } from "@/lib/api/flights";
+import {
+  getFlightActivities,
+  getFlightById,
+  updateFlightStatus,
+  type Flight,
+  type FlightActivity,
+} from "@/lib/api/flights";
 import { pageVariants } from "@/lib/ams/motion";
 import { GlassCard, PageHeader, StatusPill } from "@/components/ams/primitives";
 import type { FlightStatus } from "@/lib/ams/data";
@@ -92,6 +98,10 @@ function FlightDetailPage() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [activities, setActivities] = useState<FlightActivity[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
+  const [activitiesError, setActivitiesError] = useState("");
+  const [reason, setReason] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -103,17 +113,23 @@ function FlightDetailPage() {
         setStatusMessage("");
 
         const data = await getFlightById(Number(flightId));
+        const activityData = await getFlightActivities(Number(flightId));
 
         if (!cancelled) {
-          setFlight(data);
-          setSelectedStatus(data.status);
+          setActivities(activityData);
+          setLoading(true);
+          setError("");
         }
       } catch (err) {
         if (!cancelled) {
+          setActivitiesError(
+            err instanceof Error ? err.message : "Failed to load flight activity.",
+          );
           setError(err instanceof Error ? err.message : "Failed to load flight details.");
         }
       } finally {
         if (!cancelled) {
+          setActivitiesLoading(false);
           setLoading(false);
         }
       }
@@ -136,11 +152,12 @@ function FlightDetailPage() {
       setStatusMessage("");
       setError("");
 
-      const updatedFlight = await updateFlightStatus(flight, selectedStatus);
+      const updatedFlight = await updateFlightStatus(flight, selectedStatus, reason);
 
       setFlight(updatedFlight);
       setSelectedStatus(updatedFlight.status);
       setStatusMessage("Flight status updated successfully.");
+      setReason("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update flight status.");
     } finally {
@@ -208,6 +225,17 @@ function FlightDetailPage() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <StatusPill status={normalizeStatus(flight.status)} />
+                <input
+                  value={reason}
+                  onChange={(event) => {
+                    setReason(event.target.value);
+                    setStatusMessage("");
+                  }}
+                  placeholder="Reason (optional)"
+                  disabled={updatingStatus}
+                  aria-label="Reason for status change"
+                  className="w-44 rounded-full border border-border/60 bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                />
 
                 <select
                   value={selectedStatus}
@@ -278,21 +306,53 @@ function FlightDetailPage() {
             </GlassCard>
 
             <GlassCard hover={false} className="p-6">
-              <div className="mb-4 flex items-center gap-2">
-                <Clock3 className="h-5 w-5 text-primary" />
-                <h2 className="font-semibold">Schedule information</h2>
+              <div className="mb-5">
+                <h2 className="font-semibold">Flight activity</h2>
+                <p className="text-sm text-muted-foreground">
+                  Recent operational events for this flight.
+                </p>
               </div>
 
-              <div className="grid gap-3">
-                <DetailItem
-                  label="Scheduled departure"
-                  value={formatDateTime(flight.scheduledDeparture)}
-                />
-                <DetailItem
-                  label="Scheduled arrival"
-                  value={formatDateTime(flight.scheduledArrival)}
-                />
-              </div>
+              {activitiesLoading && (
+                <p className="text-sm text-muted-foreground">Loading activity...</p>
+              )}
+
+              {!activitiesLoading && activitiesError && (
+                <p className="text-sm text-destructive">{activitiesError}</p>
+              )}
+
+              {!activitiesLoading && !activitiesError && activities.length === 0 && (
+                <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
+              )}
+
+              {!activitiesLoading && !activitiesError && activities.length > 0 && (
+                <div className="space-y-4">
+                  {activities.map((activity) => (
+                    <div key={activity.id} className="border-l-2 border-primary/30 pl-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-medium">{activity.message}</p>
+
+                        <time className="text-xs text-muted-foreground">
+                          {formatDateTime(activity.createdAt)}
+                        </time>
+                      </div>
+
+                      {activity.reason && (
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Reason: {activity.reason}
+                        </p>
+                      )}
+
+                      {activity.previousStatus && activity.currentStatus && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {normalizeStatus(activity.previousStatus)} →{" "}
+                          {normalizeStatus(activity.currentStatus)}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </GlassCard>
           </div>
         </>

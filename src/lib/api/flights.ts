@@ -32,18 +32,30 @@ export async function getFlightById(id: number): Promise<Flight> {
   return apiRequest<Flight>(`/flights/${id}`);
 }
 
-export async function updateFlightStatus(flight: Flight, status: string): Promise<Flight> {
-  return apiRequest<Flight>(`/flights/${flight.id}`, {
-    method: "PUT",
+export type FlightActivity = {
+  id: number;
+  eventType: string;
+  message: string;
+  previousStatus: string | null;
+  currentStatus: string | null;
+  reason: string | null;
+  createdAt: string;
+};
+
+export async function getFlightActivities(id: number): Promise<FlightActivity[]> {
+  return apiRequest<FlightActivity[]>(`/flights/${id}/activities`);
+}
+
+export async function updateFlightStatus(
+  flight: Flight,
+  status: string,
+  reason?: string,
+): Promise<Flight> {
+  return apiRequest<Flight>(`/flights/${flight.id}/status`, {
+    method: "PATCH",
     body: JSON.stringify({
-      flightNumber: flight.flightNumber,
-      aircraftId: flight.aircraftId,
-      routeId: flight.routeId,
-      departureAirportId: flight.departureAirportId,
-      arrivalAirportId: flight.arrivalAirportId,
-      scheduledDeparture: flight.scheduledDeparture,
-      scheduledArrival: flight.scheduledArrival,
       status,
+      reason: reason?.trim() || null,
     }),
   });
 }
