@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AircraftRouteImport } from './routes/aircraft'
 import { Route as AirportsRouteImport } from './routes/airports'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as BookingsRouteImport } from './routes/bookings'
@@ -24,16 +23,13 @@ import { Route as PassengersRouteImport } from './routes/passengers'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RoutesRouteImport } from './routes/routes'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as AircraftIndexRouteImport } from './routes/aircraft.index'
+import { Route as AircraftAircraftidRouteImport } from './routes/aircraft.$aircraftid'
 import { Route as FlightsFlightidRouteImport } from './routes/flights.$flightid'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AircraftRoute = AircraftRouteImport.update({
-  id: '/aircraft',
-  path: '/aircraft',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AirportsRoute = AirportsRouteImport.update({
@@ -101,6 +97,16 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AircraftIndexRoute = AircraftIndexRouteImport.update({
+  id: '/aircraft/',
+  path: '/aircraft/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AircraftAircraftidRoute = AircraftAircraftidRouteImport.update({
+  id: '/aircraft/$aircraftid',
+  path: '/aircraft/$aircraftid',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FlightsFlightidRoute = FlightsFlightidRouteImport.update({
   id: '/$flightid',
   path: '/$flightid',
@@ -109,7 +115,6 @@ const FlightsFlightidRoute = FlightsFlightidRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/aircraft': typeof AircraftRoute
   '/airports': typeof AirportsRoute
   '/analytics': typeof AnalyticsRoute
   '/bookings': typeof BookingsRoute
@@ -123,11 +128,12 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/routes': typeof RoutesRoute
   '/settings': typeof SettingsRoute
+  '/aircraft/$aircraftid': typeof AircraftAircraftidRoute
   '/flights/$flightid': typeof FlightsFlightidRoute
+  '/aircraft/': typeof AircraftIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/aircraft': typeof AircraftRoute
   '/airports': typeof AirportsRoute
   '/analytics': typeof AnalyticsRoute
   '/bookings': typeof BookingsRoute
@@ -141,12 +147,13 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/routes': typeof RoutesRoute
   '/settings': typeof SettingsRoute
+  '/aircraft/$aircraftid': typeof AircraftAircraftidRoute
   '/flights/$flightid': typeof FlightsFlightidRoute
+  '/aircraft': typeof AircraftIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/aircraft': typeof AircraftRoute
   '/airports': typeof AirportsRoute
   '/analytics': typeof AnalyticsRoute
   '/bookings': typeof BookingsRoute
@@ -160,13 +167,14 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/routes': typeof RoutesRoute
   '/settings': typeof SettingsRoute
+  '/aircraft/$aircraftid': typeof AircraftAircraftidRoute
   '/flights/$flightid': typeof FlightsFlightidRoute
+  '/aircraft/': typeof AircraftIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/aircraft'
     | '/airports'
     | '/analytics'
     | '/bookings'
@@ -180,11 +188,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/routes'
     | '/settings'
+    | '/aircraft/$aircraftid'
     | '/flights/$flightid'
+    | '/aircraft/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/aircraft'
     | '/airports'
     | '/analytics'
     | '/bookings'
@@ -198,11 +207,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/routes'
     | '/settings'
+    | '/aircraft/$aircraftid'
     | '/flights/$flightid'
+    | '/aircraft'
   id:
     | '__root__'
     | '/'
-    | '/aircraft'
     | '/airports'
     | '/analytics'
     | '/bookings'
@@ -216,12 +226,13 @@ export interface FileRouteTypes {
     | '/profile'
     | '/routes'
     | '/settings'
+    | '/aircraft/$aircraftid'
     | '/flights/$flightid'
+    | '/aircraft/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AircraftRoute: typeof AircraftRoute
   AirportsRoute: typeof AirportsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   BookingsRoute: typeof BookingsRoute
@@ -235,6 +246,8 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   RoutesRoute: typeof RoutesRoute
   SettingsRoute: typeof SettingsRoute
+  AircraftAircraftidRoute: typeof AircraftAircraftidRoute
+  AircraftIndexRoute: typeof AircraftIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -244,13 +257,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/aircraft': {
-      id: '/aircraft'
-      path: '/aircraft'
-      fullPath: '/aircraft'
-      preLoaderRoute: typeof AircraftRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/airports': {
@@ -344,6 +350,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aircraft/': {
+      id: '/aircraft/'
+      path: '/aircraft'
+      fullPath: '/aircraft/'
+      preLoaderRoute: typeof AircraftIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aircraft/$aircraftid': {
+      id: '/aircraft/$aircraftid'
+      path: '/aircraft/$aircraftid'
+      fullPath: '/aircraft/$aircraftid'
+      preLoaderRoute: typeof AircraftAircraftidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/flights/$flightid': {
       id: '/flights/$flightid'
       path: '/$flightid'
@@ -367,7 +387,6 @@ const FlightsRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AircraftRoute: AircraftRoute,
   AirportsRoute: AirportsRoute,
   AnalyticsRoute: AnalyticsRoute,
   BookingsRoute: BookingsRoute,
@@ -381,6 +400,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   RoutesRoute: RoutesRoute,
   SettingsRoute: SettingsRoute,
+  AircraftAircraftidRoute: AircraftAircraftidRoute,
+  AircraftIndexRoute: AircraftIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

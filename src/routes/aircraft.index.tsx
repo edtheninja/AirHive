@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Users, Plane } from "lucide-react";
@@ -12,7 +12,7 @@ import narrowbody from "@/assets/aircraft-narrowbody.jpg";
 import widebody from "@/assets/aircraft-widebody.jpg";
 import hangar from "@/assets/aircraft-hangar.jpg";
 
-export const Route = createFileRoute("/aircraft")({
+export const Route = createFileRoute("/aircraft/")({
   head: () => ({
     meta: [
       { title: "Fleet & Aircraft — AirHive AMS" },
@@ -146,66 +146,72 @@ function AircraftPage() {
 
             return (
               <motion.div key={a.id} variants={itemVariants}>
-                <GlassCard className="overflow-hidden">
-                  <div className="relative h-40 overflow-hidden">
-                    <img
-                      src={imageFor(a, type)}
-                      alt={`${type?.model ?? a.aircraftTypeCode} aircraft`}
-                      loading="lazy"
-                      width={1024}
-                      height={640}
-                      className="h-full w-full object-cover"
-                    />
+                <Link
+                  to="/aircraft/$aircraftid"
+                  params={{ aircraftid: String(a.id) }}
+                  className="block"
+                >
+                  <GlassCard className="overflow-hidden">
+                    <div className="relative h-40 overflow-hidden">
+                      <img
+                        src={imageFor(a, type)}
+                        alt={`${type?.model ?? a.aircraftTypeCode} aircraft`}
+                        loading="lazy"
+                        width={1024}
+                        height={640}
+                        className="h-full w-full object-cover"
+                      />
 
-                    <span
-                      className={`absolute right-3 top-3 rounded-full bg-background/85 px-2.5 py-1 text-xs font-medium shadow-[var(--elev-1)] backdrop-blur-md ${statusTone(a.status)}`}
-                    >
-                      {statusLabel(a.status)}
-                    </span>
-                  </div>
-
-                  <div className="space-y-4 p-5">
-                    <div className="flex items-baseline justify-between gap-4">
-                      <h2 className="num text-lg font-semibold">{a.registrationNumber}</h2>
-
-                      <span className="text-sm text-muted-foreground">
-                        {type?.model ?? a.aircraftTypeCode}
+                      <span
+                        className={`absolute right-3 top-3 rounded-full bg-background/85 px-2.5 py-1 text-xs font-medium shadow-[var(--elev-1)] backdrop-blur-md ${statusTone(a.status)}`}
+                      >
+                        {statusLabel(a.status)}
                       </span>
                     </div>
 
-                    <div className="rounded-2xl bg-muted/40 p-4">
-                      <div className="flex items-center gap-3">
-                        <Plane className="h-5 w-5 text-accent" strokeWidth={1.7} />
+                    <div className="space-y-4 p-5">
+                      <div className="flex items-baseline justify-between gap-4">
+                        <h2 className="num text-lg font-semibold">{a.registrationNumber}</h2>
 
-                        <div>
-                          <p className="text-xs text-muted-foreground">Aircraft Type</p>
-
-                          <p className="text-sm font-medium">
-                            {type ? `${type.manufacturer} ${type.model}` : a.aircraftTypeCode}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <dl className="grid grid-cols-2 gap-3 pt-1 text-xs">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Users className="h-3.5 w-3.5" strokeWidth={1.7} />
-
-                        <span className="text-foreground">
-                          {type?.passengerCapacity ?? "—"} seats
+                        <span className="text-sm text-muted-foreground">
+                          {type?.model ?? a.aircraftTypeCode}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <span className="text-foreground">{type?.crewCapacity ?? "—"} crew</span>
+                      <div className="rounded-2xl bg-muted/40 p-4">
+                        <div className="flex items-center gap-3">
+                          <Plane className="h-5 w-5 text-accent" strokeWidth={1.7} />
+
+                          <div>
+                            <p className="text-xs text-muted-foreground">Aircraft Type</p>
+
+                            <p className="text-sm font-medium">
+                              {type ? `${type.manufacturer} ${type.model}` : a.aircraftTypeCode}
+                            </p>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="col-span-2 text-muted-foreground">
-                        Type Code: <span className="text-foreground">{a.aircraftTypeCode}</span>
-                      </div>
-                    </dl>
-                  </div>
-                </GlassCard>
+                      <dl className="grid grid-cols-2 gap-3 pt-1 text-xs">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Users className="h-3.5 w-3.5" strokeWidth={1.7} />
+
+                          <span className="text-foreground">
+                            {type?.passengerCapacity ?? "—"} seats
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <span className="text-foreground">{type?.crewCapacity ?? "—"} crew</span>
+                        </div>
+
+                        <div className="col-span-2 text-muted-foreground">
+                          Type Code: <span className="text-foreground">{a.aircraftTypeCode}</span>
+                        </div>
+                      </dl>
+                    </div>
+                  </GlassCard>
+                </Link>
               </motion.div>
             );
           })}

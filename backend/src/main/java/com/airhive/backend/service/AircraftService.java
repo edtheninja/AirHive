@@ -35,8 +35,8 @@ public class AircraftService {
                 .toList();
     }
 
-    @Cacheable(value = "aircraft", key = "#id")
-    public AircraftResponseDTO getAircraftById(Long id) {
+    // Temporarily disabled until typed Redis DTO serialization is configured.
+        public AircraftResponseDTO getAircraftById(Long id) {
         return AircraftMapper.toResponse(
                 aircraftRepository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException(
