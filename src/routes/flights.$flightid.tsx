@@ -116,9 +116,9 @@ function FlightDetailPage() {
         const activityData = await getFlightActivities(Number(flightId));
 
         if (!cancelled) {
+          setFlight(data);
+          setSelectedStatus(data.status);
           setActivities(activityData);
-          setLoading(true);
-          setError("");
         }
       } catch (err) {
         if (!cancelled) {
@@ -298,9 +298,29 @@ function FlightDetailPage() {
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <DetailItem label="Registration" value={flight.aircraftRegistration} />
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground">Registration</p>
+                  <Link
+                    to="/aircraft/$aircraftid"
+                    params={{ aircraftid: String(flight.aircraftId) }}
+                    className="mt-1 inline-flex text-sm font-medium text-primary hover:underline"
+                  >
+                    {flight.aircraftRegistration}
+                  </Link>
+                </div>
+
                 <DetailItem label="Aircraft ID" value={flight.aircraftId} />
-                <DetailItem label="Route ID" value={flight.routeId} />
+
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs text-muted-foreground">Route</p>
+                  <Link
+                    to="/routes/$routeid"
+                    params={{ routeid: String(flight.routeId) }}
+                    className="mt-1 inline-flex text-sm font-medium text-primary hover:underline"
+                  >
+                    {flight.departureAirportCode} → {flight.arrivalAirportCode}
+                  </Link>
+                </div>
                 <DetailItem label="Flight ID" value={flight.id} />
               </div>
             </GlassCard>
