@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.airhive.backend.dto.FlightRequestDTO;
 import com.airhive.backend.dto.FlightResponseDTO;
+import com.airhive.backend.dto.FlightStatusUpdateRequestDTO;
 import com.airhive.backend.entity.Aircraft;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.entity.Flight;
@@ -268,6 +269,61 @@ public class FlightService {
                                 updatedFlight.getStatus());
 
                 flightWebSocketService.publishFlightUpdated(response);
+                return response;
+        }
+
+        @CacheEvict(value = "flights", allEntries = true)
+        public FlightResponseDTO updateFlightStatus(
+                        Long id,
+                        FlightStatusUpdateRequestDTO request) {
+
+                if (request == null
+                                || request.getStatus() == null
+                                || request.getStatus().isBlank()) {
+
+                        throw new IllegalArgumentException(
+                                        "Flight status is required");
+                }
+
+                String newStatus = request.getStatus()
+                                .trim()
+                                .toUpperCase();
+
+                if (!VALID_FLIGHT_STATUSES.contains(newStatus)) {
+                        throw new IllegalArgumentException(
+                                        "Invalid flight status: " + request.getStatus());
+                }
+
+                if ((newStatus.equals("DELAYED")
+                                || newStatus.equals("CANCELLED"))
+                                && (request.getReason() == null
+                                                || request.getReason().isBlank())) {
+
+                        throw new IllegalArgumentException(
+                                        "A reason is required for delayed or cancelled flights");
+                }
+
+                Flight existingFlight = getFlightEntityById(id);
+                String previousStatus = existingFlight.getStatus();
+
+                existingFlight.setStatus(newStatus);
+
+                Flight updatedFlight = flightRepository.save(existingFlight);
+
+                FlightResponseDTO response = FlightMapper.toResponse(updatedFlight);
+
+                flightNotificationService.notifyFlightStatusChange(
+                                response,
+                                previousStatus);
+
+                flightActivityService.recordStatusChange(
+                                updatedFlight,
+                                previousStatus,
+                                newStatus,
+                                request.getReason());
+
+                flightWebSocketService.publishFlightUpdated(response);
+
                 return response;
         }
 

@@ -9,6 +9,7 @@ public class FlightActivityResponseDTO {
     private String message;
     private String previousStatus;
     private String currentStatus;
+    private String reason;
     private LocalDateTime createdAt;
 
     public FlightActivityResponseDTO() {
@@ -20,6 +21,7 @@ public class FlightActivityResponseDTO {
             String message,
             String previousStatus,
             String currentStatus,
+            String reason,
             LocalDateTime createdAt) {
 
         this.id = id;
@@ -27,6 +29,7 @@ public class FlightActivityResponseDTO {
         this.message = message;
         this.previousStatus = previousStatus;
         this.currentStatus = currentStatus;
+        this.reason = reason;
         this.createdAt = createdAt;
     }
 
@@ -48,6 +51,10 @@ public class FlightActivityResponseDTO {
 
     public String getCurrentStatus() {
         return currentStatus;
+    }
+
+    public String getReason() {
+        return reason;      
     }
 
     public LocalDateTime getCreatedAt() {

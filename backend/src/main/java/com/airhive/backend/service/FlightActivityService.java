@@ -30,18 +30,39 @@ public class FlightActivityService {
                 .toList();
     }
 
-    public void recordStatusChange(Flight flight, String previousStatus, String currentStatus) {
-        if (previousStatus == null || currentStatus == null || previousStatus.equalsIgnoreCase(currentStatus)) {
+    public void recordStatusChange(
+            Flight flight,
+            String previousStatus,
+            String currentStatus) {
+
+        recordStatusChange(flight, previousStatus, currentStatus, null);
+    }
+
+    public void recordStatusChange(
+            Flight flight,
+            String previousStatus,
+            String currentStatus,
+            String reason) {
+
+        if (previousStatus == null
+                || currentStatus == null
+                || previousStatus.equalsIgnoreCase(currentStatus)) {
             return;
         }
+
         FlightActivity activity = new FlightActivity();
         activity.setFlight(flight);
         activity.setEventType("STATUS_CHANGED");
         activity.setPreviousStatus(previousStatus);
         activity.setCurrentStatus(currentStatus);
-        activity.setMessage(String.format("Flight %s status changed from %s to %s.", flight.getFlightNumber(),
-                previousStatus, currentStatus));
+        activity.setReason(reason);
+        activity.setMessage(String.format(
+                "Flight %s status changed from %s to %s.",
+                flight.getFlightNumber(),
+                previousStatus,
+                currentStatus));
         activity.setCreatedAt(LocalDateTime.now());
+
         flightActivityRepository.save(activity);
     }
 
@@ -57,6 +78,7 @@ public class FlightActivityService {
 
     private FlightActivityResponseDTO toResponse(FlightActivity activity) {
         return new FlightActivityResponseDTO(activity.getId(), activity.getEventType(), activity.getMessage(),
-                activity.getPreviousStatus(), activity.getCurrentStatus(), activity.getCreatedAt());
+                activity.getPreviousStatus(), activity.getCurrentStatus(), activity.getReason(),
+                activity.getCreatedAt());
     }
 }

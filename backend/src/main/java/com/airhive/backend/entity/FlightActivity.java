@@ -36,6 +36,9 @@ public class FlightActivity {
     @Column(name = "current_status", length = 30)
     private String currentStatus;
 
+    @Column(length = 500)
+    private String reason;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -84,6 +87,14 @@ public class FlightActivity {
 
     public void setCurrentStatus(String currentStatus) {
         this.currentStatus = currentStatus;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     public LocalDateTime getCreatedAt() {
