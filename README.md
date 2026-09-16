@@ -982,12 +982,12 @@ docs: update project README
 * [x] Aircraft information display
 * [x] Flight status display
 * [x] Flight status update from detail page
-* [ ] Flight activity timeline
-* [ ] Delay and cancellation reasons
-* [ ] Aircraft and route detail links
-* [ ] Operational action permissions
-* [ ] Advanced flight filtering
-* [ ] Flight history
+* [x] Flight activity timeline
+* [x] Delay and cancellation reasons
+* [x] Aircraft and route detail links
+* [x] Operational action permissions
+* [x] Advanced flight filtering
+* [x] Flight history
 
 ## Phase 12 — Analytics
 

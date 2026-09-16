@@ -153,9 +153,12 @@ function FlightDetailPage() {
       setError("");
 
       const updatedFlight = await updateFlightStatus(flight, selectedStatus, reason);
+      const activityData = await getFlightActivities(Number(flightId));
 
       setFlight(updatedFlight);
       setSelectedStatus(updatedFlight.status);
+      setActivities(activityData);
+      setActivitiesError("");
       setStatusMessage("Flight status updated successfully.");
       setReason("");
     } catch (err) {
