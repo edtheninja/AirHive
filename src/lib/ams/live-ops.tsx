@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { NOTIFICATION_POOL, SEED_NOTIFICATIONS, type Flight, type OpsNotification } from "./data";
+import { type Flight, type OpsNotification } from "./data";
 import { connectToFlightUpdates, type FlightEvent } from "@/lib/api/websocket";
 import { getFlights, type Flight as ApiFlight } from "@/lib/api/flights";
 import { getAircraft } from "@/lib/api/aircraft";
+import { useNotifications } from "@/lib/notifications/notification-context";
 import { LiveOpsContext, type LiveOpsValue, type Kpis } from "./context";
 function mapApiFlight(flight: ApiFlight): Flight {
   return {
@@ -70,7 +71,24 @@ function normalizeStatus(status: string): Flight["status"] {
 
 export function LiveOpsProvider({ children }: { children: ReactNode }) {
   const [flights, setFlights] = useState<Flight[]>([]);
-  const [notifications, setNotifications] = useState<OpsNotification[]>(SEED_NOTIFICATIONS);
+  const { notifications: apiNotifications } = useNotifications();
+
+  const notifications = useMemo<OpsNotification[]>(
+    () =>
+      apiNotifications.map((notification) => ({
+        id: String(notification.id),
+        title: notification.title,
+        detail: notification.message,
+        tone:
+          notification.severity === "CRITICAL"
+            ? "danger"
+            : notification.severity === "WARNING"
+              ? "warning"
+              : "info",
+        time: new Date(notification.createdAt).toLocaleString(),
+      })),
+    [apiNotifications],
+  );
   const [kpis, setKpis] = useState<Kpis>({
     totalFlights: 0,
     activeFlights: 0,
@@ -169,19 +187,6 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  useEffect(() => {
-    const notify = setInterval(() => {
-      const seed = NOTIFICATION_POOL[Math.floor(Math.random() * NOTIFICATION_POOL.length)];
-      setNotifications((prev) =>
-        [{ ...seed, id: `N${Date.now()}`, time: "just now" }, ...prev].slice(0, 12),
-      );
-    }, 6500);
-
-    return () => {
-      clearInterval(notify);
-    };
-  }, []);
-
   const value = useMemo<LiveOpsValue>(
     () => ({
       flights,
@@ -189,11 +194,8 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
       kpis,
       loading,
       error,
-      dismiss: (id) => setNotifications((prev) => prev.filter((n) => n.id !== id)),
-      push: (n) =>
-        setNotifications((prev) =>
-          [{ ...n, id: `N${Date.now()}`, time: "just now" }, ...prev].slice(0, 12),
-        ),
+      dismiss: () => undefined,
+      push: () => undefined,
     }),
     [flights, notifications, kpis, loading, error],
   );
