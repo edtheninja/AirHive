@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.airhive.backend.dto.FlightResponseDTO;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
+import com.airhive.backend.service.FlightActivityService;
 import com.airhive.backend.service.FlightService;
 
 @WebMvcTest(FlightController.class)
@@ -37,6 +38,9 @@ class FlightControllerTest {
 
     @MockitoBean
     private FlightService flightService;
+
+    @MockitoBean
+    private FlightActivityService flightActivityService;
 
     private FlightResponseDTO flight;
 

@@ -981,7 +981,7 @@ docs: update project README
 * [x] Flight schedule information
 * [x] Aircraft information display
 * [x] Flight status display
-* [ ] Flight status update from detail page
+* [x] Flight status update from detail page
 * [ ] Flight activity timeline
 * [ ] Delay and cancellation reasons
 * [ ] Aircraft and route detail links

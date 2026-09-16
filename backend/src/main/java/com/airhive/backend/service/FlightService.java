@@ -38,6 +38,7 @@ public class FlightService {
         private final RouteRepository routeRepository;
         private final FlightWebSocketService flightWebSocketService;
         private final FlightNotificationService flightNotificationService;
+        private final FlightActivityService flightActivityService;
 
         public FlightService(
                         FlightRepository flightRepository,
@@ -45,7 +46,8 @@ public class FlightService {
                         AirportRepository airportRepository,
                         RouteRepository routeRepository,
                         FlightWebSocketService flightWebSocketService,
-                        FlightNotificationService flightNotificationService) {
+                        FlightNotificationService flightNotificationService,
+                        FlightActivityService flightActivityService) {
 
                 this.flightRepository = flightRepository;
                 this.aircraftRepository = aircraftRepository;
@@ -53,6 +55,7 @@ public class FlightService {
                 this.routeRepository = routeRepository;
                 this.flightWebSocketService = flightWebSocketService;
                 this.flightNotificationService = flightNotificationService;
+                this.flightActivityService = flightActivityService;
         }
 
         @CacheEvict(value = "flights", allEntries = true)
@@ -144,8 +147,9 @@ public class FlightService {
                 Flight savedFlight = flightRepository.save(flight);
 
                 FlightResponseDTO response = FlightMapper.toResponse(savedFlight);
-                flightWebSocketService.publishFlightCreated(response);
 
+                flightActivityService.recordFlightCreated(savedFlight);
+                flightWebSocketService.publishFlightCreated(response);
                 return response;
         }
 
@@ -258,8 +262,12 @@ public class FlightService {
                                 response,
                                 previousStatus);
 
-                flightWebSocketService.publishFlightUpdated(response);
+                flightActivityService.recordStatusChange(
+                                updatedFlight,
+                                previousStatus,
+                                updatedFlight.getStatus());
 
+                flightWebSocketService.publishFlightUpdated(response);
                 return response;
         }
 

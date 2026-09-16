@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.airhive.backend.dto.FlightActivityResponseDTO;
 import com.airhive.backend.dto.FlightRequestDTO;
 import com.airhive.backend.dto.FlightResponseDTO;
+import com.airhive.backend.service.FlightActivityService;
 import com.airhive.backend.service.FlightService;
 
 import jakarta.validation.Valid;
@@ -24,17 +26,21 @@ import jakarta.validation.Valid;
 public class FlightController {
 
     private final FlightService flightService;
+    private final FlightActivityService flightActivityService;
 
-    public FlightController(FlightService flightService) {
+    public FlightController(
+            FlightService flightService,
+            FlightActivityService flightActivityService) {
+
         this.flightService = flightService;
+        this.flightActivityService = flightActivityService;
     }
 
     @GetMapping
     public ResponseEntity<List<FlightResponseDTO>> getAllFlights() {
 
         return ResponseEntity.ok(
-                flightService.getAllFlights()
-        );
+                flightService.getAllFlights());
     }
 
     @GetMapping("/{id}")
@@ -42,8 +48,7 @@ public class FlightController {
             @PathVariable Long id) {
 
         return ResponseEntity.ok(
-                flightService.getFlightById(id)
-        );
+                flightService.getFlightById(id));
     }
 
     @PostMapping
@@ -61,8 +66,7 @@ public class FlightController {
             @Valid @RequestBody FlightRequestDTO request) {
 
         return ResponseEntity.ok(
-                flightService.updateFlight(id, request)
-        );
+                flightService.updateFlight(id, request));
     }
 
     @DeleteMapping("/{id}")
@@ -72,5 +76,13 @@ public class FlightController {
         flightService.deleteFlight(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/activities")
+    public ResponseEntity<List<FlightActivityResponseDTO>> getFlightActivities(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                flightActivityService.getActivities(id));
     }
 }
