@@ -26,6 +26,8 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AircraftIndexRouteImport } from './routes/aircraft.index'
 import { Route as AircraftAircraftidRouteImport } from './routes/aircraft.$aircraftid'
 import { Route as FlightsFlightidRouteImport } from './routes/flights.$flightid'
+import { Route as RoutesIndexRouteImport } from './routes/routes.index'
+import { Route as RoutesRouteidRouteImport } from './routes/routes.$routeid'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,6 +114,16 @@ const FlightsFlightidRoute = FlightsFlightidRouteImport.update({
   path: '/$flightid',
   getParentRoute: () => FlightsRoute,
 } as any)
+const RoutesIndexRoute = RoutesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RoutesRoute,
+} as any)
+const RoutesRouteidRoute = RoutesRouteidRouteImport.update({
+  id: '/$routeid',
+  path: '/$routeid',
+  getParentRoute: () => RoutesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -126,11 +138,13 @@ export interface FileRoutesByFullPath {
   '/operations': typeof OperationsRoute
   '/passengers': typeof PassengersRoute
   '/profile': typeof ProfileRoute
-  '/routes': typeof RoutesRoute
+  '/routes': typeof RoutesRouteWithChildren
   '/settings': typeof SettingsRoute
   '/aircraft/$aircraftid': typeof AircraftAircraftidRoute
   '/flights/$flightid': typeof FlightsFlightidRoute
+  '/routes/$routeid': typeof RoutesRouteidRoute
   '/aircraft/': typeof AircraftIndexRoute
+  '/routes/': typeof RoutesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -145,11 +159,12 @@ export interface FileRoutesByTo {
   '/operations': typeof OperationsRoute
   '/passengers': typeof PassengersRoute
   '/profile': typeof ProfileRoute
-  '/routes': typeof RoutesRoute
   '/settings': typeof SettingsRoute
   '/aircraft/$aircraftid': typeof AircraftAircraftidRoute
   '/flights/$flightid': typeof FlightsFlightidRoute
+  '/routes/$routeid': typeof RoutesRouteidRoute
   '/aircraft': typeof AircraftIndexRoute
+  '/routes': typeof RoutesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -165,11 +180,13 @@ export interface FileRoutesById {
   '/operations': typeof OperationsRoute
   '/passengers': typeof PassengersRoute
   '/profile': typeof ProfileRoute
-  '/routes': typeof RoutesRoute
+  '/routes': typeof RoutesRouteWithChildren
   '/settings': typeof SettingsRoute
   '/aircraft/$aircraftid': typeof AircraftAircraftidRoute
   '/flights/$flightid': typeof FlightsFlightidRoute
+  '/routes/$routeid': typeof RoutesRouteidRoute
   '/aircraft/': typeof AircraftIndexRoute
+  '/routes/': typeof RoutesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -190,7 +207,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/aircraft/$aircraftid'
     | '/flights/$flightid'
+    | '/routes/$routeid'
     | '/aircraft/'
+    | '/routes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -205,11 +224,12 @@ export interface FileRouteTypes {
     | '/operations'
     | '/passengers'
     | '/profile'
-    | '/routes'
     | '/settings'
     | '/aircraft/$aircraftid'
     | '/flights/$flightid'
+    | '/routes/$routeid'
     | '/aircraft'
+    | '/routes'
   id:
     | '__root__'
     | '/'
@@ -228,7 +248,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/aircraft/$aircraftid'
     | '/flights/$flightid'
+    | '/routes/$routeid'
     | '/aircraft/'
+    | '/routes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -244,7 +266,7 @@ export interface RootRouteChildren {
   OperationsRoute: typeof OperationsRoute
   PassengersRoute: typeof PassengersRoute
   ProfileRoute: typeof ProfileRoute
-  RoutesRoute: typeof RoutesRoute
+  RoutesRoute: typeof RoutesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   AircraftAircraftidRoute: typeof AircraftAircraftidRoute
   AircraftIndexRoute: typeof AircraftIndexRoute
@@ -371,6 +393,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FlightsFlightidRouteImport
       parentRoute: typeof FlightsRoute
     }
+    '/routes/': {
+      id: '/routes/'
+      path: '/'
+      fullPath: '/routes/'
+      preLoaderRoute: typeof RoutesIndexRouteImport
+      parentRoute: typeof RoutesRoute
+    }
+    '/routes/$routeid': {
+      id: '/routes/$routeid'
+      path: '/$routeid'
+      fullPath: '/routes/$routeid'
+      preLoaderRoute: typeof RoutesRouteidRouteImport
+      parentRoute: typeof RoutesRoute
+    }
   }
 }
 
@@ -385,6 +421,19 @@ const FlightsRouteChildren: FlightsRouteChildren = {
 const FlightsRouteWithChildren =
   FlightsRoute._addFileChildren(FlightsRouteChildren)
 
+interface RoutesRouteChildren {
+  RoutesRouteidRoute: typeof RoutesRouteidRoute
+  RoutesIndexRoute: typeof RoutesIndexRoute
+}
+
+const RoutesRouteChildren: RoutesRouteChildren = {
+  RoutesRouteidRoute: RoutesRouteidRoute,
+  RoutesIndexRoute: RoutesIndexRoute,
+}
+
+const RoutesRouteWithChildren =
+  RoutesRoute._addFileChildren(RoutesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AirportsRoute: AirportsRoute,
@@ -398,7 +447,7 @@ const rootRouteChildren: RootRouteChildren = {
   OperationsRoute: OperationsRoute,
   PassengersRoute: PassengersRoute,
   ProfileRoute: ProfileRoute,
-  RoutesRoute: RoutesRoute,
+  RoutesRoute: RoutesRouteWithChildren,
   SettingsRoute: SettingsRoute,
   AircraftAircraftidRoute: AircraftAircraftidRoute,
   AircraftIndexRoute: AircraftIndexRoute,
