@@ -166,17 +166,17 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <LiveOpsProvider>
-          <NotificationProvider>
+        <NotificationProvider>
+          <LiveOpsProvider>
             <MotionConfig reducedMotion="user">
               <AppShell>
-                {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+                {/* Required: nested routes render here. Removing <Outlet/> breaks all child routes. */}
                 <Outlet />
               </AppShell>
               <Toaster position="top-right" />
             </MotionConfig>
-          </NotificationProvider>
-        </LiveOpsProvider>
+          </LiveOpsProvider>
+        </NotificationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
