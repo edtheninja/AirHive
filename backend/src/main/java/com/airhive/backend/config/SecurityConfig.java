@@ -53,6 +53,11 @@ public class SecurityConfig {
                                                 .hasRole("ADMIN")
 
                                                 .requestMatchers(
+                                                                HttpMethod.PATCH,
+                                                                "/api/flights/*/status")
+                                                .hasAnyRole("OPERATOR", "ADMIN")
+
+                                                .requestMatchers(
                                                                 HttpMethod.GET,
                                                                 "/api/**")
                                                 .hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
