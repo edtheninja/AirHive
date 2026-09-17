@@ -5,6 +5,8 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -45,6 +47,37 @@ const STATUS_COLORS = [
   "hsl(var(--accent-foreground))",
   "hsl(var(--secondary-foreground))",
 ];
+
+const CHART_TEXT_COLOR = "hsl(var(--foreground))";
+const CHART_MUTED_COLOR = "hsl(var(--muted-foreground))";
+const CHART_GRID_COLOR = "hsl(var(--border))";
+const CHART_TOOLTIP_BACKGROUND = "hsl(var(--popover))";
+const CHART_TOOLTIP_BORDER = "hsl(var(--border))";
+
+const CHART_AXIS_STYLE = {
+  fill: CHART_TEXT_COLOR,
+  fontSize: 12,
+};
+
+const CHART_AXIS_LINE_STYLE = {
+  stroke: CHART_MUTED_COLOR,
+};
+
+const CHART_TOOLTIP_STYLE = {
+  backgroundColor: CHART_TOOLTIP_BACKGROUND,
+  border: `1px solid ${CHART_TOOLTIP_BORDER}`,
+  borderRadius: "0.75rem",
+  color: CHART_TEXT_COLOR,
+};
+
+const CHART_TOOLTIP_LABEL_STYLE = {
+  color: CHART_TEXT_COLOR,
+  fontWeight: 600,
+};
+
+const CHART_TOOLTIP_ITEM_STYLE = {
+  color: CHART_TEXT_COLOR,
+};
 
 function AnalyticsPage() {
   const { flights, aircraft, kpis, loading, error } = useLiveOps();
@@ -174,6 +207,131 @@ function AnalyticsPage() {
     })
     .sort((a, b) => b.assignedFlights - a.assignedFlights);
 
+  const historicalFlightActivity = flights.reduce<
+    Record<
+      string,
+      {
+        total: number;
+        delayed: number;
+        cancelled: number;
+      }
+    >
+  >((activity, flight) => {
+    const date = new Date(flight.scheduledDeparture).toLocaleDateString("en-CA");
+
+    if (!activity[date]) {
+      activity[date] = {
+        total: 0,
+        delayed: 0,
+        cancelled: 0,
+      };
+    }
+
+    activity[date].total += 1;
+
+    if (flight.status === "Delayed") {
+      activity[date].delayed += 1;
+    }
+
+    if (flight.status === "Cancelled") {
+      activity[date].cancelled += 1;
+    }
+
+    return activity;
+  }, {});
+
+  const historicalFlightChartData = Object.entries(historicalFlightActivity)
+    .map(([date, activity]) => ({
+      date,
+      total: activity.total,
+      delayed: activity.delayed,
+      cancelled: activity.cancelled,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const exportAnalyticsReport = () => {
+    const rows: string[][] = [
+      ["AIRHIVE ANALYTICS REPORT"],
+      [`Generated at`, new Date().toISOString()],
+      [],
+      ["FLIGHT STATUS SUMMARY"],
+      ["Status", "Count"],
+      ...statusRows.map(([status, count]) => [status, String(count)]),
+      [],
+      ["AIRPORT ACTIVITY"],
+      ["Airport", "Departures", "Arrivals", "Total"],
+      ...airportChartData.map((airport) => [
+        airport.airport,
+        String(airport.departures),
+        String(airport.arrivals),
+        String(airport.total),
+      ]),
+      [],
+      ["ROUTE ACTIVITY"],
+      ["Route", "Flights"],
+      ...routeChartData.map((route) => [route.route, String(route.count)]),
+      [],
+      ["DELAYED FLIGHTS BY ROUTE"],
+      ["Route", "Delayed Flights"],
+      ...delayedRouteChartData.map((route) => [route.route, String(route.count)]),
+      [],
+      ["DELAYED FLIGHTS BY AIRPORT"],
+      ["Airport", "Delayed Flights"],
+      ...delayedAirportChartData.map((airport) => [airport.airport, String(airport.count)]),
+      [],
+      ["AIRCRAFT UTILIZATION"],
+      ["Registration", "Aircraft Type", "Assigned Flights", "Status"],
+      ...aircraftUtilizationData.map((aircraftItem) => [
+        aircraftItem.registration,
+        aircraftItem.aircraftType,
+        String(aircraftItem.assignedFlights),
+        aircraftItem.status,
+      ]),
+      [],
+      ["AIRCRAFT STATUS DISTRIBUTION"],
+      ["Status", "Count"],
+      ...aircraftStatusChartData.map((status) => [status.name, String(status.value)]),
+      [],
+      ["HISTORICAL FLIGHT ACTIVITY"],
+      ["Date", "Total Flights", "Delayed Flights", "Cancelled Flights"],
+      ...historicalFlightChartData.map((activity) => [
+        activity.date,
+        String(activity.total),
+        String(activity.delayed),
+        String(activity.cancelled),
+      ]),
+      [],
+      ["OPERATIONAL SNAPSHOT"],
+      ["Metric", "Value"],
+      ["Aircraft utilization", `${aircraftUtilizationShare}%`],
+      ["Aircraft tracked", String(aircraft.length)],
+      ["Delayed flights tracked", String(delayedFlights.length)],
+      ["Flights tracked", String(flights.length)],
+      ["Airborne share", `${airborneShare}%`],
+      ["Delayed share", `${delayedShare}%`],
+      ["Fleet availability", `${kpis.fleetAvailability}%`],
+    ];
+
+    const csv = rows
+      .map((row) => row.map((value) => `"${value.replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([`\uFEFF${csv}`], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `airhive-analytics-${new Date().toISOString().slice(0, 10)}.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const aircraftStatusCounts = aircraft.reduce<Record<string, number>>((counts, aircraftItem) => {
     const status = aircraftItem.status || "Unknown";
     counts[status] = (counts[status] ?? 0) + 1;
@@ -206,11 +364,22 @@ function AnalyticsPage() {
       animate="animate"
       className="mx-auto max-w-[1600px] space-y-6 py-6"
     >
-      <PageHeader
-        title="Analytics"
-        description="Operational performance across the AirHive network."
-      />
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <PageHeader
+          title="Analytics"
+          description="Operational performance across the AirHive network."
+        />
 
+        <button
+          type="button"
+          onClick={exportAnalyticsReport}
+          disabled={loading || Boolean(error)}
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <span aria-hidden="true">↓</span>
+          Export CSV Report
+        </button>
+      </div>
       {loading ? (
         <SectionCard title="Operational analytics" subtitle="Loading live flight data">
           <p className="text-sm text-muted-foreground">Loading analytics…</p>
@@ -257,6 +426,8 @@ function AnalyticsPage() {
                         innerRadius={72}
                         outerRadius={112}
                         paddingAngle={3}
+                        labelLine={false}
+                        label={({ name, value }) => `${name}: ${value}`}
                       >
                         {statusChartData.map((entry, index) => (
                           <Cell
@@ -265,7 +436,12 @@ function AnalyticsPage() {
                           />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value, name) => [value, name]} />
+                      <Tooltip
+                        formatter={(value, name) => [value, name]}
+                        contentStyle={CHART_TOOLTIP_STYLE}
+                        labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+                        itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -300,10 +476,31 @@ function AnalyticsPage() {
                         bottom: 8,
                       }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.25} />
-                      <XAxis type="number" allowDecimals={false} />
-                      <YAxis type="category" dataKey="airport" width={48} />
-                      <Tooltip />
+                      <CartesianGrid
+                        stroke={CHART_GRID_COLOR}
+                        strokeDasharray="3 3"
+                        opacity={0.45}
+                      />
+                      <XAxis
+                        type="number"
+                        allowDecimals={false}
+                        tick={{ fill: CHART_TEXT_COLOR, fontSize: 12 }}
+                        axisLine={{ stroke: CHART_MUTED_COLOR }}
+                        tickLine={{ stroke: CHART_MUTED_COLOR }}
+                      />
+                      <YAxis
+                        type="category"
+                        dataKey="airport"
+                        width={48}
+                        tick={CHART_AXIS_STYLE}
+                        axisLine={CHART_AXIS_LINE_STYLE}
+                        tickLine={CHART_AXIS_LINE_STYLE}
+                      />
+                      <Tooltip
+                        contentStyle={CHART_TOOLTIP_STYLE}
+                        labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+                        itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+                      />
                       <Bar
                         dataKey="departures"
                         name="Departures"
@@ -343,10 +540,32 @@ function AnalyticsPage() {
                         bottom: 8,
                       }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.25} />
-                      <XAxis type="number" allowDecimals={false} />
-                      <YAxis type="category" dataKey="route" width={112} />
-                      <Tooltip />
+                      <CartesianGrid
+                        stroke={CHART_GRID_COLOR}
+                        strokeDasharray="3 3"
+                        horizontal={false}
+                        opacity={0.45}
+                      />
+                      <XAxis
+                        type="number"
+                        allowDecimals={false}
+                        tick={{ fill: CHART_TEXT_COLOR, fontSize: 12 }}
+                        axisLine={{ stroke: CHART_MUTED_COLOR }}
+                        tickLine={{ stroke: CHART_MUTED_COLOR }}
+                      />
+                      <YAxis
+                        type="category"
+                        dataKey="route"
+                        width={112}
+                        tick={CHART_AXIS_STYLE}
+                        axisLine={CHART_AXIS_LINE_STYLE}
+                        tickLine={CHART_AXIS_LINE_STYLE}
+                      />
+                      <Tooltip
+                        contentStyle={CHART_TOOLTIP_STYLE}
+                        labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+                        itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+                      />
                       <Bar
                         dataKey="count"
                         name="Flights"
@@ -379,10 +598,32 @@ function AnalyticsPage() {
                           bottom: 8,
                         }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.25} />
-                        <XAxis type="number" allowDecimals={false} />
-                        <YAxis type="category" dataKey="route" width={112} />
-                        <Tooltip />
+                        <CartesianGrid
+                          stroke={CHART_GRID_COLOR}
+                          strokeDasharray="3 3"
+                          horizontal={false}
+                          opacity={0.45}
+                        />
+                        <XAxis
+                          type="number"
+                          allowDecimals={false}
+                          tick={{ fill: CHART_TEXT_COLOR, fontSize: 12 }}
+                          axisLine={{ stroke: CHART_MUTED_COLOR }}
+                          tickLine={{ stroke: CHART_MUTED_COLOR }}
+                        />
+                        <YAxis
+                          type="category"
+                          dataKey="route"
+                          width={112}
+                          tick={CHART_AXIS_STYLE}
+                          axisLine={CHART_AXIS_LINE_STYLE}
+                          tickLine={CHART_AXIS_LINE_STYLE}
+                        />
+                        <Tooltip
+                          contentStyle={CHART_TOOLTIP_STYLE}
+                          labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+                          itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+                        />
                         <Bar
                           dataKey="count"
                           name="Delayed flights"
@@ -414,10 +655,32 @@ function AnalyticsPage() {
                           bottom: 8,
                         }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.25} />
-                        <XAxis type="number" allowDecimals={false} />
-                        <YAxis type="category" dataKey="airport" width={48} />
-                        <Tooltip />
+                        <CartesianGrid
+                          stroke={CHART_GRID_COLOR}
+                          strokeDasharray="3 3"
+                          horizontal={false}
+                          opacity={0.45}
+                        />
+                        <XAxis
+                          type="number"
+                          allowDecimals={false}
+                          tick={{ fill: CHART_TEXT_COLOR, fontSize: 12 }}
+                          axisLine={{ stroke: CHART_MUTED_COLOR }}
+                          tickLine={{ stroke: CHART_MUTED_COLOR }}
+                        />
+                        <YAxis
+                          type="category"
+                          dataKey="airport"
+                          width={48}
+                          tick={CHART_AXIS_STYLE}
+                          axisLine={CHART_AXIS_LINE_STYLE}
+                          tickLine={CHART_AXIS_LINE_STYLE}
+                        />
+                        <Tooltip
+                          contentStyle={CHART_TOOLTIP_STYLE}
+                          labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+                          itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+                        />
                         <Bar
                           dataKey="count"
                           name="Delayed flights"
@@ -451,10 +714,32 @@ function AnalyticsPage() {
                           bottom: 8,
                         }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.25} />
-                        <XAxis type="number" allowDecimals={false} />
-                        <YAxis type="category" dataKey="registration" width={76} />
-                        <Tooltip />
+                        <CartesianGrid
+                          stroke={CHART_GRID_COLOR}
+                          strokeDasharray="3 3"
+                          horizontal={false}
+                          opacity={0.45}
+                        />
+                        <XAxis
+                          type="number"
+                          allowDecimals={false}
+                          tick={{ fill: CHART_TEXT_COLOR, fontSize: 12 }}
+                          axisLine={{ stroke: CHART_MUTED_COLOR }}
+                          tickLine={{ stroke: CHART_MUTED_COLOR }}
+                        />
+                        <YAxis
+                          type="category"
+                          dataKey="registration"
+                          width={76}
+                          tick={CHART_AXIS_STYLE}
+                          axisLine={CHART_AXIS_LINE_STYLE}
+                          tickLine={CHART_AXIS_LINE_STYLE}
+                        />
+                        <Tooltip
+                          contentStyle={CHART_TOOLTIP_STYLE}
+                          labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+                          itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+                        />
                         <Bar
                           dataKey="assignedFlights"
                           name="Assigned flights"
@@ -485,6 +770,8 @@ function AnalyticsPage() {
                           innerRadius={72}
                           outerRadius={112}
                           paddingAngle={3}
+                          labelLine={false}
+                          label={({ name, value }) => `${name}: ${value}`}
                         >
                           {aircraftStatusChartData.map((entry, index) => (
                             <Cell
@@ -493,7 +780,11 @@ function AnalyticsPage() {
                             />
                           ))}
                         </Pie>
-                        <Tooltip />
+                        <Tooltip
+                          contentStyle={CHART_TOOLTIP_STYLE}
+                          labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+                          itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -504,6 +795,79 @@ function AnalyticsPage() {
                 )}
               </SectionCard>
             </div>
+
+            <SectionCard
+              title="Historical flight activity"
+              subtitle="Flight volume grouped by scheduled departure date"
+            >
+              {historicalFlightChartData.length > 0 ? (
+                <div className="h-[360px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={historicalFlightChartData}
+                      margin={{
+                        top: 8,
+                        right: 12,
+                        left: 8,
+                        bottom: 8,
+                      }}
+                    >
+                      <CartesianGrid
+                        stroke={CHART_GRID_COLOR}
+                        strokeDasharray="3 3"
+                        horizontal={false}
+                        opacity={0.45}
+                      />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fill: CHART_TEXT_COLOR, fontSize: 12 }}
+                        axisLine={{ stroke: CHART_MUTED_COLOR }}
+                        tickLine={{ stroke: CHART_MUTED_COLOR }}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        tick={CHART_AXIS_STYLE}
+                        axisLine={CHART_AXIS_LINE_STYLE}
+                        tickLine={CHART_AXIS_LINE_STYLE}
+                      />
+                      <Tooltip
+                        contentStyle={CHART_TOOLTIP_STYLE}
+                        labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+                        itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="total"
+                        name="Total flights"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="delayed"
+                        name="Delayed flights"
+                        stroke="hsl(var(--destructive))"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="cancelled"
+                        name="Cancelled flights"
+                        stroke="hsl(var(--chart-3))"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No historical flight activity available.
+                </p>
+              )}
+            </SectionCard>
             <SectionCard title="Operational snapshot" subtitle="Live network indicators">
               <dl className="space-y-4 text-sm">
                 <div className="flex items-center justify-between">
