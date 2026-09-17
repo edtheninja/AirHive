@@ -46,7 +46,7 @@ public class AircraftTypeService {
                         "Aircraft type not found with id: " + id));
     }
 
-    @CacheEvict(value = {"aircraftTypes", "aircraft"}, allEntries = true)
+    @CacheEvict(value = { "aircraftTypes", "aircraft" }, allEntries = true)
     public AircraftTypeResponseDTO createAircraftType(
             AircraftTypeRequestDTO request) {
 
@@ -58,7 +58,7 @@ public class AircraftTypeService {
                 aircraftTypeRepository.save(aircraftType));
     }
 
-    @CacheEvict(value = {"aircraftTypes", "aircraft"}, allEntries = true)
+    @CacheEvict(value = { "aircraftTypes", "aircraft" }, allEntries = true)
     public AircraftTypeResponseDTO updateAircraftType(
             Long id,
             AircraftTypeRequestDTO request) {
@@ -71,7 +71,7 @@ public class AircraftTypeService {
                 aircraftTypeRepository.save(existing));
     }
 
-    @CacheEvict(value = {"aircraftTypes", "aircraft"}, allEntries = true)
+    @CacheEvict(value = { "aircraftTypes", "aircraft" }, allEntries = true)
     public void deleteAircraftType(Long id) {
 
         aircraftTypeRepository.delete(findEntityById(id));

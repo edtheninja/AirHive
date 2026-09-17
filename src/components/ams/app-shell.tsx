@@ -139,6 +139,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { unreadCount } = useNotifications();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const current = NAV.find((n) => n.to === pathname)?.label ?? "Dashboard";
+  const userInitials = session?.username?.slice(0, 2).toUpperCase() ?? "AH";
+
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-background">
@@ -233,8 +240,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="relative">
               <details className="group">
                 <summary className="flex cursor-pointer list-none items-center gap-2 rounded-2xl py-1 pr-2 pl-1 hover:bg-foreground/5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                    {session?.username?.slice(0, 2).toUpperCase() ?? "AH"}
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold">
+                    {isHydrated ? userInitials : "AH"}
                   </span>
 
                   <span className="hidden text-sm sm:block"> {session?.username ?? "User"} </span>
