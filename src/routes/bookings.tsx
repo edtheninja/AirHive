@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { pageVariants, spring } from "@/lib/ams/motion";
-import { BOOKINGS, type Booking } from "@/lib/ams/data";
+import { getBookings, type Booking } from "@/lib/api/bookings";
 import { PageHeader, SectionCard } from "@/components/ams/primitives";
 
 export const Route = createFileRoute("/bookings")({
@@ -36,22 +36,54 @@ const statusTone: Record<Booking["status"], string> = {
 };
 
 function BookingsPage() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [cabin, setCabin] = useState<(typeof CABINS)[number]>("All");
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Booking | null>(null);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadBookings() {
+      try {
+        const data = await getBookings();
+
+        if (mounted) {
+          setBookings(data);
+        }
+      } catch {
+        if (mounted) {
+          toast.error("Unable to load bookings", {
+            description: "Please check the backend connection and try again.",
+          });
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadBookings();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const filtered = useMemo(
     () =>
-      BOOKINGS.filter(
+      bookings.filter(
         (b) =>
           (cabin === "All" || b.cabin === cabin) &&
           (query === "" ||
-            `${b.passenger}${b.id}${b.flight}${b.route}`
+            `${b.passenger}${b.pnr}${b.flight}${b.route}`
               .toLowerCase()
               .includes(query.toLowerCase())),
       ),
-    [query, cabin],
+    [bookings, query, cabin],
   );
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -74,7 +106,7 @@ function BookingsPage() {
             whileTap={{ scale: 0.98 }}
             onClick={() =>
               toast("Export unavailable", {
-                description: "Booking export will be available when the bookings API is connected.",
+                description: "Booking export will be available in a future update.",
               })
             }
             className="glass flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium"
@@ -101,6 +133,7 @@ function BookingsPage() {
                 className="w-52 bg-transparent outline-none placeholder:text-muted-foreground"
               />
             </div>
+
             {CABINS.map((c) => (
               <button
                 key={c}
@@ -141,40 +174,61 @@ function BookingsPage() {
                 ))}
               </tr>
             </thead>
+
             <tbody>
-              <AnimatePresence initial={false} mode="popLayout">
-                {rows.map((b, i) => (
-                  <motion.tr
-                    key={b.id}
-                    layout
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0, transition: { ...spring, delay: i * 0.03 } }}
-                    exit={{ opacity: 0 }}
-                    className="hover:bg-foreground/4"
-                  >
-                    <td className="num rounded-l-2xl px-3 py-3 font-medium">{b.id}</td>
-                    <td className="px-3 py-3">{b.passenger}</td>
-                    <td className="num px-3 py-3">{b.flight}</td>
-                    <td className="num px-3 py-3 text-muted-foreground">{b.route}</td>
-                    <td className="px-3 py-3 text-muted-foreground">{b.cabin}</td>
-                    <td className="num px-3 py-3">{b.seat}</td>
-                    <td className="num px-3 py-3">${b.amount.toLocaleString()}</td>
-                    <td className="px-3 py-3">
-                      <span className={`rounded-full px-2.5 py-1 text-xs ${statusTone[b.status]}`}>
-                        {b.status}
-                      </span>
-                    </td>
-                    <td className="rounded-r-2xl px-3 py-3 text-right">
-                      <button
-                        onClick={() => setSelected(b)}
-                        className="rounded-xl px-2.5 py-1 text-xs text-accent transition-colors hover:bg-accent/10"
-                      >
-                        View
-                      </button>
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
+              {loading ? (
+                <tr>
+                  <td colSpan={9} className="px-3 py-10 text-center text-sm text-muted-foreground">
+                    Loading bookings...
+                  </td>
+                </tr>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-3 py-10 text-center text-sm text-muted-foreground">
+                    No bookings found.
+                  </td>
+                </tr>
+              ) : (
+                <AnimatePresence initial={false} mode="popLayout">
+                  {rows.map((b, i) => (
+                    <motion.tr
+                      key={b.id}
+                      layout
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                        transition: { ...spring, delay: i * 0.03 },
+                      }}
+                      exit={{ opacity: 0 }}
+                      className="hover:bg-foreground/4"
+                    >
+                      <td className="num rounded-l-2xl px-3 py-3 font-medium">{b.pnr}</td>
+                      <td className="px-3 py-3">{b.passenger}</td>
+                      <td className="num px-3 py-3">{b.flight}</td>
+                      <td className="num px-3 py-3 text-muted-foreground">{b.route}</td>
+                      <td className="px-3 py-3 text-muted-foreground">{b.cabin}</td>
+                      <td className="num px-3 py-3">{b.seat}</td>
+                      <td className="num px-3 py-3">${b.amount.toLocaleString()}</td>
+                      <td className="px-3 py-3">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs ${statusTone[b.status]}`}
+                        >
+                          {b.status}
+                        </span>
+                      </td>
+                      <td className="rounded-r-2xl px-3 py-3 text-right">
+                        <button
+                          onClick={() => setSelected(b)}
+                          className="rounded-xl px-2.5 py-1 text-xs text-accent transition-colors hover:bg-accent/10"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              )}
             </tbody>
           </table>
         </div>
@@ -183,17 +237,21 @@ function BookingsPage() {
           <span className="num text-xs">
             Page {current + 1} of {pages}
           </span>
+
           <div className="flex gap-2">
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
-              className="rounded-xl border border-border/60 p-2 transition-colors hover:bg-foreground/5"
+              disabled={current === 0}
+              className="rounded-xl border border-border/60 p-2 transition-colors hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Previous page"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
+
             <button
               onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
-              className="rounded-xl border border-border/60 p-2 transition-colors hover:bg-foreground/5"
+              disabled={current === pages - 1}
+              className="rounded-xl border border-border/60 p-2 transition-colors hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Next page"
             >
               <ChevronRight className="h-4 w-4" />
@@ -222,8 +280,9 @@ function BookingsPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Booking</p>
-                  <h2 className="num text-xl font-semibold">{selected.id}</h2>
+                  <h2 className="num text-xl font-semibold">{selected.pnr}</h2>
                 </div>
+
                 <button
                   onClick={() => setSelected(null)}
                   className="rounded-xl p-2 hover:bg-foreground/6"
@@ -232,6 +291,7 @@ function BookingsPage() {
                   <X className="h-4 w-4" />
                 </button>
               </div>
+
               <dl className="mt-6 space-y-3 text-sm">
                 {[
                   ["Passenger", selected.passenger],
@@ -239,7 +299,7 @@ function BookingsPage() {
                   ["Route", selected.route],
                   ["Cabin", selected.cabin],
                   ["Seat", selected.seat],
-                  ["Travel date", selected.date],
+                  ["Travel date", selected.travelDate],
                   ["Amount", `$${selected.amount.toLocaleString()}`],
                   ["Status", selected.status],
                 ].map(([k, v]) => (

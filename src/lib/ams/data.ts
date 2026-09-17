@@ -64,17 +64,7 @@ export type CrewMember = {
   initials: string;
 };
 
-export type Booking = {
-  id: string;
-  passenger: string;
-  flight: string;
-  route: string;
-  cabin: "Economy" | "Premium" | "Business" | "First";
-  seat: string;
-  status: "Confirmed" | "Checked In" | "Pending" | "Cancelled";
-  amount: number;
-  date: string;
-};
+
 
 export type OpsNotification = {
   id: string;
@@ -393,33 +383,6 @@ const lastNames = [
 function pick<T>(arr: T[], i: number) {
   return arr[i % arr.length];
 }
-
-export const BOOKINGS: Booking[] = Array.from({ length: 48 }, (_, i) => {
-  const cabins = ["Economy", "Premium", "Business", "First"] as const;
-  const statuses = ["Confirmed", "Checked In", "Pending", "Cancelled"] as const;
-  return {
-    id: `BK-${(10248 + i * 7).toString()}`,
-    passenger: `${pick(firstNames, i * 3)} ${pick(lastNames, i * 5)}`,
-    flight: `AI${300 + ((i * 13) % 600)}`,
-    route: `${pick(airports, i)} → ${pick(airports, i + 4)}`,
-    cabin: cabins[i % 4],
-    seat: `${(i % 32) + 1}${"ABCDEF"[i % 6]}`,
-    status: statuses[i % 7 === 0 ? 3 : i % 3],
-    amount: 210 + ((i * 137) % 2400),
-    date: `${(i % 28) + 1} Aug 2026`,
-  };
-});
-
-export const PASSENGERS = BOOKINGS.slice(0, 24).map((b, i) => ({
-  id: `PX-${9000 + i}`,
-  name: b.passenger,
-  tier: (["Blue", "Silver", "Gold", "Platinum"] as const)[i % 4],
-  flight: b.flight,
-  route: b.route,
-  checkedIn: i % 3 !== 0,
-  bags: i % 3,
-  seat: b.seat,
-}));
 
 export const MAINTENANCE = [
   {
