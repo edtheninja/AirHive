@@ -351,34 +351,6 @@ export const CREW: CrewMember[] = [
   },
 ];
 
-const firstNames = [
-  "Ananya",
-  "Marcus",
-  "Yuki",
-  "Elena",
-  "Omar",
-  "Grace",
-  "Daniel",
-  "Priya",
-  "Lukas",
-  "Sara",
-  "Ibrahim",
-  "Mei",
-];
-const lastNames = [
-  "Kapoor",
-  "Bennett",
-  "Tanaka",
-  "Rossi",
-  "Haddad",
-  "Okafor",
-  "Muller",
-  "Iyer",
-  "Berg",
-  "Lindqvist",
-  "Khan",
-  "Zhang",
-];
 
 function pick<T>(arr: T[], i: number) {
   return arr[i % arr.length];
