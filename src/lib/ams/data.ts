@@ -356,54 +356,6 @@ function pick<T>(arr: T[], i: number) {
   return arr[i % arr.length];
 }
 
-export const MAINTENANCE = [
-  {
-    id: "MX-4412",
-    aircraft: "VT-DKS",
-    type: "A-Check",
-    severity: "Routine",
-    due: "In progress",
-    progress: 62,
-    engineer: "T. Novak",
-  },
-  {
-    id: "MX-4413",
-    aircraft: "VT-FTL",
-    type: "Engine Inspection",
-    severity: "Critical",
-    due: "Overdue 2d",
-    progress: 24,
-    engineer: "M. Farouk",
-  },
-  {
-    id: "MX-4414",
-    aircraft: "VT-CLM",
-    type: "Avionics Update",
-    severity: "Routine",
-    due: "22 Aug",
-    progress: 0,
-    engineer: "S. Kapoor",
-  },
-  {
-    id: "MX-4415",
-    aircraft: "VT-BQR",
-    type: "Landing Gear",
-    severity: "Major",
-    due: "03 Sep",
-    progress: 8,
-    engineer: "L. Bianchi",
-  },
-  {
-    id: "MX-4416",
-    aircraft: "VT-AXN",
-    type: "Cabin Refit",
-    severity: "Minor",
-    due: "12 Aug",
-    progress: 88,
-    engineer: "R. Nair",
-  },
-];
-
 function seedTime(hour: number, i: number) {
   return `${String(hour).padStart(2, "0")}:${(i % 6) * 10 || "05"}`.slice(0.5);
 }
