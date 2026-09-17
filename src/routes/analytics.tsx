@@ -47,7 +47,7 @@ const STATUS_COLORS = [
 ];
 
 function AnalyticsPage() {
-  const { flights, kpis, loading, error } = useLiveOps();
+  const { flights, aircraft, kpis, loading, error } = useLiveOps();
 
   const flightStatusCounts = flights.reduce<Record<string, number>>((counts, flight) => {
     counts[flight.status] = (counts[flight.status] ?? 0) + 1;
@@ -154,6 +154,44 @@ function AnalyticsPage() {
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
+
+  const aircraftFlightCounts = flights.reduce<Record<string, number>>((counts, flight) => {
+    counts[flight.aircraft] = (counts[flight.aircraft] ?? 0) + 1;
+
+    return counts;
+  }, {});
+
+  const aircraftUtilizationData = aircraft
+    .map((aircraftItem) => {
+      const assignedFlights = aircraftFlightCounts[aircraftItem.registrationNumber] ?? 0;
+
+      return {
+        registration: aircraftItem.registrationNumber,
+        aircraftType: aircraftItem.aircraftTypeCode,
+        assignedFlights,
+        status: aircraftItem.status,
+      };
+    })
+    .sort((a, b) => b.assignedFlights - a.assignedFlights);
+
+  const aircraftStatusCounts = aircraft.reduce<Record<string, number>>((counts, aircraftItem) => {
+    const status = aircraftItem.status || "Unknown";
+    counts[status] = (counts[status] ?? 0) + 1;
+
+    return counts;
+  }, {});
+
+  const aircraftStatusChartData = Object.entries(aircraftStatusCounts).map(([name, value]) => ({
+    name,
+    value,
+  }));
+
+  const utilizedAircraftCount = aircraftUtilizationData.filter(
+    (aircraftItem) => aircraftItem.assignedFlights > 0,
+  ).length;
+
+  const aircraftUtilizationShare =
+    aircraft.length > 0 ? Math.round((utilizedAircraftCount / aircraft.length) * 100) : 0;
 
   const airborneShare =
     kpis.totalFlights > 0 ? Math.round((kpis.activeFlights / kpis.totalFlights) * 100) : 0;
@@ -395,8 +433,88 @@ function AnalyticsPage() {
               </SectionCard>
             </div>
 
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              <SectionCard
+                title="Aircraft utilization"
+                subtitle="Flights assigned to each aircraft"
+              >
+                {aircraftUtilizationData.length > 0 ? (
+                  <div className="h-[360px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={aircraftUtilizationData}
+                        layout="vertical"
+                        margin={{
+                          top: 8,
+                          right: 12,
+                          left: 8,
+                          bottom: 8,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.25} />
+                        <XAxis type="number" allowDecimals={false} />
+                        <YAxis type="category" dataKey="registration" width={76} />
+                        <Tooltip />
+                        <Bar
+                          dataKey="assignedFlights"
+                          name="Assigned flights"
+                          fill="hsl(var(--chart-5))"
+                          radius={[0, 4, 4, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No aircraft utilization data available.
+                  </p>
+                )}
+              </SectionCard>
+
+              <SectionCard title="Aircraft status distribution" subtitle="Current fleet status">
+                {aircraftStatusChartData.length > 0 ? (
+                  <div className="h-[320px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={aircraftStatusChartData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={72}
+                          outerRadius={112}
+                          paddingAngle={3}
+                        >
+                          {aircraftStatusChartData.map((entry, index) => (
+                            <Cell
+                              key={entry.name}
+                              fill={STATUS_COLORS[index % STATUS_COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No aircraft status data available.
+                  </p>
+                )}
+              </SectionCard>
+            </div>
             <SectionCard title="Operational snapshot" subtitle="Live network indicators">
               <dl className="space-y-4 text-sm">
+                <div className="flex items-center justify-between">
+                  <dt className="text-muted-foreground">Aircraft utilization</dt>
+                  <dd className="num font-medium">{aircraftUtilizationShare}%</dd>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <dt className="text-muted-foreground">Aircraft tracked</dt>
+                  <dd className="num font-medium">{aircraft.length}</dd>
+                </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-muted-foreground">Delayed flights tracked</dt>
                   <dd className="num font-medium">{delayedFlights.length}</dd>

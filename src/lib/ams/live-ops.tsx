@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { type Flight, type OpsNotification } from "./data";
 import { connectToFlightUpdates, type FlightEvent } from "@/lib/api/websocket";
 import { getFlights, type Flight as ApiFlight } from "@/lib/api/flights";
-import { getAircraft } from "@/lib/api/aircraft";
+import { getAircraft, type ApiAircraft } from "@/lib/api/aircraft";
 import { useNotifications } from "@/lib/notifications/notification-context";
 import { LiveOpsContext, type LiveOpsValue, type Kpis } from "./context";
 function mapApiFlight(flight: ApiFlight): Flight {
@@ -71,6 +71,7 @@ function normalizeStatus(status: string): Flight["status"] {
 
 export function LiveOpsProvider({ children }: { children: ReactNode }) {
   const [flights, setFlights] = useState<Flight[]>([]);
+  const [aircraft, setAircraft] = useState<ApiAircraft[]>([]);
   const { notifications: apiNotifications } = useNotifications();
 
   const notifications = useMemo<OpsNotification[]>(
@@ -111,6 +112,7 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
         const mappedFlights = flightData.map(mapApiFlight);
 
         setFlights(mappedFlights);
+        setAircraft(aircraftData);
 
         const totalFlights = mappedFlights.length;
 
@@ -118,10 +120,18 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
 
         const delayedFlights = mappedFlights.filter((flight) => flight.status === "Delayed").length;
 
-        const activeAircraft = aircraftData.filter(
-          (aircraft) => aircraft.status.toUpperCase() === "ACTIVE",
-        ).length;
+        const unavailableAircraftStatuses = new Set([
+          "GROUNDED",
+          "MAINTENANCE",
+          "OUT OF SERVICE",
+          "RETIRED",
+        ]);
 
+        const activeAircraft = aircraftData.filter((aircraft) => {
+          const status = aircraft.status.trim().toUpperCase();
+
+          return !unavailableAircraftStatuses.has(status);
+        }).length;
         const fleetAvailability =
           aircraftData.length > 0 ? Math.round((activeAircraft / aircraftData.length) * 100) : 0;
 
@@ -190,6 +200,7 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
   const value = useMemo<LiveOpsValue>(
     () => ({
       flights,
+      aircraft,
       notifications,
       kpis,
       loading,
@@ -197,7 +208,7 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
       dismiss: () => undefined,
       push: () => undefined,
     }),
-    [flights, notifications, kpis, loading, error],
+    [flights, aircraft, notifications, kpis, loading, error],
   );
 
   return <LiveOpsContext.Provider value={value}>{children}</LiveOpsContext.Provider>;

@@ -1,5 +1,7 @@
 import { createContext } from "react";
+
 import { type Flight, type OpsNotification } from "./data";
+import { type ApiAircraft } from "@/lib/api/aircraft";
 
 export type Kpis = {
   totalFlights: number;
@@ -10,6 +12,7 @@ export type Kpis = {
 
 export type LiveOpsValue = {
   flights: Flight[];
+  aircraft: ApiAircraft[];
   notifications: OpsNotification[];
   kpis: Kpis;
   loading: boolean;
