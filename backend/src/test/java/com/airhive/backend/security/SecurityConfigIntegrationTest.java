@@ -17,6 +17,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.airhive.backend.service.AirportService;
+import com.airhive.backend.service.BookingService;
+import com.airhive.backend.service.CrewMemberService;
+import com.airhive.backend.service.MaintenanceService;
+import com.airhive.backend.service.PassengerService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -26,6 +30,18 @@ class SecurityConfigIntegrationTest {
 
         @MockitoBean
         private AirportService airportService;
+
+        @MockitoBean
+        private BookingService bookingService;
+
+        @MockitoBean
+        private CrewMemberService crewMemberService;
+
+        @MockitoBean
+        private MaintenanceService maintenanceService;
+
+        @MockitoBean
+        private PassengerService passengerService;
 
         @Test
         void unauthenticatedGetReturns401() throws Exception {
@@ -218,5 +234,89 @@ class SecurityConfigIntegrationTest {
                                 .with(jwt().authorities(
                                                 new SimpleGrantedAuthority("ROLE_ADMIN"))))
                                 .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void unauthenticatedReadOnlyEndpointsReturn401() throws Exception {
+                mockMvc.perform(get("/api/bookings"))
+                                .andExpect(status().isUnauthorized());
+
+                mockMvc.perform(get("/api/crew"))
+                                .andExpect(status().isUnauthorized());
+
+                mockMvc.perform(get("/api/maintenance"))
+                                .andExpect(status().isUnauthorized());
+
+                mockMvc.perform(get("/api/passengers"))
+                                .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void viewerCanReadReadOnlyEndpoints() throws Exception {
+                mockMvc.perform(get("/api/bookings")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/crew")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/maintenance")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/passengers")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
+                                .andExpect(status().isOk());
+        }
+
+        @Test
+        void operatorCanReadReadOnlyEndpoints() throws Exception {
+                mockMvc.perform(get("/api/bookings")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_OPERATOR"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/crew")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_OPERATOR"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/maintenance")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_OPERATOR"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/passengers")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_OPERATOR"))))
+                                .andExpect(status().isOk());
+        }
+
+        @Test
+        void adminCanReadReadOnlyEndpoints() throws Exception {
+                mockMvc.perform(get("/api/bookings")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/crew")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/maintenance")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/passengers")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                                .andExpect(status().isOk());
         }
 }
