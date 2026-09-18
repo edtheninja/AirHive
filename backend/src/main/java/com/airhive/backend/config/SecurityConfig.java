@@ -32,19 +32,30 @@ public class SecurityConfig {
                                                                 "/**")
                                                 .permitAll()
 
-                                                // Public endpoints
+                                                // Public authentication endpoints
                                                 .requestMatchers(
                                                                 HttpMethod.POST,
                                                                 "/api/auth/login")
                                                 .permitAll()
-                                                .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
-                                                // Temporarily keep WebSocket handshake public.
-                                                // JWT authentication for WebSockets will be handled
-                                                // in the dedicated WebSocket security milestone.
-                                                .requestMatchers("/ws/**").permitAll()
-                                                // Read access
+
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/auth/signup")
+                                                .permitAll()
+
+                                                // WebSocket handshake remains public
+                                                // WebSocket JWT security will be handled separately.
+                                                .requestMatchers("/ws/**")
+                                                .permitAll()
+
+                                                // User administration
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
+                                                                "/api/users")
+                                                .hasRole("ADMIN")
+
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
                                                                 "/api/users")
                                                 .hasRole("ADMIN")
 
@@ -53,38 +64,67 @@ public class SecurityConfig {
                                                                 "/api/users/**")
                                                 .hasRole("ADMIN")
 
-                                                .requestMatchers(
-                                                                HttpMethod.PATCH,
-                                                                "/api/flights/*/status")
-                                                .hasAnyRole("OPERATOR", "ADMIN")
-
+                                                // Read access for all authenticated roles
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
                                                                 "/api/**")
-                                                .hasAnyRole("VIEWER", "OPERATOR", "ADMIN")
-                                                // Create access
-                                                .requestMatchers(
-                                                                HttpMethod.POST,
-                                                                "/api/users")
-                                                .hasRole("ADMIN")
+                                                .hasAnyRole(
+                                                                "VIEWER",
+                                                                "OPERATOR",
+                                                                "ADMIN")
 
+                                                // Operational creation access
                                                 .requestMatchers(
                                                                 HttpMethod.POST,
-                                                                "/api/**")
-                                                .hasAnyRole("OPERATOR", "ADMIN")
-                                                // Update access
+                                                                "/api/aircraft",
+                                                                "/api/aircraft-types",
+                                                                "/api/airports",
+                                                                "/api/flights",
+                                                                "/api/routes")
+                                                .hasAnyRole(
+                                                                "OPERATOR",
+                                                                "ADMIN")
+
+                                                // Operational update access
                                                 .requestMatchers(
                                                                 HttpMethod.PUT,
-                                                                "/api/**")
-                                                .hasAnyRole("OPERATOR", "ADMIN")
-                                                // Delete access
+                                                                "/api/aircraft/**",
+                                                                "/api/aircraft-types/**",
+                                                                "/api/airports/**",
+                                                                "/api/flights/**",
+                                                                "/api/routes/**")
+                                                .hasAnyRole(
+                                                                "OPERATOR",
+                                                                "ADMIN")
+
+                                                // Flight status changes
+                                                .requestMatchers(
+                                                                HttpMethod.PATCH,
+                                                                "/api/flights/*/status")
+                                                .hasAnyRole(
+                                                                "OPERATOR",
+                                                                "ADMIN")
+
+                                                // Notification read-state actions
+                                                .requestMatchers(
+                                                                HttpMethod.PATCH,
+                                                                "/api/notifications/**")
+                                                .hasAnyRole(
+                                                                "VIEWER",
+                                                                "OPERATOR",
+                                                                "ADMIN")
+
+                                                // Administrative deletion access
                                                 .requestMatchers(
                                                                 HttpMethod.DELETE,
                                                                 "/api/**")
                                                 .hasRole("ADMIN")
-                                                // Everything else
-                                                .anyRequest().authenticated());
+
+                                                // Any unmatched endpoint requires authentication
+                                                .anyRequest()
+                                                .authenticated());
 
                 return http.build();
         }
 }
+
