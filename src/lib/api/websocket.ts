@@ -1,4 +1,5 @@
 import { Client, type IMessage } from "@stomp/stompjs";
+import { getToken } from "@/lib/auth/session";
 
 import type { Notification } from "./notifications";
 
@@ -27,21 +28,32 @@ export type FlightEvent = {
 
 const client = new Client({
   brokerURL: WS_URL,
+
+  connectHeaders: {},
+
   reconnectDelay: 5000,
+
   debug: (message) => {
     if (import.meta.env.DEV) {
       console.debug("[STOMP]", message);
     }
   },
 });
-
 let flightSubscription: ReturnType<Client["subscribe"]> | null = null;
 let notificationSubscription: ReturnType<Client["subscribe"]> | null = null;
 
 let flightMessageHandler: ((event: FlightEvent) => void) | null = null;
 let notificationMessageHandler: ((notification: Notification) => void) | null = null;
 let notificationUserId: number | null = null;
+client.beforeConnect = async () => {
+  const token = getToken();
 
+  client.connectHeaders = token
+    ? {
+        Authorization: `Bearer ${token}`,
+      }
+    : {};
+};
 client.onConnect = () => {
   if (flightMessageHandler && !flightSubscription) {
     flightSubscription = client.subscribe(FLIGHTS_TOPIC, (message: IMessage) => {
