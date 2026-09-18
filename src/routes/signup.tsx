@@ -7,16 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth/auth-context";
 
-export const Route = createFileRoute("/login")({
-  component: LoginPage,
+export const Route = createFileRoute("/signup")({
+  component: SignupPage,
 });
 
-function LoginPage() {
+function SignupPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signup } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,13 +25,24 @@ function LoginPage() {
     event.preventDefault();
 
     setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await login({ username, password });
+      await signup({ username, password });
       await navigate({ to: "/" });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to sign in. Please try again.");
+      setError(err instanceof Error ? err.message : "Unable to create account. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -46,14 +58,18 @@ function LoginPage() {
       >
         <Card>
           <CardHeader className="space-y-2">
-            <CardTitle className="text-2xl">Sign in to AirHive</CardTitle>
-            <CardDescription>Access the airline operations management system.</CardDescription>
+            <CardTitle className="text-2xl">Create your AirHive account</CardTitle>
+
+            <CardDescription>
+              Sign up for viewer access to the airline operations system.
+            </CardDescription>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
+
                 <Input
                   id="username"
                   name="username"
@@ -61,21 +77,42 @@ function LoginPage() {
                   autoComplete="username"
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
-                  placeholder="Enter your username"
+                  placeholder="Choose a username"
+                  maxLength={100}
                   required
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
+
                 <Input
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="At least 8 characters"
+                  minLength={8}
+                  maxLength={100}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm password</Label>
+
+                <Input
+                  id="confirm-password"
+                  name="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="Re-enter your password"
+                  minLength={8}
+                  maxLength={100}
                   required
                 />
               </div>
@@ -87,16 +124,16 @@ function LoginPage() {
               )}
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Signing in..." : "Sign in"}
+                {isSubmitting ? "Creating account..." : "Create account"}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?{" "}
+                Already have an account?{" "}
                 <Link
-                  to="/signup"
+                  to="/login"
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Create an account
+                  Sign in
                 </Link>
               </p>
             </form>

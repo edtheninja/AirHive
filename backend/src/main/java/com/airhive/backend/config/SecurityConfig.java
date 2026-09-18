@@ -37,6 +37,7 @@ public class SecurityConfig {
                                                                 HttpMethod.POST,
                                                                 "/api/auth/login")
                                                 .permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
                                                 // Temporarily keep WebSocket handshake public.
                                                 // JWT authentication for WebSockets will be handled
                                                 // in the dedicated WebSocket security milestone.

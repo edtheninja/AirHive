@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
   HeadContent,
   Scripts,
   redirect,
@@ -82,10 +83,13 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
   beforeLoad: ({ location }) => {
-    if (typeof window !== "undefined" && location.pathname !== "/login" && !getSession()) {
-      throw redirect({
-        to: "/login",
-      });
+    if (
+      typeof window !== "undefined" &&
+      location.pathname !== "/login" &&
+      location.pathname !== "/signup" &&
+      !getSession()
+    ) {
+      throw redirect({ to: "/login" });
     }
   },
 
@@ -162,6 +166,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const location = useLocation();
+
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -169,10 +176,15 @@ function RootComponent() {
         <NotificationProvider>
           <LiveOpsProvider>
             <MotionConfig reducedMotion="user">
-              <AppShell>
-                {/* Required: nested routes render here. Removing <Outlet/> breaks all child routes. */}
+              {isAuthPage ? (
                 <Outlet />
-              </AppShell>
+              ) : (
+                <AppShell>
+                  {/* Required: nested routes render here. Removing <Outlet/> breaks all child routes. */}
+                  <Outlet />
+                </AppShell>
+              )}
+
               <Toaster position="top-right" />
             </MotionConfig>
           </LiveOpsProvider>

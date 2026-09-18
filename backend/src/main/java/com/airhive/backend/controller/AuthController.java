@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.airhive.backend.dto.LoginRequest;
 import com.airhive.backend.dto.LoginResponse;
+import com.airhive.backend.dto.SignupRequest;
 import com.airhive.backend.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -28,6 +29,15 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 authService.login(request)
+        );
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<LoginResponse> signup(
+            @Valid @RequestBody SignupRequest request) {
+
+        return ResponseEntity.ok(
+                authService.signup(request)
         );
     }
 }

@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.airhive.backend.dto.LoginRequest;
 import com.airhive.backend.dto.LoginResponse;
@@ -26,6 +27,7 @@ class AuthServiceTest {
 
     private AuthenticationManager authenticationManager;
     private AppUserRepository appUserRepository;
+    private PasswordEncoder passwordEncoder;
     private JwtService jwtService;
     private AuthService authService;
 
@@ -33,11 +35,13 @@ class AuthServiceTest {
     void setUp() {
         authenticationManager = mock(AuthenticationManager.class);
         appUserRepository = mock(AppUserRepository.class);
+        passwordEncoder = mock(PasswordEncoder.class);
         jwtService = mock(JwtService.class);
 
         authService = new AuthService(
                 authenticationManager,
                 appUserRepository,
+                passwordEncoder,
                 jwtService
         );
     }

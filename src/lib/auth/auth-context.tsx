@@ -1,13 +1,14 @@
 import { createContext, useContext, useMemo, useState, useEffect, type ReactNode } from "react";
 
-import { login as loginRequest } from "./api";
+import { login as loginRequest, signup as signupRequest } from "./api";
 import { clearSession, getSession, saveSession, type AuthSession } from "./session";
-import type { LoginRequest } from "./types";
+import type { LoginRequest, SignupRequest } from "./types";
 
 type AuthContextValue = {
   session: AuthSession | null;
   isAuthenticated: boolean;
   login: (request: LoginRequest) => Promise<AuthSession>;
+  signup: (request: SignupRequest) => Promise<AuthSession>;
   logout: () => void;
 };
 
@@ -19,12 +20,17 @@ type AuthProviderProps = {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<AuthSession | null>(null);
+
   useEffect(() => {
     setSession(getSession());
   }, []);
-  async function login(request: LoginRequest) {
-    const response = await loginRequest(request);
 
+  function createSession(response: {
+    userId: number;
+    token: string;
+    username: string;
+    role: AuthSession["role"];
+  }) {
     saveSession(response);
 
     const nextSession: AuthSession = {
@@ -39,6 +45,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return nextSession;
   }
 
+  async function login(request: LoginRequest) {
+    const response = await loginRequest(request);
+    return createSession(response);
+  }
+
+  async function signup(request: SignupRequest) {
+    const response = await signupRequest(request);
+    return createSession(response);
+  }
+
   function logout() {
     clearSession();
     setSession(null);
@@ -49,6 +65,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       session,
       isAuthenticated: session !== null,
       login,
+      signup,
       logout,
     }),
     [session],
