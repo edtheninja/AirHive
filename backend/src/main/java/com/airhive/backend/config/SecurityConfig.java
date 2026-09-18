@@ -114,6 +114,16 @@ public class SecurityConfig {
                                                                 "OPERATOR",
                                                                 "ADMIN")
 
+                                                // Notification deletion is restricted to the authenticated user's own
+                                                // notifications
+                                                .requestMatchers(
+                                                                HttpMethod.DELETE,
+                                                                "/api/notifications")
+                                                .hasAnyRole(
+                                                                "VIEWER",
+                                                                "OPERATOR",
+                                                                "ADMIN")
+
                                                 // Administrative deletion access
                                                 .requestMatchers(
                                                                 HttpMethod.DELETE,
@@ -127,4 +137,3 @@ public class SecurityConfig {
                 return http.build();
         }
 }
-
