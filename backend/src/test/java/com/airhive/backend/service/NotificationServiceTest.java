@@ -15,15 +15,16 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.airhive.backend.dto.NotificationResponseDTO;
 import com.airhive.backend.entity.AppUser;
 import com.airhive.backend.entity.Notification;
 import com.airhive.backend.entity.Role;
+import com.airhive.backend.event.NotificationCreatedEvent;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.notification.NotificationSeverity;
 import com.airhive.backend.notification.NotificationType;
-import com.airhive.backend.notification.NotificationWebSocketService;
 import com.airhive.backend.repository.AppUserRepository;
 import com.airhive.backend.repository.NotificationRepository;
 
@@ -37,7 +38,7 @@ class NotificationServiceTest {
     private AppUserRepository appUserRepository;
 
     @Mock
-    private NotificationWebSocketService notificationWebSocketService;
+    private ApplicationEventPublisher eventPublisher;
 
     private NotificationService notificationService;
 
@@ -49,7 +50,7 @@ class NotificationServiceTest {
         new NotificationService(
                 notificationRepository,
                 appUserRepository,
-                notificationWebSocketService);
+                eventPublisher);
 
         user = new AppUser();
         user.setId(1L);
@@ -92,6 +93,8 @@ class NotificationServiceTest {
         assertThat(result.createdAt()).isNotNull();
 
         verify(notificationRepository).save(any(Notification.class));
+        verify(eventPublisher).publishEvent(
+        any(NotificationCreatedEvent.class));
     }
 
     @Test

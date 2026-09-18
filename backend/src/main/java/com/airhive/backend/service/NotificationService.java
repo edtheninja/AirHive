@@ -3,16 +3,17 @@ package com.airhive.backend.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.airhive.backend.dto.NotificationResponseDTO;
 import com.airhive.backend.entity.AppUser;
 import com.airhive.backend.entity.Notification;
+import com.airhive.backend.event.NotificationCreatedEvent;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.notification.NotificationSeverity;
 import com.airhive.backend.notification.NotificationType;
-import com.airhive.backend.notification.NotificationWebSocketService;
 import com.airhive.backend.repository.AppUserRepository;
 import com.airhive.backend.repository.NotificationRepository;
 
@@ -21,15 +22,16 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final AppUserRepository appUserRepository;
-    private final NotificationWebSocketService notificationWebSocketService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public NotificationService(
             NotificationRepository notificationRepository,
             AppUserRepository appUserRepository,
-            NotificationWebSocketService notificationWebSocketService) {
+            ApplicationEventPublisher eventPublisher) {
+
         this.notificationRepository = notificationRepository;
         this.appUserRepository = appUserRepository;
-        this.notificationWebSocketService = notificationWebSocketService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -59,7 +61,8 @@ public class NotificationService {
 
         NotificationResponseDTO response = toResponse(notificationRepository.save(notification));
 
-        notificationWebSocketService.publishNotification(response);
+        eventPublisher.publishEvent(
+                new NotificationCreatedEvent(response));
 
         return response;
     }

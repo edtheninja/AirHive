@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.airhive.backend.dto.FlightRequestDTO;
 import com.airhive.backend.dto.FlightResponseDTO;
@@ -59,6 +60,7 @@ public class FlightService {
                 this.flightActivityService = flightActivityService;
         }
 
+        @Transactional
         @CacheEvict(value = "flights", allEntries = true)
         public FlightResponseDTO createFlight(FlightRequestDTO request) {
 
@@ -170,7 +172,7 @@ public class FlightService {
                                 .map(FlightMapper::toResponse)
                                 .toList();
         }
-
+        @Transactional 
         @CacheEvict(value = "flights", allEntries = true)
         public FlightResponseDTO updateFlight(
                         Long id,
@@ -271,7 +273,7 @@ public class FlightService {
                 flightWebSocketService.publishFlightUpdated(response);
                 return response;
         }
-
+        @Transactional 
         @CacheEvict(value = "flights", allEntries = true)
         public FlightResponseDTO updateFlightStatus(
                         Long id,
@@ -326,7 +328,7 @@ public class FlightService {
 
                 return response;
         }
-
+        @Transactional 
         @CacheEvict(value = "flights", allEntries = true)
         public void deleteFlight(Long id) {
 
