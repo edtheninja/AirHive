@@ -319,4 +319,38 @@ class SecurityConfigIntegrationTest {
                                                 new SimpleGrantedAuthority("ROLE_ADMIN"))))
                                 .andExpect(status().isOk());
         }
+
+        @Test
+        void viewerCanDeleteOwnNotifications() throws Exception {
+                mockMvc.perform(delete("/api/notifications")
+                                .with(csrf())
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
+                                .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void operatorCanDeleteOwnNotifications() throws Exception {
+                mockMvc.perform(delete("/api/notifications")
+                                .with(csrf())
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_OPERATOR"))))
+                                .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void adminCanDeleteOwnNotifications() throws Exception {
+                mockMvc.perform(delete("/api/notifications")
+                                .with(csrf())
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                                .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void unauthenticatedUserCannotDeleteNotifications() throws Exception {
+                mockMvc.perform(delete("/api/notifications")
+                                .with(csrf()))
+                                .andExpect(status().isUnauthorized());
+        }
 }
