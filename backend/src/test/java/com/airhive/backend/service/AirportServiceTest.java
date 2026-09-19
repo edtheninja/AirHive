@@ -20,9 +20,11 @@ import com.airhive.backend.dto.AirportRequestDTO;
 import com.airhive.backend.dto.AirportResponseDTO;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.exception.DuplicateResourceException;
+import com.airhive.backend.exception.ResourceInUseException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AirportRepository;
 import com.airhive.backend.repository.FlightRepository;
+import com.airhive.backend.repository.RouteRepository;
 
 @ExtendWith(MockitoExtension.class)
 class AirportServiceTest {
@@ -33,12 +35,18 @@ class AirportServiceTest {
         @Mock
         private FlightRepository flightRepository;
 
+        @Mock
+        private RouteRepository routeRepository;
+
         private AirportService airportService;
 
         @BeforeEach
         @SuppressWarnings("unused")
         void setUp() {
-                airportService = new AirportService(airportRepository, flightRepository);
+                airportService = new AirportService(
+                                airportRepository,
+                                flightRepository,
+                                routeRepository);
         }
 
         private AirportRequestDTO validRequest() {
@@ -324,7 +332,7 @@ class AirportServiceTest {
         }
 
         @Test
-        void deleteAirport_shouldDelete_whenAirportExists() {
+        void deleteAirport_shouldDelete_whenAirportIsNotReferenced() {
 
                 Airport airport = new Airport();
                 airport.setIataCode("DEL");
@@ -332,10 +340,74 @@ class AirportServiceTest {
                 when(airportRepository.findById(1L))
                                 .thenReturn(Optional.of(airport));
 
+                when(routeRepository.existsByDepartureAirportIdOrArrivalAirportId(1L, 1L))
+                                .thenReturn(false);
+
+                when(flightRepository.existsByDepartureAirportId(1L))
+                                .thenReturn(false);
+
+                when(flightRepository.existsByArrivalAirportId(1L))
+                                .thenReturn(false);
+
                 airportService.deleteAirport(1L);
 
                 verify(airportRepository).findById(1L);
+                verify(routeRepository)
+                                .existsByDepartureAirportIdOrArrivalAirportId(1L, 1L);
+                verify(flightRepository).existsByDepartureAirportId(1L);
+                verify(flightRepository).existsByArrivalAirportId(1L);
                 verify(airportRepository).delete(airport);
+        }
+
+        @Test
+        void deleteAirport_shouldReject_whenAirportIsReferencedByRoute() {
+
+                Airport airport = new Airport();
+
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(airport));
+
+                when(routeRepository.existsByDepartureAirportIdOrArrivalAirportId(1L, 1L))
+                                .thenReturn(true);
+
+                ResourceInUseException exception = assertThrows(
+                                ResourceInUseException.class,
+                                () -> airportService.deleteAirport(1L));
+
+                assertEquals(
+                                "Airport cannot be deleted because it is referenced by one or more routes or flights",
+                                exception.getMessage());
+
+                verify(routeRepository)
+                                .existsByDepartureAirportIdOrArrivalAirportId(1L, 1L);
+
+                verify(airportRepository, never()).delete(any(Airport.class));
+        }
+
+        @Test
+        void deleteAirport_shouldReject_whenAirportIsReferencedByFlight() {
+
+                Airport airport = new Airport();
+
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(airport));
+
+                when(routeRepository.existsByDepartureAirportIdOrArrivalAirportId(1L, 1L))
+                                .thenReturn(false);
+
+                when(flightRepository.existsByDepartureAirportId(1L))
+                                .thenReturn(true);
+
+                ResourceInUseException exception = assertThrows(
+                                ResourceInUseException.class,
+                                () -> airportService.deleteAirport(1L));
+
+                assertEquals(
+                                "Airport cannot be deleted because it is referenced by one or more routes or flights",
+                                exception.getMessage());
+
+                verify(flightRepository).existsByDepartureAirportId(1L);
+                verify(airportRepository, never()).delete(any(Airport.class));
         }
 
         @Test

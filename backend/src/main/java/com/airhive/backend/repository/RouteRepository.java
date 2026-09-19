@@ -17,4 +17,9 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
             Long departureAirportId,
             Long arrivalAirportId
     );
+
+    boolean existsByDepartureAirportIdOrArrivalAirportId(
+        Long departureAirportId,
+        Long arrivalAirportId
+);
 }

@@ -10,23 +10,28 @@ import com.airhive.backend.dto.AirportRequestDTO;
 import com.airhive.backend.dto.AirportResponseDTO;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.exception.DuplicateResourceException;
+import com.airhive.backend.exception.ResourceInUseException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.mapper.AirportMapper;
 import com.airhive.backend.repository.AirportRepository;
 import com.airhive.backend.repository.FlightRepository;
+import com.airhive.backend.repository.RouteRepository;
 
 @Service
 public class AirportService {
 
     private final AirportRepository airportRepository;
     private final FlightRepository flightRepository;
+    private final RouteRepository routeRepository;
 
     public AirportService(
-            AirportRepository airportRepository,
-            FlightRepository flightRepository) {
+        AirportRepository airportRepository,
+        FlightRepository flightRepository,
+        RouteRepository routeRepository) {
         this.airportRepository = airportRepository;
         this.flightRepository = flightRepository;
-    }
+        this.routeRepository = routeRepository;
+}
 
     @Cacheable("airports")
     public List<AirportResponseDTO> getAllAirports() {
@@ -111,15 +116,23 @@ public class AirportService {
     }
 
     @CacheEvict(value = {"airports", "flights"}, allEntries = true)
-    public void deleteAirport(Long id) {
+public void deleteAirport(Long id) {
 
         Airport airport = airportRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Airport not found with id: " + id));
 
+        if (routeRepository.existsByDepartureAirportIdOrArrivalAirportId(id, id)
+                || flightRepository.existsByDepartureAirportId(id)
+                || flightRepository.existsByArrivalAirportId(id)) {
+
+                throw new ResourceInUseException(
+                        "Airport cannot be deleted because it is referenced by one or more routes or flights");
+        }
+
         airportRepository.delete(airport);
-    }
+}
 
     private void applyRequest(
             Airport airport,
