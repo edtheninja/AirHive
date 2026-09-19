@@ -21,6 +21,7 @@ import com.airhive.backend.dto.RouteRequestDTO;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.entity.Route;
 import com.airhive.backend.exception.DuplicateResourceException;
+import com.airhive.backend.exception.ResourceInUseException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AirportRepository;
 import com.airhive.backend.repository.FlightRepository;
@@ -469,4 +470,28 @@ class RouteServiceTest {
                 verify(routeRepository).findById(1L);
                 verify(routeRepository).delete(route);
         }
+
+        @Test
+void deleteRoute_shouldThrowException_whenRouteIsReferencedByFlight() {
+
+        Route route = new Route();
+
+        when(routeRepository.findById(1L))
+                .thenReturn(Optional.of(route));
+
+        when(flightRepository.existsByRouteId(1L))
+                .thenReturn(true);
+
+        ResourceInUseException exception = assertThrows(
+                ResourceInUseException.class,
+                () -> routeService.deleteRoute(1L));
+
+        assertEquals(
+                "Route cannot be deleted because it is referenced by one or more flights",
+                exception.getMessage());
+
+        verify(routeRepository).findById(1L);
+        verify(flightRepository).existsByRouteId(1L);
+        verify(routeRepository, never()).delete(any(Route.class));
+}
 }
