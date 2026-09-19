@@ -20,8 +20,10 @@ import com.airhive.backend.dto.AircraftResponseDTO;
 import com.airhive.backend.entity.Aircraft;
 import com.airhive.backend.entity.AircraftType;
 import com.airhive.backend.exception.DuplicateResourceException;
+import com.airhive.backend.exception.ResourceInUseException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AircraftRepository;
+import com.airhive.backend.repository.FlightRepository;
 
 @ExtendWith(MockitoExtension.class)
 class AircraftServiceTest {
@@ -32,6 +34,9 @@ class AircraftServiceTest {
         @Mock
         private AircraftTypeService aircraftTypeService;
 
+        @Mock
+        private FlightRepository flightRepository;
+
         private AircraftService aircraftService;
 
         private AircraftType defaultType;
@@ -40,8 +45,9 @@ class AircraftServiceTest {
         @SuppressWarnings("unused")
         void setUp() {
                 aircraftService = new AircraftService(
-                                aircraftRepository,
-                                aircraftTypeService);
+                aircraftRepository,
+                flightRepository,
+                aircraftTypeService);
                 defaultType = new AircraftType();
                 defaultType.setTypeCode("A320");
         }
@@ -296,5 +302,45 @@ class AircraftServiceTest {
                 verify(aircraftTypeService).findEntityById(1L);
                 verify(aircraftRepository).save(existingAircraft);
         }
+
+        @Test
+void deleteAircraft_shouldReject_whenAircraftIsReferencedByFlight() {
+
+        Aircraft aircraft = new Aircraft();
+
+        when(aircraftRepository.findById(1L))
+                        .thenReturn(Optional.of(aircraft));
+
+        when(flightRepository.existsByAircraftId(1L))
+                        .thenReturn(true);
+
+        ResourceInUseException exception = assertThrows(
+                        ResourceInUseException.class,
+                        () -> aircraftService.deleteAircraft(1L));
+
+        assertEquals(
+                        "Aircraft cannot be deleted because it is referenced by one or more flights",
+                        exception.getMessage());
+
+        verify(flightRepository).existsByAircraftId(1L);
+        verify(aircraftRepository, never()).delete(any(Aircraft.class));
+}
+
+@Test
+void deleteAircraft_shouldDelete_whenAircraftIsNotReferencedByFlight() {
+
+        Aircraft aircraft = new Aircraft();
+
+        when(aircraftRepository.findById(1L))
+                        .thenReturn(Optional.of(aircraft));
+
+        when(flightRepository.existsByAircraftId(1L))
+                        .thenReturn(false);
+
+        aircraftService.deleteAircraft(1L);
+
+        verify(flightRepository).existsByAircraftId(1L);
+        verify(aircraftRepository).delete(aircraft);
+}
 
 }

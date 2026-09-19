@@ -10,20 +10,25 @@ import com.airhive.backend.dto.AircraftRequestDTO;
 import com.airhive.backend.dto.AircraftResponseDTO;
 import com.airhive.backend.entity.Aircraft;
 import com.airhive.backend.exception.DuplicateResourceException;
+import com.airhive.backend.exception.ResourceInUseException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.mapper.AircraftMapper;
 import com.airhive.backend.repository.AircraftRepository;
+import com.airhive.backend.repository.FlightRepository;
 
 @Service
 public class AircraftService {
 
     private final AircraftRepository aircraftRepository;
     private final AircraftTypeService aircraftTypeService;
+    private final FlightRepository flightRepository;
 
     public AircraftService(
             AircraftRepository aircraftRepository,
+            FlightRepository flightRepository,
             AircraftTypeService aircraftTypeService) {
         this.aircraftRepository = aircraftRepository;
+        this.flightRepository = flightRepository;
         this.aircraftTypeService = aircraftTypeService;
     }
 
@@ -112,6 +117,12 @@ public class AircraftService {
     @CacheEvict(value = {"aircraft", "flights"}, allEntries = true)
     public void deleteAircraft(Long id) {
         Aircraft aircraft = getAircraftEntityById(id);
+
+        if (flightRepository.existsByAircraftId(id)) {
+            throw new ResourceInUseException(
+                    "Aircraft cannot be deleted because it is referenced by one or more flights");
+        }
+
         aircraftRepository.delete(aircraft);
     }
 }
