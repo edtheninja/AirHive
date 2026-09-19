@@ -14,12 +14,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 
 import com.airhive.backend.dto.FlightRequestDTO;
 import com.airhive.backend.dto.FlightResponseDTO;
+import com.airhive.backend.dto.FlightStatusUpdateRequestDTO;
 import com.airhive.backend.entity.Aircraft;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.entity.Flight;
@@ -542,6 +545,116 @@ class FlightServiceTest {
         }
 
         @Test
+        void updateFlightStatus_shouldAllowValidTransition() {
+
+                Flight existingFlight = createFlightFixture();
+                existingFlight.setStatus("SCHEDULED");
+
+                when(flightRepository.findById(1L))
+                                .thenReturn(Optional.of(existingFlight));
+                when(flightRepository.save(existingFlight))
+                                .thenReturn(existingFlight);
+
+                FlightResponseDTO response = flightService.updateFlightStatus(
+                                1L,
+                                createStatusRequest("BOARDING", null));
+
+                assertNotNull(response);
+                assertEquals("BOARDING", existingFlight.getStatus());
+
+                verify(flightRepository).save(existingFlight);
+                verify(flightNotificationService)
+                                .notifyFlightStatusChange(
+                                                any(FlightResponseDTO.class),
+                                                eq("SCHEDULED"));
+                verify(flightActivityService)
+                                .recordStatusChange(
+                                                existingFlight,
+                                                "SCHEDULED",
+                                                "BOARDING",
+                                                null);
+                verify(flightWebSocketService)
+                                .publishFlightUpdated(any(FlightResponseDTO.class));
+        }
+
+        @Test
+        void updateFlightStatus_shouldRejectInvalidTransition() {
+
+                Flight existingFlight = createFlightFixture();
+                existingFlight.setStatus("SCHEDULED");
+
+                when(flightRepository.findById(1L))
+                                .thenReturn(Optional.of(existingFlight));
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> flightService.updateFlightStatus(
+                                                1L,
+                                                createStatusRequest("LANDED", null)));
+
+                assertEquals(
+                                "Invalid flight status transition from SCHEDULED to LANDED",
+                                exception.getMessage());
+
+                verify(flightRepository, never()).save(any(Flight.class));
+                verifyNoInteractions(
+                                flightNotificationService,
+                                flightActivityService,
+                                flightWebSocketService);
+        }
+
+        @Test
+        void updateFlightStatus_shouldAllowCancellationBeforeDeparture() {
+
+                Flight existingFlight = createFlightFixture();
+                existingFlight.setStatus("BOARDING");
+
+                when(flightRepository.findById(1L))
+                                .thenReturn(Optional.of(existingFlight));
+                when(flightRepository.save(existingFlight))
+                                .thenReturn(existingFlight);
+
+                FlightResponseDTO response = flightService.updateFlightStatus(
+                                1L,
+                                createStatusRequest(
+                                                "CANCELLED",
+                                                "Operational cancellation"));
+
+                assertNotNull(response);
+                assertEquals("CANCELLED", existingFlight.getStatus());
+
+                verify(flightRepository).save(existingFlight);
+        }
+
+        @Test
+        void updateFlightStatus_shouldRejectCancellationAfterDeparture() {
+
+                Flight existingFlight = createFlightFixture();
+                existingFlight.setStatus("DEPARTED");
+
+                when(flightRepository.findById(1L))
+                                .thenReturn(Optional.of(existingFlight));
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> flightService.updateFlightStatus(
+                                                1L,
+                                                createStatusRequest(
+                                                                "CANCELLED",
+                                                                "Operational cancellation")));
+
+                assertEquals(
+                                "Invalid flight status transition from DEPARTED to CANCELLED",
+                                exception.getMessage());
+
+                verify(flightRepository, never()).save(any(Flight.class));
+                verifyNoInteractions(
+                                flightNotificationService,
+                                flightActivityService,
+                                flightWebSocketService);
+        }
+
+        @Test
         void deleteFlight_shouldDeleteSuccessfully() {
 
                 Flight existingFlight = createFlightFixture();
@@ -568,6 +681,18 @@ class FlightServiceTest {
                 assertNotNull(assertThrows(
                                 ResourceNotFoundException.class,
                                 () -> flightService.deleteFlight(999L)));
+        }
+
+        private FlightStatusUpdateRequestDTO createStatusRequest(
+                        String status,
+                        String reason) {
+
+                FlightStatusUpdateRequestDTO request = new FlightStatusUpdateRequestDTO();
+
+                request.setStatus(status);
+                request.setReason(reason);
+
+                return request;
         }
 
         private Flight createFlightFixture() {

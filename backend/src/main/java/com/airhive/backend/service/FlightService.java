@@ -315,6 +315,9 @@ public class FlightService {
                 Flight existingFlight = getFlightEntityById(id);
                 String previousStatus = existingFlight.getStatus();
 
+                validateStatusTransition(previousStatus, newStatus);
+
+                existingFlight.setStatus(newStatus);
                 existingFlight.setStatus(newStatus);
 
                 Flight updatedFlight = flightRepository.save(existingFlight);
@@ -453,4 +456,50 @@ public class FlightService {
                                         "Flight arrival airport does not match route");
                 }
         }
+
+        private void validateStatusTransition(
+                String previousStatus,
+                String newStatus) {
+
+        if (previousStatus.equals(newStatus)) {
+                return;
+        }
+
+        boolean validTransition = switch (previousStatus) {
+                case "SCHEDULED" ->
+                                newStatus.equals("BOARDING")
+                                                || newStatus.equals("CANCELLED");
+
+                case "BOARDING" ->
+                                newStatus.equals("TAXIING")
+                                                || newStatus.equals("CANCELLED");
+
+                case "TAXIING" ->
+                                newStatus.equals("DEPARTED")
+                                                || newStatus.equals("CANCELLED");
+
+                case "DEPARTED" ->
+                                newStatus.equals("IN AIR");
+
+                case "IN AIR" ->
+                                newStatus.equals("LANDING");
+
+                case "LANDING" ->
+                                newStatus.equals("LANDED");
+
+                case "LANDED", "CANCELLED" ->
+                                false;
+
+                default ->
+                                false;
+        };
+
+        if (!validTransition) {
+                throw new IllegalArgumentException(
+                                "Invalid flight status transition from "
+                                                + previousStatus
+                                                + " to "
+                                                + newStatus);
+        }
+}
 }
