@@ -40,4 +40,11 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
             @Param("flightId") Long flightId,
             @Param("arrival") LocalDateTime arrival,
             @Param("departure") LocalDateTime departure);
+
+    boolean existsByAircraftId(Long aircraftId);
+
+    boolean existsByDepartureAirportId(Long airportId);
+
+    boolean existsByArrivalAirportId(Long airportId);
+    boolean existsByRouteId(Long routeId);
 }

@@ -13,14 +13,19 @@ import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.mapper.AirportMapper;
 import com.airhive.backend.repository.AirportRepository;
+import com.airhive.backend.repository.FlightRepository;
 
 @Service
 public class AirportService {
 
     private final AirportRepository airportRepository;
+    private final FlightRepository flightRepository;
 
-    public AirportService(AirportRepository airportRepository) {
+    public AirportService(
+            AirportRepository airportRepository,
+            FlightRepository flightRepository) {
         this.airportRepository = airportRepository;
+        this.flightRepository = flightRepository;
     }
 
     @Cacheable("airports")

@@ -22,6 +22,7 @@ import com.airhive.backend.entity.Airport;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AirportRepository;
+import com.airhive.backend.repository.FlightRepository;
 
 @ExtendWith(MockitoExtension.class)
 class AirportServiceTest {
@@ -29,12 +30,15 @@ class AirportServiceTest {
         @Mock
         private AirportRepository airportRepository;
 
+        @Mock
+        private FlightRepository flightRepository;
+
         private AirportService airportService;
 
         @BeforeEach
         @SuppressWarnings("unused")
         void setUp() {
-                airportService = new AirportService(airportRepository);
+                airportService = new AirportService(airportRepository, flightRepository);
         }
 
         private AirportRequestDTO validRequest() {

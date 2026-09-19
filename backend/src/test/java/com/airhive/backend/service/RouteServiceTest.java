@@ -23,6 +23,7 @@ import com.airhive.backend.entity.Route;
 import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AirportRepository;
+import com.airhive.backend.repository.FlightRepository;
 import com.airhive.backend.repository.RouteRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +35,9 @@ class RouteServiceTest {
         @Mock
         private AirportRepository airportRepository;
 
+        @Mock
+        private FlightRepository flightRepository;
+
         private RouteService routeService;
 
         @BeforeEach
@@ -41,7 +45,8 @@ class RouteServiceTest {
         void setUp() {
                 routeService = new RouteService(
                                 routeRepository,
-                                airportRepository);
+                                airportRepository,
+                                flightRepository);
         }
 
         private RouteRequestDTO validRequest() {
@@ -455,6 +460,9 @@ class RouteServiceTest {
 
                 when(routeRepository.findById(1L))
                                 .thenReturn(Optional.of(route));
+
+                when(flightRepository.existsByRouteId(1L))
+                        .thenReturn(false);
 
                 routeService.deleteRoute(1L);
 

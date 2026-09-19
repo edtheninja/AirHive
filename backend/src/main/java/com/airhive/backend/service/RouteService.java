@@ -8,8 +8,10 @@ import com.airhive.backend.dto.RouteRequestDTO;
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.entity.Route;
 import com.airhive.backend.exception.DuplicateResourceException;
+import com.airhive.backend.exception.ResourceInUseException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AirportRepository;
+import com.airhive.backend.repository.FlightRepository;
 import com.airhive.backend.repository.RouteRepository;
 
 @Service
@@ -17,13 +19,16 @@ public class RouteService {
 
     private final RouteRepository routeRepository;
     private final AirportRepository airportRepository;
+    private final FlightRepository flightRepository;
 
     public RouteService(
             RouteRepository routeRepository,
-            AirportRepository airportRepository) {
+            AirportRepository airportRepository,
+            FlightRepository flightRepository) {
 
         this.routeRepository = routeRepository;
         this.airportRepository = airportRepository;
+        this.flightRepository = flightRepository;
     }
 
     public List<Route> getAllRoutes() {
@@ -152,10 +157,15 @@ public class RouteService {
 
     public void deleteRoute(Long id) {
 
-        Route route = getRouteById(id);
+    Route route = getRouteById(id);
 
-        routeRepository.delete(route);
+    if (flightRepository.existsByRouteId(id)) {
+        throw new ResourceInUseException(
+                "Route cannot be deleted because it is referenced by one or more flights");
     }
+
+    routeRepository.delete(route);
+}
 
     private void validateRoute(RouteRequestDTO request) {
 

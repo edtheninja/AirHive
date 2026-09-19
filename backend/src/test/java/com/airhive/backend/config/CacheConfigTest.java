@@ -25,6 +25,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.repository.AirportRepository;
+import com.airhive.backend.repository.FlightRepository;
 import com.airhive.backend.service.AirportService;
 
 @SpringJUnitConfig(classes = {
@@ -55,10 +56,16 @@ class CacheConfigTest {
         }
 
         @Bean
-        AirportService airportService(
-                AirportRepository airportRepository) {
+        FlightRepository flightRepository() {
+            return mock(FlightRepository.class);
+        }
 
-            return new AirportService(airportRepository);
+        @Bean
+        AirportService airportService(
+                AirportRepository airportRepository,
+                FlightRepository flightRepository) {
+
+            return new AirportService(airportRepository, flightRepository);
         }
     }
 
