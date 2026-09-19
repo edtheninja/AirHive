@@ -28,6 +28,7 @@ import com.airhive.backend.exception.DuplicateResourceException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AircraftRepository;
 import com.airhive.backend.repository.AirportRepository;
+import com.airhive.backend.repository.FlightActivityRepository;
 import com.airhive.backend.repository.FlightRepository;
 import com.airhive.backend.repository.RouteRepository;
 
@@ -53,6 +54,9 @@ class FlightServiceTest {
 
         @Mock
         private FlightActivityService flightActivityService;
+
+        @Mock
+        private FlightActivityRepository flightActivityRepository;
 
         @InjectMocks
         private FlightService flightService;
@@ -544,6 +548,9 @@ class FlightServiceTest {
 
                 when(flightRepository.findById(1L))
                                 .thenReturn(Optional.of(existingFlight));
+
+                when(flightActivityRepository.existsByFlightId(1L))
+                                .thenReturn(false);
 
                 flightService.deleteFlight(1L);
 

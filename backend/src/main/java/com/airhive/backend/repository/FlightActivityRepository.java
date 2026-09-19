@@ -10,4 +10,6 @@ public interface FlightActivityRepository
         extends JpaRepository<FlightActivity, Long> {
 
     List<FlightActivity> findByFlightIdOrderByCreatedAtDesc(Long flightId);
+
+    boolean existsByFlightId(Long flightId);
 }

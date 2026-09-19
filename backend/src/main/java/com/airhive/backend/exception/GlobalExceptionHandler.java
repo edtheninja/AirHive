@@ -86,4 +86,15 @@ public class GlobalExceptionHandler {
                                                 "status", HttpStatus.BAD_REQUEST.value(),
                                                 "message", exception.getMessage()));
         }
+
+        @ExceptionHandler(ResourceInUseException.class)
+        public ResponseEntity<Map<String, Object>> handleResourceInUse(
+                        ResourceInUseException exception) {
+
+                return ResponseEntity
+                                .status(HttpStatus.CONFLICT)
+                                .body(Map.of(
+                                                "status", HttpStatus.CONFLICT.value(),
+                                                "message", exception.getMessage()));
+        }
 }

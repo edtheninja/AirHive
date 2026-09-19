@@ -15,10 +15,12 @@ import com.airhive.backend.entity.Airport;
 import com.airhive.backend.entity.Flight;
 import com.airhive.backend.entity.Route;
 import com.airhive.backend.exception.DuplicateResourceException;
+import com.airhive.backend.exception.ResourceInUseException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.mapper.FlightMapper;
 import com.airhive.backend.repository.AircraftRepository;
 import com.airhive.backend.repository.AirportRepository;
+import com.airhive.backend.repository.FlightActivityRepository;
 import com.airhive.backend.repository.FlightRepository;
 import com.airhive.backend.repository.RouteRepository;
 
@@ -38,6 +40,7 @@ public class FlightService {
         private final AircraftRepository aircraftRepository;
         private final AirportRepository airportRepository;
         private final RouteRepository routeRepository;
+        private final FlightActivityRepository flightActivityRepository;
         private final FlightWebSocketService flightWebSocketService;
         private final FlightNotificationService flightNotificationService;
         private final FlightActivityService flightActivityService;
@@ -47,6 +50,7 @@ public class FlightService {
                         AircraftRepository aircraftRepository,
                         AirportRepository airportRepository,
                         RouteRepository routeRepository,
+                        FlightActivityRepository flightActivityRepository,
                         FlightWebSocketService flightWebSocketService,
                         FlightNotificationService flightNotificationService,
                         FlightActivityService flightActivityService) {
@@ -55,6 +59,7 @@ public class FlightService {
                 this.aircraftRepository = aircraftRepository;
                 this.airportRepository = airportRepository;
                 this.routeRepository = routeRepository;
+                this.flightActivityRepository = flightActivityRepository;
                 this.flightWebSocketService = flightWebSocketService;
                 this.flightNotificationService = flightNotificationService;
                 this.flightActivityService = flightActivityService;
@@ -172,7 +177,8 @@ public class FlightService {
                                 .map(FlightMapper::toResponse)
                                 .toList();
         }
-        @Transactional 
+
+        @Transactional
         @CacheEvict(value = "flights", allEntries = true)
         public FlightResponseDTO updateFlight(
                         Long id,
@@ -273,7 +279,8 @@ public class FlightService {
                 flightWebSocketService.publishFlightUpdated(response);
                 return response;
         }
-        @Transactional 
+
+        @Transactional
         @CacheEvict(value = "flights", allEntries = true)
         public FlightResponseDTO updateFlightStatus(
                         Long id,
@@ -328,11 +335,17 @@ public class FlightService {
 
                 return response;
         }
-        @Transactional 
+
+        @Transactional
         @CacheEvict(value = "flights", allEntries = true)
         public void deleteFlight(Long id) {
 
                 Flight flight = getFlightEntityById(id);
+
+                if (flightActivityRepository.existsByFlightId(id)) {
+                        throw new ResourceInUseException(
+                                        "Flight cannot be deleted because it has associated activity records");
+                }
 
                 FlightResponseDTO response = FlightMapper.toResponse(flight);
 

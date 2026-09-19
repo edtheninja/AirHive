@@ -9,19 +9,24 @@ import org.springframework.stereotype.Service;
 import com.airhive.backend.dto.AircraftTypeRequestDTO;
 import com.airhive.backend.dto.AircraftTypeResponseDTO;
 import com.airhive.backend.entity.AircraftType;
+import com.airhive.backend.exception.ResourceInUseException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.mapper.AircraftTypeMapper;
+import com.airhive.backend.repository.AircraftRepository;
 import com.airhive.backend.repository.AircraftTypeRepository;
 
 @Service
 public class AircraftTypeService {
 
     private final AircraftTypeRepository aircraftTypeRepository;
+    private final AircraftRepository aircraftRepository;
 
     public AircraftTypeService(
-            AircraftTypeRepository aircraftTypeRepository) {
+            AircraftTypeRepository aircraftTypeRepository,
+            AircraftRepository aircraftRepository) {
 
         this.aircraftTypeRepository = aircraftTypeRepository;
+        this.aircraftRepository = aircraftRepository;
     }
 
     @Cacheable("aircraftTypes")
@@ -74,7 +79,14 @@ public class AircraftTypeService {
     @CacheEvict(value = { "aircraftTypes", "aircraft" }, allEntries = true)
     public void deleteAircraftType(Long id) {
 
-        aircraftTypeRepository.delete(findEntityById(id));
+        AircraftType aircraftType = findEntityById(id);
+
+        if (aircraftRepository.existsByAircraftTypeId(id)) {
+            throw new ResourceInUseException(
+                    "Aircraft type cannot be deleted because it is referenced by one or more aircraft");
+        }
+
+        aircraftTypeRepository.delete(aircraftType);
     }
 
     private void applyRequest(

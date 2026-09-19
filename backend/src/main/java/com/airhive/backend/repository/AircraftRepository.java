@@ -1,13 +1,15 @@
 package com.airhive.backend.repository;
 
-import com.airhive.backend.entity.Aircraft;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import com.airhive.backend.entity.Aircraft;
 
 public interface AircraftRepository extends JpaRepository<Aircraft, Long> {
 
     Optional<Aircraft> findByRegistrationNumber(String registrationNumber);
 
     boolean existsByRegistrationNumber(String registrationNumber);
+    boolean existsByAircraftTypeId(Long aircraftTypeId);
 }

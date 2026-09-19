@@ -19,6 +19,7 @@ import com.airhive.backend.dto.AircraftTypeRequestDTO;
 import com.airhive.backend.dto.AircraftTypeResponseDTO;
 import com.airhive.backend.entity.AircraftType;
 import com.airhive.backend.exception.ResourceNotFoundException;
+import com.airhive.backend.repository.AircraftRepository;
 import com.airhive.backend.repository.AircraftTypeRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +27,9 @@ class AircraftTypeServiceTest {
 
     @Mock
     private AircraftTypeRepository aircraftTypeRepository;
+
+    @Mock
+    private AircraftRepository aircraftRepository;
 
     @InjectMocks
     private AircraftTypeService aircraftTypeService;
@@ -152,6 +156,9 @@ class AircraftTypeServiceTest {
 
         when(aircraftTypeRepository.findById(1L))
                 .thenReturn(Optional.of(aircraftType));
+        
+        when(aircraftRepository.existsByAircraftTypeId(1L))
+        .thenReturn(false);
 
         aircraftTypeService.deleteAircraftType(1L);
 
