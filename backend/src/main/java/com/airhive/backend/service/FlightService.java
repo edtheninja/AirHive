@@ -189,6 +189,17 @@ public class FlightService {
 
                 validateRequest(request);
 
+                String newStatus = request.getStatus()
+                                .trim()
+                                .toUpperCase();
+
+                if (!VALID_FLIGHT_STATUSES.contains(newStatus)) {
+                        throw new IllegalArgumentException(
+                                        "Invalid flight status: " + request.getStatus());
+                }
+
+                validateStatusTransition(previousStatus, newStatus);
+
                 if (!existingFlight.getFlightNumber()
                                 .equals(request.getFlightNumber())
                                 && flightRepository.existsByFlightNumber(
@@ -260,8 +271,7 @@ public class FlightService {
                 existingFlight.setScheduledArrival(
                                 request.getScheduledArrival());
 
-                existingFlight.setStatus(
-                                request.getStatus());
+                existingFlight.setStatus(newStatus);
 
                 Flight updatedFlight = flightRepository.save(existingFlight);
 
@@ -458,48 +468,48 @@ public class FlightService {
         }
 
         private void validateStatusTransition(
-                String previousStatus,
-                String newStatus) {
+                        String previousStatus,
+                        String newStatus) {
 
-        if (previousStatus.equals(newStatus)) {
-                return;
-        }
+                if (previousStatus.equals(newStatus)) {
+                        return;
+                }
 
-        boolean validTransition = switch (previousStatus) {
-                case "SCHEDULED" ->
+                boolean validTransition = switch (previousStatus) {
+                        case "SCHEDULED" ->
                                 newStatus.equals("BOARDING")
                                                 || newStatus.equals("CANCELLED");
 
-                case "BOARDING" ->
+                        case "BOARDING" ->
                                 newStatus.equals("TAXIING")
                                                 || newStatus.equals("CANCELLED");
 
-                case "TAXIING" ->
+                        case "TAXIING" ->
                                 newStatus.equals("DEPARTED")
                                                 || newStatus.equals("CANCELLED");
 
-                case "DEPARTED" ->
+                        case "DEPARTED" ->
                                 newStatus.equals("IN AIR");
 
-                case "IN AIR" ->
+                        case "IN AIR" ->
                                 newStatus.equals("LANDING");
 
-                case "LANDING" ->
+                        case "LANDING" ->
                                 newStatus.equals("LANDED");
 
-                case "LANDED", "CANCELLED" ->
+                        case "LANDED", "CANCELLED" ->
                                 false;
 
-                default ->
+                        default ->
                                 false;
-        };
+                };
 
-        if (!validTransition) {
-                throw new IllegalArgumentException(
-                                "Invalid flight status transition from "
-                                                + previousStatus
-                                                + " to "
-                                                + newStatus);
+                if (!validTransition) {
+                        throw new IllegalArgumentException(
+                                        "Invalid flight status transition from "
+                                                        + previousStatus
+                                                        + " to "
+                                                        + newStatus);
+                }
         }
-}
 }
