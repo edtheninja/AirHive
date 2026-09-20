@@ -46,9 +46,9 @@ class AircraftServiceTest {
         @SuppressWarnings("unused")
         void setUp() {
                 aircraftService = new AircraftService(
-                aircraftRepository,
-                flightRepository,
-                aircraftTypeService);
+                                aircraftRepository,
+                                flightRepository,
+                                aircraftTypeService);
                 defaultType = new AircraftType();
                 defaultType.setTypeCode("A320");
         }
@@ -251,6 +251,112 @@ class AircraftServiceTest {
         }
 
         @Test
+        void updateAircraft_shouldRejectAircraftTypeChange_whenAircraftIsReferencedByFlight() {
+
+                Aircraft existingAircraft = new Aircraft();
+                existingAircraft.setRegistrationNumber("VT-AIR01");
+                existingAircraft.setStatus("ACTIVE");
+                existingAircraft.setAircraftType(defaultType);
+
+                AircraftType anotherType = new AircraftType();
+
+                try {
+                        java.lang.reflect.Field idField = AircraftType.class.getDeclaredField("id");
+                        idField.setAccessible(true);
+                        idField.set(anotherType, 2L);
+                } catch (ReflectiveOperationException exception) {
+                        throw new RuntimeException(exception);
+                }
+
+                anotherType.setTypeCode("B737");
+
+                Aircraft updatedAircraft = new Aircraft();
+                updatedAircraft.setRegistrationNumber("VT-AIR01");
+                updatedAircraft.setStatus("ACTIVE");
+                updatedAircraft.setAircraftType(anotherType);
+
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(existingAircraft));
+
+                when(flightRepository.existsByAircraftId(1L))
+                                .thenReturn(true);
+
+                ResourceInUseException exception = assertThrows(
+                                ResourceInUseException.class,
+                                () -> aircraftService.updateAircraft(1L, updatedAircraft));
+
+                assertEquals(
+                                "Aircraft type cannot be changed because the aircraft is referenced by one or more flights",
+                                exception.getMessage());
+
+                verify(aircraftRepository).findById(1L);
+                verify(flightRepository).existsByAircraftId(1L);
+                verify(aircraftRepository, never()).save(any(Aircraft.class));
+        }
+
+        @Test
+        void updateAircraft_shouldAllowSameAircraftType_whenAircraftIsReferencedByFlight() {
+
+                Aircraft existingAircraft = new Aircraft();
+                existingAircraft.setRegistrationNumber("VT-AIR01");
+                existingAircraft.setStatus("ACTIVE");
+                existingAircraft.setAircraftType(defaultType);
+
+                Aircraft updatedAircraft = new Aircraft();
+                updatedAircraft.setRegistrationNumber("VT-AIR99");
+                updatedAircraft.setStatus("INACTIVE");
+                updatedAircraft.setAircraftType(defaultType);
+
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(existingAircraft));
+
+                when(aircraftRepository.save(existingAircraft))
+                                .thenReturn(existingAircraft);
+
+                AircraftResponseDTO result = aircraftService.updateAircraft(1L, updatedAircraft);
+
+                assertEquals("VT-AIR99", result.getRegistrationNumber());
+                assertEquals("INACTIVE", result.getStatus());
+
+                verify(aircraftRepository).findById(1L);
+                verify(aircraftRepository).save(existingAircraft);
+                verify(flightRepository, never()).existsByAircraftId(1L);
+        }
+
+        @Test
+        void updateAircraft_shouldRejectAircraftTypeChangeUsingRequestDTO_whenAircraftIsReferencedByFlight() {
+
+                Aircraft existingAircraft = new Aircraft();
+                existingAircraft.setRegistrationNumber("VT-AIR01");
+                existingAircraft.setStatus("ACTIVE");
+                existingAircraft.setAircraftType(defaultType);
+
+                AircraftRequestDTO request = new AircraftRequestDTO();
+                request.setRegistrationNumber("VT-AIR01");
+                request.setStatus("ACTIVE");
+                request.setAircraftTypeId(2L);
+
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(existingAircraft));
+
+                when(flightRepository.existsByAircraftId(1L))
+                                .thenReturn(true);
+
+                ResourceInUseException exception = assertThrows(
+                                ResourceInUseException.class,
+                                () -> aircraftService.updateAircraft(1L, request));
+
+                assertEquals(
+                                "Aircraft type cannot be changed because the aircraft is referenced by one or more flights",
+                                exception.getMessage());
+
+                verify(aircraftRepository).findById(1L);
+                verify(flightRepository).existsByAircraftId(1L);
+                verify(aircraftRepository, never()).save(any(Aircraft.class));
+                verify(aircraftTypeService, never()).findEntityById(anyLong());
+        }
+
+        @Test
         void updateAircraft_shouldThrowException_whenAircraftDoesNotExist() {
 
                 Aircraft updatedAircraft = new Aircraft();
@@ -305,110 +411,110 @@ class AircraftServiceTest {
         }
 
         @Test
-void updateAircraft_shouldThrowException_whenRegistrationBelongsToAnotherAircraft() {
-    Aircraft existingAircraft = new Aircraft();
-    existingAircraft.setRegistrationNumber("VT-AIR01");
-    existingAircraft.setStatus("ACTIVE");
-    existingAircraft.setAircraftType(defaultType);
+        void updateAircraft_shouldThrowException_whenRegistrationBelongsToAnotherAircraft() {
+                Aircraft existingAircraft = new Aircraft();
+                existingAircraft.setRegistrationNumber("VT-AIR01");
+                existingAircraft.setStatus("ACTIVE");
+                existingAircraft.setAircraftType(defaultType);
 
-    Aircraft updatedAircraft = new Aircraft();
-    updatedAircraft.setRegistrationNumber("VT-AIR02");
-    updatedAircraft.setStatus("INACTIVE");
-    updatedAircraft.setAircraftType(defaultType);
+                Aircraft updatedAircraft = new Aircraft();
+                updatedAircraft.setRegistrationNumber("VT-AIR02");
+                updatedAircraft.setStatus("INACTIVE");
+                updatedAircraft.setAircraftType(defaultType);
 
-    when(aircraftRepository.findById(1L))
-            .thenReturn(Optional.of(existingAircraft));
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(existingAircraft));
 
-    when(aircraftRepository.existsByRegistrationNumberAndIdNot(
-            "VT-AIR02", 1L))
-            .thenReturn(true);
+                when(aircraftRepository.existsByRegistrationNumberAndIdNot(
+                                "VT-AIR02", 1L))
+                                .thenReturn(true);
 
-    DuplicateResourceException exception = assertThrows(
-            DuplicateResourceException.class,
-            () -> aircraftService.updateAircraft(1L, updatedAircraft));
+                DuplicateResourceException exception = assertThrows(
+                                DuplicateResourceException.class,
+                                () -> aircraftService.updateAircraft(1L, updatedAircraft));
 
-    assertEquals(
-            "Aircraft already exists with registration number: VT-AIR02",
-            exception.getMessage());
+                assertEquals(
+                                "Aircraft already exists with registration number: VT-AIR02",
+                                exception.getMessage());
 
-    verify(aircraftRepository).findById(1L);
-    verify(aircraftRepository)
-            .existsByRegistrationNumberAndIdNot("VT-AIR02", 1L);
-    verify(aircraftRepository, never()).save(any(Aircraft.class));
-}
-
-@Test
-void updateAircraft_shouldThrowException_whenRequestRegistrationBelongsToAnotherAircraft() {
-    Aircraft existingAircraft = new Aircraft();
-    existingAircraft.setRegistrationNumber("VT-AIR01");
-    existingAircraft.setStatus("ACTIVE");
-    existingAircraft.setAircraftType(defaultType);
-
-    AircraftRequestDTO request = new AircraftRequestDTO();
-    request.setRegistrationNumber("VT-AIR02");
-    request.setStatus("ACTIVE");
-    request.setAircraftTypeId(1L);
-
-    when(aircraftRepository.findById(1L))
-            .thenReturn(Optional.of(existingAircraft));
-
-    when(aircraftRepository.existsByRegistrationNumberAndIdNot(
-            "VT-AIR02", 1L))
-            .thenReturn(true);
-
-    DuplicateResourceException exception = assertThrows(
-            DuplicateResourceException.class,
-            () -> aircraftService.updateAircraft(1L, request));
-
-    assertEquals(
-            "Aircraft already exists with registration number: VT-AIR02",
-            exception.getMessage());
-
-    verify(aircraftRepository).findById(1L);
-    verify(aircraftRepository)
-            .existsByRegistrationNumberAndIdNot("VT-AIR02", 1L);
-    verify(aircraftRepository, never()).save(any(Aircraft.class));
-    verify(aircraftTypeService, never()).findEntityById(anyLong());
-}
+                verify(aircraftRepository).findById(1L);
+                verify(aircraftRepository)
+                                .existsByRegistrationNumberAndIdNot("VT-AIR02", 1L);
+                verify(aircraftRepository, never()).save(any(Aircraft.class));
+        }
 
         @Test
-void deleteAircraft_shouldReject_whenAircraftIsReferencedByFlight() {
+        void updateAircraft_shouldThrowException_whenRequestRegistrationBelongsToAnotherAircraft() {
+                Aircraft existingAircraft = new Aircraft();
+                existingAircraft.setRegistrationNumber("VT-AIR01");
+                existingAircraft.setStatus("ACTIVE");
+                existingAircraft.setAircraftType(defaultType);
 
-        Aircraft aircraft = new Aircraft();
+                AircraftRequestDTO request = new AircraftRequestDTO();
+                request.setRegistrationNumber("VT-AIR02");
+                request.setStatus("ACTIVE");
+                request.setAircraftTypeId(1L);
 
-        when(aircraftRepository.findById(1L))
-                        .thenReturn(Optional.of(aircraft));
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(existingAircraft));
 
-        when(flightRepository.existsByAircraftId(1L))
-                        .thenReturn(true);
+                when(aircraftRepository.existsByRegistrationNumberAndIdNot(
+                                "VT-AIR02", 1L))
+                                .thenReturn(true);
 
-        ResourceInUseException exception = assertThrows(
-                        ResourceInUseException.class,
-                        () -> aircraftService.deleteAircraft(1L));
+                DuplicateResourceException exception = assertThrows(
+                                DuplicateResourceException.class,
+                                () -> aircraftService.updateAircraft(1L, request));
 
-        assertEquals(
-                        "Aircraft cannot be deleted because it is referenced by one or more flights",
-                        exception.getMessage());
+                assertEquals(
+                                "Aircraft already exists with registration number: VT-AIR02",
+                                exception.getMessage());
 
-        verify(flightRepository).existsByAircraftId(1L);
-        verify(aircraftRepository, never()).delete(any(Aircraft.class));
-}
+                verify(aircraftRepository).findById(1L);
+                verify(aircraftRepository)
+                                .existsByRegistrationNumberAndIdNot("VT-AIR02", 1L);
+                verify(aircraftRepository, never()).save(any(Aircraft.class));
+                verify(aircraftTypeService, never()).findEntityById(anyLong());
+        }
 
-@Test
-void deleteAircraft_shouldDelete_whenAircraftIsNotReferencedByFlight() {
+        @Test
+        void deleteAircraft_shouldReject_whenAircraftIsReferencedByFlight() {
 
-        Aircraft aircraft = new Aircraft();
+                Aircraft aircraft = new Aircraft();
 
-        when(aircraftRepository.findById(1L))
-                        .thenReturn(Optional.of(aircraft));
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(aircraft));
 
-        when(flightRepository.existsByAircraftId(1L))
-                        .thenReturn(false);
+                when(flightRepository.existsByAircraftId(1L))
+                                .thenReturn(true);
 
-        aircraftService.deleteAircraft(1L);
+                ResourceInUseException exception = assertThrows(
+                                ResourceInUseException.class,
+                                () -> aircraftService.deleteAircraft(1L));
 
-        verify(flightRepository).existsByAircraftId(1L);
-        verify(aircraftRepository).delete(aircraft);
-}
+                assertEquals(
+                                "Aircraft cannot be deleted because it is referenced by one or more flights",
+                                exception.getMessage());
+
+                verify(flightRepository).existsByAircraftId(1L);
+                verify(aircraftRepository, never()).delete(any(Aircraft.class));
+        }
+
+        @Test
+        void deleteAircraft_shouldDelete_whenAircraftIsNotReferencedByFlight() {
+
+                Aircraft aircraft = new Aircraft();
+
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(aircraft));
+
+                when(flightRepository.existsByAircraftId(1L))
+                                .thenReturn(false);
+
+                aircraftService.deleteAircraft(1L);
+
+                verify(flightRepository).existsByAircraftId(1L);
+                verify(aircraftRepository).delete(aircraft);
+        }
 
 }

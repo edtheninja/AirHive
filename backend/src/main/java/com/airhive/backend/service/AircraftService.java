@@ -1,6 +1,7 @@
 package com.airhive.backend.service;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -72,6 +73,7 @@ public class AircraftService {
         public AircraftResponseDTO updateAircraft(Long id, Aircraft updatedAircraft) {
 
                 Aircraft aircraft = getAircraftEntityById(id);
+
                 if (aircraftRepository.existsByRegistrationNumberAndIdNot(
                                 updatedAircraft.getRegistrationNumber(),
                                 id)) {
@@ -80,6 +82,11 @@ public class AircraftService {
                                         "Aircraft already exists with registration number: "
                                                         + updatedAircraft.getRegistrationNumber());
                 }
+
+                validateAircraftTypeUpdate(
+                                id,
+                                updatedAircraft.getAircraftType().getId(),
+                                aircraft);
 
                 aircraft.setRegistrationNumber(
                                 updatedAircraft.getRegistrationNumber());
@@ -95,7 +102,9 @@ public class AircraftService {
 
         @CacheEvict(value = { "aircraft", "flights" }, allEntries = true)
         public AircraftResponseDTO updateAircraft(Long id, AircraftRequestDTO request) {
+
                 Aircraft aircraft = getAircraftEntityById(id);
+
                 if (aircraftRepository.existsByRegistrationNumberAndIdNot(
                                 request.getRegistrationNumber(),
                                 id)) {
@@ -104,9 +113,32 @@ public class AircraftService {
                                         "Aircraft already exists with registration number: "
                                                         + request.getRegistrationNumber());
                 }
+
+                validateAircraftTypeUpdate(
+                                id,
+                                request.getAircraftTypeId(),
+                                aircraft);
+
                 applyRequest(aircraft, request);
+
                 return AircraftMapper.toResponse(aircraftRepository.save(aircraft));
         }
+
+        private void validateAircraftTypeUpdate(
+                Long aircraftId,
+                Long requestedAircraftTypeId,
+                Aircraft existingAircraft) {
+
+        Long existingAircraftTypeId =
+                        existingAircraft.getAircraftType().getId();
+
+        if (!Objects.equals(existingAircraftTypeId, requestedAircraftTypeId)
+                        && flightRepository.existsByAircraftId(aircraftId)) {
+
+                throw new ResourceInUseException(
+                                "Aircraft type cannot be changed because the aircraft is referenced by one or more flights");
+        }
+}
 
         private Aircraft getAircraftEntityById(Long id) {
                 return aircraftRepository.findById(id)
