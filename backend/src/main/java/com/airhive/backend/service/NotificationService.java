@@ -91,6 +91,7 @@ public class NotificationService {
 
     @Transactional
     public void clearNotifications(Long userId) {
+        ensureUserExists(userId);
         notificationRepository.deleteByUserId(userId);
     }
 

@@ -20,6 +20,7 @@ import com.airhive.backend.service.AirportService;
 import com.airhive.backend.service.BookingService;
 import com.airhive.backend.service.CrewMemberService;
 import com.airhive.backend.service.MaintenanceService;
+import com.airhive.backend.service.NotificationService;
 import com.airhive.backend.service.PassengerService;
 
 @SpringBootTest
@@ -42,6 +43,9 @@ class SecurityConfigIntegrationTest {
 
         @MockitoBean
         private PassengerService passengerService;
+
+        @MockitoBean
+        private NotificationService notificationService;
 
         @Test
         void unauthenticatedGetReturns401() throws Exception {
@@ -324,8 +328,10 @@ class SecurityConfigIntegrationTest {
         void viewerCanDeleteOwnNotifications() throws Exception {
                 mockMvc.perform(delete("/api/notifications")
                                 .with(csrf())
-                                .with(jwt().authorities(
-                                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
+                                .with(jwt()
+                                                .jwt(jwt -> jwt.claim("userId", 1L))
+                                                .authorities(
+                                                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
                                 .andExpect(status().isNoContent());
         }
 
@@ -333,8 +339,10 @@ class SecurityConfigIntegrationTest {
         void operatorCanDeleteOwnNotifications() throws Exception {
                 mockMvc.perform(delete("/api/notifications")
                                 .with(csrf())
-                                .with(jwt().authorities(
-                                                new SimpleGrantedAuthority("ROLE_OPERATOR"))))
+                                .with(jwt()
+                                                .jwt(jwt -> jwt.claim("userId", 1L))
+                                                .authorities(
+                                                                new SimpleGrantedAuthority("ROLE_OPERATOR"))))
                                 .andExpect(status().isNoContent());
         }
 
@@ -342,8 +350,10 @@ class SecurityConfigIntegrationTest {
         void adminCanDeleteOwnNotifications() throws Exception {
                 mockMvc.perform(delete("/api/notifications")
                                 .with(csrf())
-                                .with(jwt().authorities(
-                                                new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                                .with(jwt()
+                                                .jwt(jwt -> jwt.claim("userId", 1L))
+                                                .authorities(
+                                                                new SimpleGrantedAuthority("ROLE_ADMIN"))))
                                 .andExpect(status().isNoContent());
         }
 
