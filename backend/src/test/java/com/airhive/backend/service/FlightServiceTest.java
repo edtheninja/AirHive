@@ -245,6 +245,78 @@ class FlightServiceTest {
         }
 
         @Test
+        void createFlight_shouldThrowException_whenDepartureAirportDoesNotMatchRoute() {
+
+                when(flightRepository.existsByFlightNumber("AI101"))
+                                .thenReturn(false);
+
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(aircraft));
+
+                Airport wrongDepartureAirport = new Airport();
+                wrongDepartureAirport.setId(3L);
+                wrongDepartureAirport.setIataCode("BLR");
+
+                when(airportRepository.findById(3L))
+                                .thenReturn(Optional.of(wrongDepartureAirport));
+
+                when(airportRepository.findById(2L))
+                                .thenReturn(Optional.of(arrivalAirport));
+
+                when(routeRepository.findById(1L))
+                                .thenReturn(Optional.of(route));
+
+                request.setDepartureAirportId(3L);
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> flightService.createFlight(request));
+
+                assertEquals(
+                                "Flight departure airport does not match route",
+                                exception.getMessage());
+
+                verify(flightRepository, never())
+                                .save(any(Flight.class));
+        }
+
+        @Test
+        void createFlight_shouldThrowException_whenArrivalAirportDoesNotMatchRoute() {
+
+                when(flightRepository.existsByFlightNumber("AI101"))
+                                .thenReturn(false);
+
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(aircraft));
+
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(departureAirport));
+
+                Airport wrongArrivalAirport = new Airport();
+                wrongArrivalAirport.setId(3L);
+                wrongArrivalAirport.setIataCode("BLR");
+
+                when(airportRepository.findById(3L))
+                                .thenReturn(Optional.of(wrongArrivalAirport));
+
+                when(routeRepository.findById(1L))
+                                .thenReturn(Optional.of(route));
+
+                request.setArrivalAirportId(3L);
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> flightService.createFlight(request));
+
+                assertEquals(
+                                "Flight arrival airport does not match route",
+                                exception.getMessage());
+
+                verify(flightRepository, never())
+                                .save(any(Flight.class));
+        }
+
+        @Test
         void createFlight_shouldThrowException_whenAircraftScheduleConflicts() {
 
                 when(flightRepository.existsByFlightNumber("AI101"))
