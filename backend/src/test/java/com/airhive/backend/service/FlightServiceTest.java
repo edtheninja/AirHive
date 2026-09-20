@@ -274,6 +274,47 @@ class FlightServiceTest {
         }
 
         @Test
+        void createFlight_shouldThrowException_whenScheduledDepartureIsAfterArrival() {
+
+                request.setScheduledDeparture(
+                                LocalDateTime.of(2026, 1, 10, 12, 0));
+
+                request.setScheduledArrival(
+                                LocalDateTime.of(2026, 1, 10, 11, 0));
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> flightService.createFlight(request));
+
+                assertEquals(
+                                "Scheduled departure must be before scheduled arrival",
+                                exception.getMessage());
+
+                verify(flightRepository, never())
+                                .save(any(Flight.class));
+        }
+
+        @Test
+        void createFlight_shouldThrowException_whenScheduledDepartureEqualsArrival() {
+
+                LocalDateTime scheduledTime = LocalDateTime.of(2026, 1, 10, 12, 0);
+
+                request.setScheduledDeparture(scheduledTime);
+                request.setScheduledArrival(scheduledTime);
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> flightService.createFlight(request));
+
+                assertEquals(
+                                "Scheduled departure must be before scheduled arrival",
+                                exception.getMessage());
+
+                verify(flightRepository, never())
+                                .save(any(Flight.class));
+        }
+
+        @Test
         void getFlightById_shouldReturnFlight() {
 
                 Flight flight = createFlightFixture();
