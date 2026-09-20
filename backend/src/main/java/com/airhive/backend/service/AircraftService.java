@@ -2,6 +2,7 @@ package com.airhive.backend.service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -23,6 +24,9 @@ public class AircraftService {
         private final AircraftRepository aircraftRepository;
         private final AircraftTypeService aircraftTypeService;
         private final FlightRepository flightRepository;
+        private static final Set<String> VALID_AIRCRAFT_STATUSES = Set.of(
+                        "ACTIVE",
+                        "INACTIVE");
 
         public AircraftService(
                         AircraftRepository aircraftRepository,
@@ -83,6 +87,8 @@ public class AircraftService {
                                                         + updatedAircraft.getRegistrationNumber());
                 }
 
+                String newStatus =
+                normalizeAircraftStatus(updatedAircraft.getStatus());
                 validateAircraftTypeUpdate(
                                 id,
                                 updatedAircraft.getAircraftType().getId(),
@@ -91,8 +97,7 @@ public class AircraftService {
                 aircraft.setRegistrationNumber(
                                 updatedAircraft.getRegistrationNumber());
 
-                aircraft.setStatus(
-                                updatedAircraft.getStatus());
+                aircraft.setStatus(newStatus);
 
                 aircraft.setAircraftType(
                                 updatedAircraft.getAircraftType());
@@ -114,6 +119,9 @@ public class AircraftService {
                                                         + request.getRegistrationNumber());
                 }
 
+                String newStatus =
+                normalizeAircraftStatus(request.getStatus());
+
                 validateAircraftTypeUpdate(
                                 id,
                                 request.getAircraftTypeId(),
@@ -125,20 +133,19 @@ public class AircraftService {
         }
 
         private void validateAircraftTypeUpdate(
-                Long aircraftId,
-                Long requestedAircraftTypeId,
-                Aircraft existingAircraft) {
+                        Long aircraftId,
+                        Long requestedAircraftTypeId,
+                        Aircraft existingAircraft) {
 
-        Long existingAircraftTypeId =
-                        existingAircraft.getAircraftType().getId();
+                Long existingAircraftTypeId = existingAircraft.getAircraftType().getId();
 
-        if (!Objects.equals(existingAircraftTypeId, requestedAircraftTypeId)
-                        && flightRepository.existsByAircraftId(aircraftId)) {
+                if (!Objects.equals(existingAircraftTypeId, requestedAircraftTypeId)
+                                && flightRepository.existsByAircraftId(aircraftId)) {
 
-                throw new ResourceInUseException(
-                                "Aircraft type cannot be changed because the aircraft is referenced by one or more flights");
+                        throw new ResourceInUseException(
+                                        "Aircraft type cannot be changed because the aircraft is referenced by one or more flights");
+                }
         }
-}
 
         private Aircraft getAircraftEntityById(Long id) {
                 return aircraftRepository.findById(id)
@@ -146,20 +153,38 @@ public class AircraftService {
                                                 "Aircraft not found with id: " + id));
         }
 
-        private void applyRequest(
-                        Aircraft aircraft,
-                        AircraftRequestDTO request) {
+        private String normalizeAircraftStatus(String status) {
 
-                aircraft.setRegistrationNumber(
-                                request.getRegistrationNumber());
-
-                aircraft.setStatus(
-                                request.getStatus());
-
-                aircraft.setAircraftType(
-                                aircraftTypeService.findEntityById(
-                                                request.getAircraftTypeId()));
+        if (status == null || status.isBlank()) {
+                throw new IllegalArgumentException(
+                                "Aircraft status is required");
         }
+
+        String normalizedStatus = status.trim().toUpperCase();
+
+        if (!VALID_AIRCRAFT_STATUSES.contains(normalizedStatus)) {
+                throw new IllegalArgumentException(
+                                "Invalid aircraft status: " + status);
+        }
+
+        return normalizedStatus;
+}
+
+        private void applyRequest(
+                Aircraft aircraft,
+                AircraftRequestDTO request) {
+
+        String newStatus =
+                normalizeAircraftStatus(request.getStatus());
+        aircraft.setRegistrationNumber(
+                        request.getRegistrationNumber());
+
+        aircraft.setStatus(newStatus);
+
+        aircraft.setAircraftType(
+                        aircraftTypeService.findEntityById(
+                                        request.getAircraftTypeId()));
+}
 
         @CacheEvict(value = { "aircraft", "flights" }, allEntries = true)
         public void deleteAircraft(Long id) {

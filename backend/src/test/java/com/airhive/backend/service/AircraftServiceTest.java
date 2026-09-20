@@ -501,6 +501,77 @@ class AircraftServiceTest {
         }
 
         @Test
+        void updateAircraft_shouldRejectInvalidStatus() {
+
+                Aircraft existingAircraft = new Aircraft();
+                existingAircraft.setRegistrationNumber("VT-AIR01");
+                existingAircraft.setStatus("ACTIVE");
+                existingAircraft.setAircraftType(defaultType);
+
+                Aircraft updatedAircraft = new Aircraft();
+                updatedAircraft.setRegistrationNumber("VT-AIR99");
+                updatedAircraft.setStatus("MAINTENANCE");
+                updatedAircraft.setAircraftType(defaultType);
+
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(existingAircraft));
+
+                when(aircraftRepository.existsByRegistrationNumberAndIdNot(
+                                "VT-AIR99", 1L))
+                                .thenReturn(false);
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> aircraftService.updateAircraft(
+                                                1L,
+                                                updatedAircraft));
+
+                assertEquals(
+                                "Invalid aircraft status: MAINTENANCE",
+                                exception.getMessage());
+
+                verify(aircraftRepository, never())
+                                .save(any(Aircraft.class));
+        }
+
+        @Test
+        void updateAircraft_shouldRejectInvalidStatusUsingRequestDTO() {
+
+                Aircraft existingAircraft = new Aircraft();
+                existingAircraft.setRegistrationNumber("VT-AIR01");
+                existingAircraft.setStatus("ACTIVE");
+                existingAircraft.setAircraftType(defaultType);
+
+                AircraftRequestDTO request = new AircraftRequestDTO();
+                request.setRegistrationNumber("VT-AIR01");
+                request.setStatus("MAINTENANCE");
+                request.setAircraftTypeId(1L);
+
+                when(aircraftRepository.findById(1L))
+                                .thenReturn(Optional.of(existingAircraft));
+
+                when(aircraftRepository.existsByRegistrationNumberAndIdNot(
+                                "VT-AIR01", 1L))
+                                .thenReturn(false);
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> aircraftService.updateAircraft(
+                                                1L,
+                                                request));
+
+                assertEquals(
+                                "Invalid aircraft status: MAINTENANCE",
+                                exception.getMessage());
+
+                verify(aircraftRepository, never())
+                                .save(any(Aircraft.class));
+
+                verify(aircraftTypeService, never())
+                                .findEntityById(anyLong());
+        }
+
+        @Test
         void deleteAircraft_shouldDelete_whenAircraftIsNotReferencedByFlight() {
 
                 Aircraft aircraft = new Aircraft();
