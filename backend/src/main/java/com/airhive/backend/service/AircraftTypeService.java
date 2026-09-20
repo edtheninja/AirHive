@@ -53,28 +53,45 @@ public class AircraftTypeService {
 
     @CacheEvict(value = { "aircraftTypes", "aircraft" }, allEntries = true)
     public AircraftTypeResponseDTO createAircraftType(
-            AircraftTypeRequestDTO request) {
+        AircraftTypeRequestDTO request) {
 
-        AircraftType aircraftType = new AircraftType();
+    AircraftType aircraftType = new AircraftType();
 
-        applyRequest(aircraftType, request);
+    if (aircraftTypeRepository.existsByTypeCodeIgnoreCase(
+            request.getTypeCode())) {
 
-        return AircraftTypeMapper.toResponse(
-                aircraftTypeRepository.save(aircraftType));
+        throw new IllegalArgumentException(
+                "Aircraft type already exists with type code: "
+                        + request.getTypeCode());
     }
+
+    applyRequest(aircraftType, request);
+
+    return AircraftTypeMapper.toResponse(
+            aircraftTypeRepository.save(aircraftType));
+}
 
     @CacheEvict(value = { "aircraftTypes", "aircraft" }, allEntries = true)
     public AircraftTypeResponseDTO updateAircraftType(
-            Long id,
-            AircraftTypeRequestDTO request) {
+        Long id,
+        AircraftTypeRequestDTO request) {
 
-        AircraftType existing = findEntityById(id);
+    AircraftType existing = findEntityById(id);
 
-        applyRequest(existing, request);
+    if (aircraftTypeRepository.existsByTypeCodeIgnoreCaseAndIdNot(
+            request.getTypeCode(),
+            id)) {
 
-        return AircraftTypeMapper.toResponse(
-                aircraftTypeRepository.save(existing));
+        throw new IllegalArgumentException(
+                "Aircraft type already exists with type code: "
+                        + request.getTypeCode());
     }
+
+    applyRequest(existing, request);
+
+    return AircraftTypeMapper.toResponse(
+            aircraftTypeRepository.save(existing));
+}
 
     @CacheEvict(value = { "aircraftTypes", "aircraft" }, allEntries = true)
     public void deleteAircraftType(Long id) {

@@ -119,6 +119,47 @@ class AircraftTypeServiceTest {
         }
 
         @Test
+        void createAircraftType_shouldThrow_whenTypeCodeAlreadyExists() {
+
+                when(aircraftTypeRepository.existsByTypeCodeIgnoreCase("A320"))
+                                .thenReturn(true);
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> aircraftTypeService.createAircraftType(request));
+
+                assertEquals(
+                                "Aircraft type already exists with type code: A320",
+                                exception.getMessage());
+
+                verify(aircraftTypeRepository, never())
+                                .save(any(AircraftType.class));
+        }
+
+        @Test
+        void updateAircraftType_shouldThrow_whenTypeCodeAlreadyExists() {
+
+                when(aircraftTypeRepository.findById(1L))
+                                .thenReturn(Optional.of(aircraftType));
+
+                when(aircraftTypeRepository.existsByTypeCodeIgnoreCaseAndIdNot(
+                                "A320",
+                                1L))
+                                .thenReturn(true);
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> aircraftTypeService.updateAircraftType(1L, request));
+
+                assertEquals(
+                                "Aircraft type already exists with type code: A320",
+                                exception.getMessage());
+
+                verify(aircraftTypeRepository, never())
+                                .save(any(AircraftType.class));
+        }
+
+        @Test
         void updateAircraftType_shouldReturnUpdatedAircraftType() {
 
                 when(aircraftTypeRepository.findById(1L))
