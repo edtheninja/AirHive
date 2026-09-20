@@ -310,6 +310,37 @@ class AirportServiceTest {
         }
 
         @Test
+        void updateAirport_shouldThrowException_whenIataAlreadyExists() {
+
+                Airport existing = new Airport();
+
+                existing.setIataCode("BOM");
+                existing.setIcaoCode("VABB");
+
+                AirportRequestDTO request = validRequest();
+
+                when(airportRepository.findById(1L))
+                                .thenReturn(Optional.of(existing));
+
+                when(airportRepository.existsByIataCode("DEL"))
+                                .thenReturn(true);
+
+                DuplicateResourceException exception = assertThrows(
+                                DuplicateResourceException.class,
+                                () -> airportService.updateAirport(1L, request));
+
+                assertEquals(
+                                "Airport already exists with IATA code: DEL",
+                                exception.getMessage());
+
+                verify(airportRepository)
+                                .existsByIataCode("DEL");
+
+                verify(airportRepository, never())
+                                .save(any(Airport.class));
+        }
+
+        @Test
         void updateAirport_shouldThrowException_whenAirportNotFound() {
 
                 AirportRequestDTO request = validRequest();
