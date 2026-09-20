@@ -12,4 +12,7 @@ public interface AircraftRepository extends JpaRepository<Aircraft, Long> {
 
     boolean existsByRegistrationNumber(String registrationNumber);
     boolean existsByAircraftTypeId(Long aircraftTypeId);
+    boolean existsByRegistrationNumberAndIdNot(
+        String registrationNumber,
+        Long id);
 }

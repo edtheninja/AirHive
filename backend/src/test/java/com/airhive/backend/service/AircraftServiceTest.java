@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -302,6 +303,73 @@ class AircraftServiceTest {
                 verify(aircraftTypeService).findEntityById(1L);
                 verify(aircraftRepository).save(existingAircraft);
         }
+
+        @Test
+void updateAircraft_shouldThrowException_whenRegistrationBelongsToAnotherAircraft() {
+    Aircraft existingAircraft = new Aircraft();
+    existingAircraft.setRegistrationNumber("VT-AIR01");
+    existingAircraft.setStatus("ACTIVE");
+    existingAircraft.setAircraftType(defaultType);
+
+    Aircraft updatedAircraft = new Aircraft();
+    updatedAircraft.setRegistrationNumber("VT-AIR02");
+    updatedAircraft.setStatus("INACTIVE");
+    updatedAircraft.setAircraftType(defaultType);
+
+    when(aircraftRepository.findById(1L))
+            .thenReturn(Optional.of(existingAircraft));
+
+    when(aircraftRepository.existsByRegistrationNumberAndIdNot(
+            "VT-AIR02", 1L))
+            .thenReturn(true);
+
+    DuplicateResourceException exception = assertThrows(
+            DuplicateResourceException.class,
+            () -> aircraftService.updateAircraft(1L, updatedAircraft));
+
+    assertEquals(
+            "Aircraft already exists with registration number: VT-AIR02",
+            exception.getMessage());
+
+    verify(aircraftRepository).findById(1L);
+    verify(aircraftRepository)
+            .existsByRegistrationNumberAndIdNot("VT-AIR02", 1L);
+    verify(aircraftRepository, never()).save(any(Aircraft.class));
+}
+
+@Test
+void updateAircraft_shouldThrowException_whenRequestRegistrationBelongsToAnotherAircraft() {
+    Aircraft existingAircraft = new Aircraft();
+    existingAircraft.setRegistrationNumber("VT-AIR01");
+    existingAircraft.setStatus("ACTIVE");
+    existingAircraft.setAircraftType(defaultType);
+
+    AircraftRequestDTO request = new AircraftRequestDTO();
+    request.setRegistrationNumber("VT-AIR02");
+    request.setStatus("ACTIVE");
+    request.setAircraftTypeId(1L);
+
+    when(aircraftRepository.findById(1L))
+            .thenReturn(Optional.of(existingAircraft));
+
+    when(aircraftRepository.existsByRegistrationNumberAndIdNot(
+            "VT-AIR02", 1L))
+            .thenReturn(true);
+
+    DuplicateResourceException exception = assertThrows(
+            DuplicateResourceException.class,
+            () -> aircraftService.updateAircraft(1L, request));
+
+    assertEquals(
+            "Aircraft already exists with registration number: VT-AIR02",
+            exception.getMessage());
+
+    verify(aircraftRepository).findById(1L);
+    verify(aircraftRepository)
+            .existsByRegistrationNumberAndIdNot("VT-AIR02", 1L);
+    verify(aircraftRepository, never()).save(any(Aircraft.class));
+    verify(aircraftTypeService, never()).findEntityById(anyLong());
+}
 
         @Test
 void deleteAircraft_shouldReject_whenAircraftIsReferencedByFlight() {
