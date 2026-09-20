@@ -478,16 +478,22 @@ public class FlightService {
                 boolean validTransition = switch (previousStatus) {
                         case "SCHEDULED" ->
                                 newStatus.equals("BOARDING")
+                                                || newStatus.equals("DELAYED")
                                                 || newStatus.equals("CANCELLED");
 
                         case "BOARDING" ->
                                 newStatus.equals("TAXIING")
+                                                || newStatus.equals("DELAYED")
                                                 || newStatus.equals("CANCELLED");
 
                         case "TAXIING" ->
                                 newStatus.equals("DEPARTED")
+                                                || newStatus.equals("DELAYED")
                                                 || newStatus.equals("CANCELLED");
 
+                        case "DELAYED" ->
+                                newStatus.equals("BOARDING")
+                                                || newStatus.equals("CANCELLED");
                         case "DEPARTED" ->
                                 newStatus.equals("IN AIR");
 

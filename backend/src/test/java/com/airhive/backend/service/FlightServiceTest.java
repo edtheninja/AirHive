@@ -687,6 +687,92 @@ class FlightServiceTest {
         }
 
         @Test
+        void updateFlightStatus_shouldAllowScheduledToDelayed() {
+                Flight flight = createFlightFixture();
+                flight.setStatus("SCHEDULED");
+
+                FlightStatusUpdateRequestDTO request = new FlightStatusUpdateRequestDTO();
+                request.setStatus("DELAYED");
+                request.setReason("Weather delay");
+
+                when(flightRepository.findById(1L))
+                                .thenReturn(Optional.of(flight));
+                when(flightRepository.save(any(Flight.class)))
+                                .thenReturn(flight);
+
+                flightService.updateFlightStatus(1L, request);
+
+                assertEquals("DELAYED", flight.getStatus());
+
+                verify(flightRepository).save(flight);
+        }
+
+        @Test
+        void updateFlightStatus_shouldAllowDelayedToBoarding() {
+                Flight flight = createFlightFixture();
+                flight.setStatus("DELAYED");
+
+                FlightStatusUpdateRequestDTO request = new FlightStatusUpdateRequestDTO();
+                request.setStatus("BOARDING");
+                request.setReason("Delay resolved");
+
+                when(flightRepository.findById(1L))
+                                .thenReturn(Optional.of(flight));
+                when(flightRepository.save(any(Flight.class)))
+                                .thenReturn(flight);
+
+                flightService.updateFlightStatus(1L, request);
+
+                assertEquals("BOARDING", flight.getStatus());
+
+                verify(flightRepository).save(flight);
+        }
+
+        @Test
+        void updateFlightStatus_shouldAllowDelayedToCancelled() {
+                Flight flight = createFlightFixture();
+                flight.setStatus("DELAYED");
+
+                FlightStatusUpdateRequestDTO request = new FlightStatusUpdateRequestDTO();
+                request.setStatus("CANCELLED");
+                request.setReason("Flight cancelled after extended delay");
+
+                when(flightRepository.findById(1L))
+                                .thenReturn(Optional.of(flight));
+                when(flightRepository.save(any(Flight.class)))
+                                .thenReturn(flight);
+
+                flightService.updateFlightStatus(1L, request);
+
+                assertEquals("CANCELLED", flight.getStatus());
+
+                verify(flightRepository).save(flight);
+        }
+
+        @Test
+        void updateFlightStatus_shouldRejectDepartedToDelayed() {
+                Flight flight = new Flight();
+                flight.setStatus("DEPARTED");
+
+                FlightStatusUpdateRequestDTO request = new FlightStatusUpdateRequestDTO();
+                request.setStatus("DELAYED");
+                request.setReason("Unexpected delay");
+
+                when(flightRepository.findById(1L))
+                                .thenReturn(Optional.of(flight));
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> flightService.updateFlightStatus(1L, request));
+
+                assertEquals(
+                                "Invalid flight status transition from DEPARTED to DELAYED",
+                                exception.getMessage());
+
+                verify(flightRepository, never()).save(any(Flight.class));
+        }
+
+        @Test
         void deleteFlight_shouldDeleteSuccessfully() {
 
                 Flight existingFlight = createFlightFixture();
