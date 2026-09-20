@@ -455,6 +455,48 @@ class RouteServiceTest {
         }
 
         @Test
+        void updateRoute_shouldThrowException_whenReferencedRouteAirportsAreChanged() {
+
+                Airport existingDeparture = airport(1L, "DEL");
+                Airport existingArrival = airport(2L, "BOM");
+
+                Route existingRoute = new Route();
+                existingRoute.setDepartureAirport(existingDeparture);
+                existingRoute.setArrivalAirport(existingArrival);
+
+                RouteRequestDTO request = validRequest();
+                request.setDepartureAirportId(2L);
+                request.setArrivalAirportId(1L);
+
+                when(routeRepository.findById(10L))
+                                .thenReturn(Optional.of(existingRoute));
+
+                when(flightRepository.existsByRouteId(10L))
+                                .thenReturn(true);
+
+                ResourceInUseException exception = assertThrows(
+                                ResourceInUseException.class,
+                                () -> routeService.updateRoute(10L, request));
+
+                assertEquals(
+                                "Route airports cannot be changed because the route is referenced by one or more flights",
+                                exception.getMessage());
+
+                verify(routeRepository).findById(10L);
+                verify(flightRepository).existsByRouteId(10L);
+
+                verify(routeRepository, never())
+                                .existsByDepartureAirportIdAndArrivalAirportId(
+                                                anyLong(), anyLong());
+
+                verify(airportRepository, never())
+                                .findById(anyLong());
+
+                verify(routeRepository, never())
+                                .save(any(Route.class));
+        }
+
+        @Test
         void deleteRoute_shouldDelete_whenRouteExists() {
 
                 Route route = new Route();
@@ -463,7 +505,7 @@ class RouteServiceTest {
                                 .thenReturn(Optional.of(route));
 
                 when(flightRepository.existsByRouteId(1L))
-                        .thenReturn(false);
+                                .thenReturn(false);
 
                 routeService.deleteRoute(1L);
 
@@ -472,26 +514,26 @@ class RouteServiceTest {
         }
 
         @Test
-void deleteRoute_shouldThrowException_whenRouteIsReferencedByFlight() {
+        void deleteRoute_shouldThrowException_whenRouteIsReferencedByFlight() {
 
-        Route route = new Route();
+                Route route = new Route();
 
-        when(routeRepository.findById(1L))
-                .thenReturn(Optional.of(route));
+                when(routeRepository.findById(1L))
+                                .thenReturn(Optional.of(route));
 
-        when(flightRepository.existsByRouteId(1L))
-                .thenReturn(true);
+                when(flightRepository.existsByRouteId(1L))
+                                .thenReturn(true);
 
-        ResourceInUseException exception = assertThrows(
-                ResourceInUseException.class,
-                () -> routeService.deleteRoute(1L));
+                ResourceInUseException exception = assertThrows(
+                                ResourceInUseException.class,
+                                () -> routeService.deleteRoute(1L));
 
-        assertEquals(
-                "Route cannot be deleted because it is referenced by one or more flights",
-                exception.getMessage());
+                assertEquals(
+                                "Route cannot be deleted because it is referenced by one or more flights",
+                                exception.getMessage());
 
-        verify(routeRepository).findById(1L);
-        verify(flightRepository).existsByRouteId(1L);
-        verify(routeRepository, never()).delete(any(Route.class));
-}
+                verify(routeRepository).findById(1L);
+                verify(flightRepository).existsByRouteId(1L);
+                verify(routeRepository, never()).delete(any(Route.class));
+        }
 }
