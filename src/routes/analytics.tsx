@@ -16,7 +16,9 @@ import {
 } from "recharts";
 import { pageVariants } from "@/lib/ams/motion";
 import { PageHeader, SectionCard } from "@/components/ams/primitives";
-import { useLiveOps } from "@/lib/ams/hooks";
+import { getAnalyticsOverview } from "@/lib/api/analytics";
+import type { AnalyticsOverview } from "@/lib/api/analytics";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/analytics")({
   head: () => ({
@@ -80,243 +82,207 @@ const CHART_TOOLTIP_ITEM_STYLE = {
 };
 
 function AnalyticsPage() {
-  const { flights, aircraft, kpis, loading, error } = useLiveOps();
+  const [analytics, setAnalytics] = useState<AnalyticsOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const flightStatusCounts = flights.reduce<Record<string, number>>((counts, flight) => {
-    counts[flight.status] = (counts[flight.status] ?? 0) + 1;
-    return counts;
-  }, {});
+  useEffect(() => {
+    let mounted = true;
+
+    getAnalyticsOverview()
+      .then((data) => {
+        if (!mounted) {
+          return;
+        }
+
+        setAnalytics(data);
+      })
+      .catch((requestError) => {
+        if (!mounted) {
+          return;
+        }
+
+        setError(
+          requestError instanceof Error ? requestError.message : "Unable to load analytics.",
+        );
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const flightStatusCounts = analytics?.flightStatusDistribution ?? [];
 
   const statusRows = [
-    ["Scheduled", flightStatusCounts.Scheduled ?? 0],
-    ["Boarding", flightStatusCounts.Boarding ?? 0],
-    ["Taxiing", flightStatusCounts.Taxiing ?? 0],
-    ["Departed", flightStatusCounts.Departed ?? 0],
-    ["In Air", flightStatusCounts["In Air"] ?? 0],
-    ["Landing", flightStatusCounts.Landing ?? 0],
-    ["Landed", flightStatusCounts.Landed ?? 0],
-    ["Delayed", flightStatusCounts.Delayed ?? 0],
-    ["Cancelled", flightStatusCounts.Cancelled ?? 0],
-  ] as const;
+    "SCHEDULED",
+    "BOARDING",
+    "TAXIING",
+    "DEPARTED",
+    "IN AIR",
+    "LANDING",
+    "LANDED",
+    "DELAYED",
+    "CANCELLED",
+  ].map((status) => ({
+    status,
+    count: flightStatusCounts.find((item) => item.status === status)?.count ?? 0,
+  }));
 
-  const statusChartData = statusRows
-    .filter(([, value]) => value > 0)
-    .map(([name, value]) => ({
-      name,
-      value,
-    }));
+  const statusChartData = statusRows.map((item) => ({
+    name: item.status,
+    value: item.count,
+  }));
 
-  const airportActivity = flights.reduce<Record<string, { departures: number; arrivals: number }>>(
-    (activity, flight) => {
-      if (!activity[flight.origin]) {
-        activity[flight.origin] = {
-          departures: 0,
-          arrivals: 0,
-        };
-      }
+  const airportActivity = analytics?.airportActivity ?? [];
 
-      if (!activity[flight.destination]) {
-        activity[flight.destination] = {
-          departures: 0,
-          arrivals: 0,
-        };
-      }
+  const airportChartData = airportActivity.slice(0, 10).map((item) => ({
+    airport: item.name,
+    departures: item.departures,
+    arrivals: item.arrivals,
+    total: item.total,
+  }));
 
-      activity[flight.origin].departures += 1;
-      activity[flight.destination].arrivals += 1;
+  const routeActivity = analytics?.routeActivity ?? [];
 
-      return activity;
+  const routeChartData = routeActivity.slice(0, 10).map((item) => ({
+    route: item.name,
+    count: item.total,
+  }));
+
+  /*
+   * The current analytics API does not expose delayed flights grouped
+   * by route or airport. Keep these sections empty rather than
+   * presenting total activity as delayed activity.
+   */
+  const delayedFlights = analytics?.delayedFlights ?? 0;
+
+  const delayedRouteChartData: Array<{
+    route: string;
+    count: number;
+  }> = [];
+
+  const delayedAirportChartData: Array<{
+    airport: string;
+    count: number;
+  }> = [];
+
+  const aircraftUtilizationData = (analytics?.aircraftUtilization ?? []).map((item) => ({
+    aircraftId: item.aircraftId,
+    registration: item.registrationNumber,
+    aircraftTypeCode: item.aircraftTypeCode,
+    status: item.status,
+    assignedFlights: item.assignedFlights,
+  }));
+
+  const aircraftStatusCounts = aircraftUtilizationData.reduce<Record<string, number>>(
+    (counts, aircraft) => {
+      counts[aircraft.status] = (counts[aircraft.status] ?? 0) + 1;
+      return counts;
     },
     {},
   );
 
-  const airportChartData = Object.entries(airportActivity)
-    .map(([airport, activity]) => ({
-      airport,
-      departures: activity.departures,
-      arrivals: activity.arrivals,
-      total: activity.departures + activity.arrivals,
-    }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 10);
+  const aircraftStatusChartData = Object.entries(aircraftStatusCounts).map(([name, value]) => ({
+    name,
+    value,
+  }));
 
-  const routeActivity = flights.reduce<Record<string, number>>((routes, flight) => {
-    const route = `${flight.origin} → ${flight.destination}`;
-    routes[route] = (routes[route] ?? 0) + 1;
-    return routes;
-  }, {});
+  const historicalFlightActivity = analytics?.historicalActivity ?? [];
 
-  const routeChartData = Object.entries(routeActivity)
-    .map(([route, count]) => ({
-      route,
-      count,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
-  const delayedFlights = flights.filter((flight) => flight.status === "Delayed");
+  const historicalFlightChartData = historicalFlightActivity;
 
-  const delayedRouteActivity = delayedFlights.reduce<Record<string, number>>((routes, flight) => {
-    const route = `${flight.origin} → ${flight.destination}`;
-    routes[route] = (routes[route] ?? 0) + 1;
+  const delayedShare =
+    analytics && analytics.totalFlights > 0
+      ? Math.round((analytics.delayedFlights / analytics.totalFlights) * 100)
+      : 0;
 
-    return routes;
-  }, {});
+  const aircraftUtilizationShare =
+    analytics && analytics.totalAircraft > 0
+      ? Math.round(
+          (aircraftUtilizationData.filter((aircraft) => aircraft.assignedFlights > 0).length /
+            analytics.totalAircraft) *
+            100,
+        )
+      : 0;
 
-  const delayedRouteChartData = Object.entries(delayedRouteActivity)
-    .map(([route, count]) => ({
-      route,
-      count,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
+  const airborneShare =
+    analytics && analytics.totalFlights > 0
+      ? Math.round((analytics.airborneFlights / analytics.totalFlights) * 100)
+      : 0;
 
-  const delayedAirportActivity = delayedFlights.reduce<Record<string, number>>(
-    (airports, flight) => {
-      airports[flight.origin] = (airports[flight.origin] ?? 0) + 1;
-      airports[flight.destination] = (airports[flight.destination] ?? 0) + 1;
-
-      return airports;
-    },
-    {},
-  );
-
-  const delayedAirportChartData = Object.entries(delayedAirportActivity)
-    .map(([airport, count]) => ({
-      airport,
-      count,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
-
-  const aircraftFlightCounts = flights.reduce<Record<string, number>>((counts, flight) => {
-    counts[flight.aircraft] = (counts[flight.aircraft] ?? 0) + 1;
-
-    return counts;
-  }, {});
-
-  const aircraftUtilizationData = aircraft
-    .map((aircraftItem) => {
-      const assignedFlights = aircraftFlightCounts[aircraftItem.registrationNumber] ?? 0;
-
-      return {
-        registration: aircraftItem.registrationNumber,
-        aircraftType: aircraftItem.aircraftTypeCode,
-        assignedFlights,
-        status: aircraftItem.status,
-      };
-    })
-    .sort((a, b) => b.assignedFlights - a.assignedFlights);
-
-  const historicalFlightActivity = flights.reduce<
-    Record<
-      string,
-      {
-        total: number;
-        delayed: number;
-        cancelled: number;
-      }
-    >
-  >((activity, flight) => {
-    const date = new Date(flight.scheduledDeparture).toLocaleDateString("en-CA");
-
-    if (!activity[date]) {
-      activity[date] = {
-        total: 0,
-        delayed: 0,
-        cancelled: 0,
-      };
-    }
-
-    activity[date].total += 1;
-
-    if (flight.status === "Delayed") {
-      activity[date].delayed += 1;
-    }
-
-    if (flight.status === "Cancelled") {
-      activity[date].cancelled += 1;
-    }
-
-    return activity;
-  }, {});
-
-  const historicalFlightChartData = Object.entries(historicalFlightActivity)
-    .map(([date, activity]) => ({
-      date,
-      total: activity.total,
-      delayed: activity.delayed,
-      cancelled: activity.cancelled,
-    }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  const fleetAvailability =
+    analytics && analytics.totalAircraft > 0
+      ? Math.round((analytics.activeAircraft / analytics.totalAircraft) * 100)
+      : 0;
 
   const exportAnalyticsReport = () => {
-    const rows: string[][] = [
-      ["AIRHIVE ANALYTICS REPORT"],
-      [`Generated at`, new Date().toISOString()],
+    if (!analytics) {
+      return;
+    }
+
+    const rows = [
+      ["AirHive Analytics Report"],
       [],
-      ["FLIGHT STATUS SUMMARY"],
+      ["Operational Summary"],
+      ["Total Flights", analytics.totalFlights],
+      ["Delayed Flights", analytics.delayedFlights],
+      ["Cancelled Flights", analytics.cancelledFlights],
+      ["Airborne Flights", analytics.airborneFlights],
+      [],
+      ["Fleet Summary"],
+      ["Total Aircraft", analytics.totalAircraft],
+      ["Active Aircraft", analytics.activeAircraft],
+      ["Inactive Aircraft", analytics.inactiveAircraft],
+      ["Maintenance Aircraft", analytics.maintenanceAircraft],
+      [],
+      ["Flight Status Distribution"],
       ["Status", "Count"],
-      ...statusRows.map(([status, count]) => [status, String(count)]),
+      ...analytics.flightStatusDistribution.map((item) => [item.status, item.count]),
       [],
-      ["AIRPORT ACTIVITY"],
+      ["Aircraft Utilization"],
+      ["Aircraft ID", "Registration", "Aircraft Type", "Status", "Assigned Flights"],
+      ...analytics.aircraftUtilization.map((item) => [
+        item.aircraftId,
+        item.registrationNumber,
+        item.aircraftTypeCode ?? "",
+        item.status,
+        item.assignedFlights,
+      ]),
+      [],
+      ["Airport Activity"],
       ["Airport", "Departures", "Arrivals", "Total"],
-      ...airportChartData.map((airport) => [
-        airport.airport,
-        String(airport.departures),
-        String(airport.arrivals),
-        String(airport.total),
+      ...analytics.airportActivity.map((item) => [
+        item.name,
+        item.departures,
+        item.arrivals,
+        item.total,
       ]),
       [],
-      ["ROUTE ACTIVITY"],
-      ["Route", "Flights"],
-      ...routeChartData.map((route) => [route.route, String(route.count)]),
+      ["Route Activity"],
+      ["Route", "Total Flights"],
+      ...analytics.routeActivity.map((item) => [item.name, item.total]),
       [],
-      ["DELAYED FLIGHTS BY ROUTE"],
-      ["Route", "Delayed Flights"],
-      ...delayedRouteChartData.map((route) => [route.route, String(route.count)]),
-      [],
-      ["DELAYED FLIGHTS BY AIRPORT"],
-      ["Airport", "Delayed Flights"],
-      ...delayedAirportChartData.map((airport) => [airport.airport, String(airport.count)]),
-      [],
-      ["AIRCRAFT UTILIZATION"],
-      ["Registration", "Aircraft Type", "Assigned Flights", "Status"],
-      ...aircraftUtilizationData.map((aircraftItem) => [
-        aircraftItem.registration,
-        aircraftItem.aircraftType,
-        String(aircraftItem.assignedFlights),
-        aircraftItem.status,
+      ["Historical Activity"],
+      ["Date", "Total", "Delayed", "Cancelled"],
+      ...analytics.historicalActivity.map((item) => [
+        item.date,
+        item.total,
+        item.delayed,
+        item.cancelled,
       ]),
-      [],
-      ["AIRCRAFT STATUS DISTRIBUTION"],
-      ["Status", "Count"],
-      ...aircraftStatusChartData.map((status) => [status.name, String(status.value)]),
-      [],
-      ["HISTORICAL FLIGHT ACTIVITY"],
-      ["Date", "Total Flights", "Delayed Flights", "Cancelled Flights"],
-      ...historicalFlightChartData.map((activity) => [
-        activity.date,
-        String(activity.total),
-        String(activity.delayed),
-        String(activity.cancelled),
-      ]),
-      [],
-      ["OPERATIONAL SNAPSHOT"],
-      ["Metric", "Value"],
-      ["Aircraft utilization", `${aircraftUtilizationShare}%`],
-      ["Aircraft tracked", String(aircraft.length)],
-      ["Delayed flights tracked", String(delayedFlights.length)],
-      ["Flights tracked", String(flights.length)],
-      ["Airborne share", `${airborneShare}%`],
-      ["Delayed share", `${delayedShare}%`],
-      ["Fleet availability", `${kpis.fleetAvailability}%`],
     ];
 
     const csv = rows
-      .map((row) => row.map((value) => `"${value.replace(/"/g, '""')}"`).join(","))
+      .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
       .join("\n");
 
-    const blob = new Blob([`\uFEFF${csv}`], {
+    const blob = new Blob([csv], {
       type: "text/csv;charset=utf-8;",
     });
 
@@ -324,38 +290,11 @@ function AnalyticsPage() {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = `airhive-analytics-${new Date().toISOString().slice(0, 10)}.csv`;
-
-    document.body.appendChild(link);
+    link.download = "airhive-analytics-report.csv";
     link.click();
-    document.body.removeChild(link);
+
     URL.revokeObjectURL(url);
   };
-
-  const aircraftStatusCounts = aircraft.reduce<Record<string, number>>((counts, aircraftItem) => {
-    const status = aircraftItem.status || "Unknown";
-    counts[status] = (counts[status] ?? 0) + 1;
-
-    return counts;
-  }, {});
-
-  const aircraftStatusChartData = Object.entries(aircraftStatusCounts).map(([name, value]) => ({
-    name,
-    value,
-  }));
-
-  const utilizedAircraftCount = aircraftUtilizationData.filter(
-    (aircraftItem) => aircraftItem.assignedFlights > 0,
-  ).length;
-
-  const aircraftUtilizationShare =
-    aircraft.length > 0 ? Math.round((utilizedAircraftCount / aircraft.length) * 100) : 0;
-
-  const airborneShare =
-    kpis.totalFlights > 0 ? Math.round((kpis.activeFlights / kpis.totalFlights) * 100) : 0;
-
-  const delayedShare =
-    kpis.totalFlights > 0 ? Math.round((kpis.delayedFlights / kpis.totalFlights) * 100) : 0;
 
   return (
     <motion.div
@@ -380,6 +319,7 @@ function AnalyticsPage() {
           Export CSV Report
         </button>
       </div>
+
       {loading ? (
         <SectionCard title="Operational analytics" subtitle="Loading live flight data">
           <p className="text-sm text-muted-foreground">Loading analytics…</p>
@@ -392,19 +332,19 @@ function AnalyticsPage() {
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <SectionCard title="Total flights" subtitle="Current network">
-              <p className="num mt-4 text-3xl font-semibold">{kpis.totalFlights}</p>
+              <p className="num mt-4 text-3xl font-semibold">{analytics?.totalFlights ?? 0}</p>
             </SectionCard>
 
             <SectionCard title="Currently airborne" subtitle="Flights in air">
-              <p className="num mt-4 text-3xl font-semibold">{kpis.activeFlights}</p>
+              <p className="num mt-4 text-3xl font-semibold">{analytics?.airborneFlights ?? 0}</p>
             </SectionCard>
 
             <SectionCard title="Currently delayed" subtitle="Active delays">
-              <p className="num mt-4 text-3xl font-semibold">{kpis.delayedFlights}</p>
+              <p className="num mt-4 text-3xl font-semibold">{analytics?.delayedFlights ?? 0}</p>
             </SectionCard>
 
             <SectionCard title="Fleet availability" subtitle="Based on available fleet">
-              <p className="num mt-4 text-3xl font-semibold">{kpis.fleetAvailability}%</p>
+              <p className="num mt-4 text-3xl font-semibold">{fleetAvailability}%</p>
             </SectionCard>
           </div>
 
@@ -450,10 +390,10 @@ function AnalyticsPage() {
               )}
 
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-                {statusRows.map(([label, value]) => (
-                  <div key={label} className="rounded-lg border border-border/60 px-3 py-2">
-                    <p className="text-muted-foreground">{label}</p>
-                    <p className="num mt-1 text-lg font-semibold">{value}</p>
+                {statusRows.map((item) => (
+                  <div key={item.status} className="rounded-lg border border-border/60 px-3 py-2">
+                    <p className="text-muted-foreground">{item.status}</p>
+                    <p className="num mt-1 text-lg font-semibold">{item.count}</p>
                   </div>
                 ))}
               </div>
@@ -868,6 +808,7 @@ function AnalyticsPage() {
                 </p>
               )}
             </SectionCard>
+
             <SectionCard title="Operational snapshot" subtitle="Live network indicators">
               <dl className="space-y-4 text-sm">
                 <div className="flex items-center justify-between">
@@ -877,15 +818,17 @@ function AnalyticsPage() {
 
                 <div className="flex items-center justify-between">
                   <dt className="text-muted-foreground">Aircraft tracked</dt>
-                  <dd className="num font-medium">{aircraft.length}</dd>
+                  <dd className="num font-medium">{analytics?.totalAircraft ?? 0}</dd>
                 </div>
+
                 <div className="flex items-center justify-between">
                   <dt className="text-muted-foreground">Delayed flights tracked</dt>
-                  <dd className="num font-medium">{delayedFlights.length}</dd>
+                  <dd className="num font-medium">{delayedFlights}</dd>
                 </div>
+
                 <div className="flex items-center justify-between">
                   <dt className="text-muted-foreground">Flights tracked</dt>
-                  <dd className="num font-medium">{flights.length}</dd>
+                  <dd className="num font-medium">{analytics?.totalFlights ?? 0}</dd>
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -900,7 +843,7 @@ function AnalyticsPage() {
 
                 <div className="flex items-center justify-between">
                   <dt className="text-muted-foreground">Fleet availability</dt>
-                  <dd className="num font-medium">{kpis.fleetAvailability}%</dd>
+                  <dd className="num font-medium">{fleetAvailability}%</dd>
                 </div>
               </dl>
             </SectionCard>
