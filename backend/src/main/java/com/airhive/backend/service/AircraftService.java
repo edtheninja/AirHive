@@ -100,7 +100,8 @@ public class AircraftService {
                 aircraft.setStatus(newStatus);
 
                 aircraft.setAircraftType(
-                                updatedAircraft.getAircraftType());
+        aircraftTypeService.findEntityById(
+                updatedAircraft.getAircraftType().getId()));
 
                 return AircraftMapper.toResponse(aircraftRepository.save(aircraft));
         }

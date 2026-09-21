@@ -3,6 +3,7 @@ package com.airhive.backend.service;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.airhive.backend.dto.AircraftRequestDTO;
 import com.airhive.backend.dto.AircraftResponseDTO;
@@ -50,6 +52,7 @@ class AircraftServiceTest {
                                 flightRepository,
                                 aircraftTypeService);
                 defaultType = new AircraftType();
+                ReflectionTestUtils.setField(defaultType, "id", 1L);
                 defaultType.setTypeCode("A320");
         }
 
@@ -241,6 +244,9 @@ class AircraftServiceTest {
                 when(aircraftRepository.save(existingAircraft))
                                 .thenReturn(existingAircraft);
 
+                when(aircraftTypeService.findEntityById(defaultType.getId()))
+        .thenReturn(defaultType);
+
                 AircraftResponseDTO result = aircraftService.updateAircraft(1L, updatedAircraft);
 
                 assertEquals("VT-AIR99", result.getRegistrationNumber());
@@ -295,33 +301,36 @@ class AircraftServiceTest {
         }
 
         @Test
-        void updateAircraft_shouldAllowSameAircraftType_whenAircraftIsReferencedByFlight() {
+void updateAircraft_shouldAllowSameAircraftType_whenAircraftIsReferencedByFlight() {
 
-                Aircraft existingAircraft = new Aircraft();
-                existingAircraft.setRegistrationNumber("VT-AIR01");
-                existingAircraft.setStatus("ACTIVE");
-                existingAircraft.setAircraftType(defaultType);
+        Aircraft existingAircraft = new Aircraft();
+        existingAircraft.setRegistrationNumber("VT-AIR01");
+        existingAircraft.setStatus("ACTIVE");
+        existingAircraft.setAircraftType(defaultType);
 
-                Aircraft updatedAircraft = new Aircraft();
-                updatedAircraft.setRegistrationNumber("VT-AIR99");
-                updatedAircraft.setStatus("INACTIVE");
-                updatedAircraft.setAircraftType(defaultType);
+        Aircraft updatedAircraft = new Aircraft();
+        updatedAircraft.setRegistrationNumber("VT-AIR99");
+        updatedAircraft.setStatus("INACTIVE");
+        updatedAircraft.setAircraftType(defaultType);
 
-                when(aircraftRepository.findById(1L))
-                                .thenReturn(Optional.of(existingAircraft));
+        when(aircraftRepository.findById(1L))
+                        .thenReturn(Optional.of(existingAircraft));
 
-                when(aircraftRepository.save(existingAircraft))
-                                .thenReturn(existingAircraft);
+        when(aircraftRepository.save(existingAircraft))
+                        .thenReturn(existingAircraft);
+        
+        when(aircraftTypeService.findEntityById(defaultType.getId()))
+        .thenReturn(defaultType);
 
-                AircraftResponseDTO result = aircraftService.updateAircraft(1L, updatedAircraft);
+        AircraftResponseDTO result = aircraftService.updateAircraft(1L, updatedAircraft);
 
-                assertEquals("VT-AIR99", result.getRegistrationNumber());
-                assertEquals("INACTIVE", result.getStatus());
+        assertEquals("VT-AIR99", result.getRegistrationNumber());
+        assertEquals("INACTIVE", result.getStatus());
 
-                verify(aircraftRepository).findById(1L);
-                verify(aircraftRepository).save(existingAircraft);
-                verify(flightRepository, never()).existsByAircraftId(1L);
-        }
+        verify(aircraftRepository).findById(1L);
+        verify(aircraftRepository).save(existingAircraft);
+        verify(flightRepository, never()).existsByAircraftId(1L);
+}
 
         @Test
         void updateAircraft_shouldRejectAircraftTypeChangeUsingRequestDTO_whenAircraftIsReferencedByFlight() {
@@ -587,5 +596,38 @@ class AircraftServiceTest {
                 verify(flightRepository).existsByAircraftId(1L);
                 verify(aircraftRepository).delete(aircraft);
         }
+
+        @Test
+void updateAircraft_shouldRejectNonExistentAircraftType() {
+
+    Aircraft aircraft = new Aircraft();
+    aircraft.setRegistrationNumber("VT-TEST");
+    aircraft.setStatus("ACTIVE");
+
+    AircraftType existingType = new AircraftType();
+    ReflectionTestUtils.setField(existingType, "id", 1L);
+    aircraft.setAircraftType(existingType);
+
+    when(aircraftRepository.findById(1L))
+            .thenReturn(Optional.of(aircraft));
+
+    AircraftType requestedType = new AircraftType();
+    ReflectionTestUtils.setField(requestedType, "id", 999L);
+
+    Aircraft updatedAircraft = new Aircraft();
+    updatedAircraft.setRegistrationNumber("VT-TEST");
+    updatedAircraft.setStatus("ACTIVE");
+    updatedAircraft.setAircraftType(requestedType);
+
+    when(aircraftTypeService.findEntityById(999L))
+            .thenThrow(new ResourceNotFoundException(
+                    "Aircraft type not found with id: 999"));
+
+    assertThatThrownBy(() ->
+            aircraftService.updateAircraft(1L, updatedAircraft))
+            .isInstanceOf(ResourceNotFoundException.class);
+
+    verify(aircraftRepository, never()).save(any(Aircraft.class));
+}
 
 }
