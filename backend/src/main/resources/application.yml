@@ -36,3 +36,23 @@ airhive:
       expiration-ms: 604800000
   cors:
     allowed-origins: ${AIRHIVE_CORS_ORIGINS:http://localhost:8081,http://localhost:5173}
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: AirHive Backend
+    description: Airline Management System backend
+    version: 1.0.0
