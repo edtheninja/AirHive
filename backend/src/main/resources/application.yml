@@ -34,3 +34,5 @@ airhive:
     jwt:
       secret: ${AIRHIVE_JWT_SECRET}
       expiration-ms: 604800000
+  cors:
+    allowed-origins: ${AIRHIVE_CORS_ORIGINS:http://localhost:8081,http://localhost:5173}
