@@ -3,7 +3,7 @@ import { getToken } from "@/lib/auth/session";
 
 import type { Notification } from "./notifications";
 
-const WS_URL = "ws://localhost:8080/ws";
+const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:8080/ws";
 const FLIGHTS_TOPIC = "/topic/flights";
 
 export type FlightEventType = "FLIGHT_CREATED" | "FLIGHT_UPDATED" | "FLIGHT_DELETED";
