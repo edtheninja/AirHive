@@ -28,7 +28,7 @@ spring:
 
   logging:
    level:
-    org.springframework.security: TRACE      
+    org.springframework.security: INFO      
 airhive:
   security:
     jwt:
