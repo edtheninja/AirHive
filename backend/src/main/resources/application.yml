@@ -36,7 +36,8 @@ airhive:
       expiration-ms: 604800000
   cors:
     allowed-origins: ${AIRHIVE_CORS_ORIGINS:http://localhost:8081,http://localhost:5173}
-
+  websocket:
+    allowed-origins: ${AIRHIVE_WS_ALLOWED_ORIGINS:http://localhost:*,http://127.0.0.1:*}
 
 management:
   endpoints:

@@ -1,5 +1,8 @@
 package com.airhive.backend.config;
 
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -12,6 +15,9 @@ import com.airhive.backend.security.WebSocketAuthInterceptor;
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Value("${airhive.websocket.allowed-origins:http://localhost:*,http://127.0.0.1:*}")
+    private String allowedOrigins;
 
     private final WebSocketAuthInterceptor webSocketAuthInterceptor;
 
@@ -38,8 +44,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns(
-                        "http://localhost:*",
-                        "http://127.0.0.1:*"
+                        Arrays.stream(allowedOrigins.split(","))
+                                .map(String::trim)
+                                .filter(origin -> !origin.isEmpty())
+                                .toArray(String[]::new)
                 );
     }
 }
