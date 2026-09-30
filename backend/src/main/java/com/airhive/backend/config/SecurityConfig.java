@@ -25,6 +25,9 @@ public class SecurityConfig {
                                                                 .jwtAuthenticationConverter(
                                                                                 jwtAuthenticationConverter)))
                                 .authorizeHttpRequests(auth -> auth
+                                                // Docker and service health monitoring
+                                                .requestMatchers("/actuator/health")
+                                                .permitAll()
 
                                                 // CORS preflight
                                                 .requestMatchers(

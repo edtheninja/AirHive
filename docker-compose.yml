@@ -1,0 +1,83 @@
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: airhive-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: airhive
+      POSTGRES_USER: airhive_user
+      POSTGRES_PASSWORD: ${AIRHIVE_DB_PASSWORD:?Set AIRHIVE_DB_PASSWORD in .env}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airhive_user -d airhive"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    container_name: airhive-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: airhive-backend:dev
+    container_name: airhive-backend
+    restart: unless-stopped
+    environment:
+      AIRHIVE_DB_URL: jdbc:postgresql://postgres:5432/airhive
+      AIRHIVE_DB_USERNAME: airhive_user
+      AIRHIVE_DB_PASSWORD: ${AIRHIVE_DB_PASSWORD:?Set AIRHIVE_DB_PASSWORD in .env}
+      AIRHIVE_REDIS_HOST: redis
+      AIRHIVE_REDIS_PORT: 6379
+      AIRHIVE_JWT_SECRET: ${AIRHIVE_JWT_SECRET:?Set AIRHIVE_JWT_SECRET in .env}
+      AIRHIVE_CORS_ORIGINS: http://localhost:3000,http://localhost:8081,http://localhost:5173
+      AIRHIVE_WS_ALLOWED_ORIGINS: http://localhost:*,http://127.0.0.1:*
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: dev
+
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 90s
+      retries: 10
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: airhive-frontend:dev
+    container_name: airhive-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
