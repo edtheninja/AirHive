@@ -2,43 +2,45 @@
 
 ### Airline Operations & Management System
 
-AirHive is a full-stack airline operations management system designed to provide a centralized platform for managing flights, aircraft, airports, routes, analytics, notifications, and real-time operational updates.
+AirHive is a full-stack airline operations management system designed to provide a centralized platform for managing flights, aircraft, airports, routes, passengers, crew, bookings, maintenance, analytics, notifications, and real-time operational updates.
 
-The project combines a modern React frontend with a Spring Boot backend, PostgreSQL for persistent storage, Redis for caching, WebSockets for real-time communication, JWT-based authentication, role-based access control, and operational analytics.
+The project combines a modern React frontend with a Spring Boot backend, PostgreSQL for persistent storage, Redis for caching, WebSockets for real-time communication, JWT-based authentication, role-based access control, operational analytics, Docker-based infrastructure, and application health monitoring.
 
 ---
 
 ## 📌 Table of Contents
 
-* [Overview](#-overview)
-* [Features](#-features)
-* [Architecture](#-architecture)
-* [Technology Stack](#-technology-stack)
-* [Project Structure](#-project-structure)
-* [Prerequisites](#-prerequisites)
-* [Getting Started](#-getting-started)
-* [Database Setup](#-database-setup)
-* [Redis Setup](#-redis-setup)
-* [Running the Application](#-running-the-application)
-* [API Documentation](#-api-documentation)
-* [WebSocket Real-Time Updates](#-websocket-real-time-updates)
-* [Caching](#-caching)
-* [Analytics](#-analytics)
-* [Testing](#-testing)
-* [Frontend Development](#-frontend-development)
-* [Backend Development](#-backend-development)
-* [Environment Configuration](#-environment-configuration)
-* [Security](#-security)
-* [Git Workflow](#-git-workflow)
-* [Current Project Status](#-current-project-status)
-* [Roadmap](#-roadmap)
-* [Useful Commands](#-useful-commands)
-* [Troubleshooting](#-troubleshooting)
-* [Live Application](#-live-application)
-* [Project History](#-project-history)
-* [Design Philosophy](#-design-philosophy)
-* [License](#-license)
-* [Development](#-development)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Technology Stack](#-technology-stack)
+- [Project Structure](#-project-structure)
+- [Prerequisites](#-prerequisites)
+- [Getting Started](#-getting-started)
+- [Database Setup](#-database-setup)
+- [Redis Setup](#-redis-setup)
+- [Running the Application](#-running-the-application)
+- [Docker](#-docker)
+- [API Documentation](#-api-documentation)
+- [WebSocket Real-Time Updates](#-websocket-real-time-updates)
+- [Caching](#-caching)
+- [Analytics](#-analytics)
+- [Testing](#-testing)
+- [Frontend Development](#-frontend-development)
+- [Backend Development](#-backend-development)
+- [Environment Configuration](#-environment-configuration)
+- [Application Health & Observability](#-application-health--observability)
+- [Security](#-security)
+- [Git Workflow](#-git-workflow)
+- [Current Project Status](#-current-project-status)
+- [Roadmap](#-roadmap)
+- [Useful Commands](#-useful-commands)
+- [Troubleshooting](#-troubleshooting)
+- [Live Application](#-live-application)
+- [Project History](#-project-history)
+- [Design Philosophy](#-design-philosophy)
+- [License](#-license)
+- [Development](#-development)
 
 ---
 
@@ -48,42 +50,48 @@ AirHive is built as a modular airline management platform.
 
 The system currently provides functionality for:
 
-* Airport management
-* Aircraft type management
-* Aircraft management
-* Route management
-* Flight management
-* Flight validation
-* Aircraft scheduling conflict detection
-* REST API communication
-* Redis caching
-* Real-time flight updates using WebSockets
-* Real-time notifications
-* Authentication and authorization
-* JWT-based security
-* Role-based access control
-* Advanced flight operations
-* Flight history
-* Operational analytics
-* Historical flight analytics
-* Environment-based runtime configuration
-* Application health monitoring
-* Liveness and readiness probes
-* Automated backend testing
+- Airport management
+- Aircraft type management
+- Aircraft management
+- Route management
+- Flight management
+- Flight validation
+- Aircraft scheduling conflict detection
+- Passenger management
+- Crew management
+- Booking management
+- Maintenance management
+- REST API communication
+- Redis caching
+- Real-time flight updates using WebSockets
+- Real-time notifications
+- Authentication and authorization
+- JWT-based security
+- Role-based access control
+- Advanced flight operations
+- Flight history
+- Operational analytics
+- Historical flight analytics
+- Environment-based runtime configuration
+- Dockerized application infrastructure
+- Application health monitoring
+- Liveness and readiness probes
+- Automated backend testing
 
 The project is being developed with an emphasis on:
 
-* Clean architecture
-* Separation of concerns
-* Validation
-* Performance
-* Real-time communication
-* Maintainability
-* Scalable API design
-* Security
-* Observability
-* Modern user experience
-* Production-oriented configuration
+- Clean architecture
+- Separation of concerns
+- Validation
+- Performance
+- Real-time communication
+- Maintainability
+- Scalable API design
+- Security
+- Observability
+- Modern user experience
+- Production-oriented configuration
+- Reproducible development environments
 
 ---
 
@@ -95,21 +103,21 @@ Manage airline flights through the backend REST API and frontend operations inte
 
 Supported operations include:
 
-* Create flights
-* View flights
-* View individual flights
-* Update flights
-* Delete flights
-* Flight status management
-* Aircraft assignment
-* Route assignment
-* Departure/arrival airport assignment
-* Scheduled departure and arrival times
-* Flight history
-* Advanced filtering
-* Flight detail views
-* Delay and cancellation reasons
-* Operational actions
+- Create flights
+- View flights
+- View individual flights
+- Update flights
+- Delete flights
+- Flight status management
+- Aircraft assignment
+- Route assignment
+- Departure/arrival airport assignment
+- Scheduled departure and arrival times
+- Flight history
+- Advanced filtering
+- Flight detail views
+- Delay and cancellation reasons
+- Operational actions
 
 The system also performs business validation before accepting flight operations.
 
@@ -119,10 +127,11 @@ The system also performs business validation before accepting flight operations.
 
 AirHive maintains aircraft information including:
 
-* Aircraft registration
-* Aircraft type
-* Aircraft status
-* Aircraft assignments
+- Aircraft registration
+- Aircraft type
+- Aircraft status
+- Aircraft assignments
+- Maintenance relationships
 
 Duplicate aircraft registration numbers are prevented through backend validation.
 
@@ -134,8 +143,8 @@ Aircraft types can be managed independently from individual aircraft.
 
 Examples include:
 
-* Boeing 737-800
-* Airbus A320-200
+- Boeing 737-800
+- Airbus A320-200
 
 This allows aircraft to reference reusable aircraft type definitions.
 
@@ -145,10 +154,10 @@ This allows aircraft to reference reusable aircraft type definitions.
 
 Airport records include information such as:
 
-* Airport name
-* IATA code
-* ICAO code
-* Location information
+- Airport name
+- IATA code
+- ICAO code
+- Location information
 
 The backend validates duplicate airport identifiers.
 
@@ -162,23 +171,76 @@ Flight records can reference an existing route while maintaining their airport r
 
 ---
 
+## 👥 Passenger Management
+
+Passenger management provides support for:
+
+- Passenger records
+- Passenger information
+- Passenger-to-booking relationships
+- Passenger manifests
+- Flight passenger information
+
+---
+
+## 🧑‍✈️ Crew Management
+
+Crew management provides support for:
+
+- Crew member records
+- Crew information
+- Crew-to-flight relationships
+- Operational crew management
+
+---
+
+## 🎫 Booking Management
+
+The booking system provides:
+
+- Booking records
+- Passenger association
+- Flight association
+- Booking status
+- Booking management workflows
+- Passenger manifest integration
+
+---
+
+## 🔧 Maintenance Management
+
+Aircraft maintenance functionality includes:
+
+- Maintenance records
+- Maintenance type
+- Maintenance severity
+- Maintenance status
+- Maintenance progress
+- Aircraft maintenance relationships
+- Operational maintenance tracking
+
+---
+
 ## 🧠 Business Validation
 
 AirHive includes backend validation for operational consistency.
 
 Examples include:
 
-* Duplicate flight validation
-* Duplicate aircraft registration validation
-* Duplicate airport identifier validation
-* Aircraft existence validation
-* Airport existence validation
-* Route existence validation
-* Aircraft scheduling conflict detection
-* DTO validation
-* Flight status validation
-* User lifecycle validation
-* Role and permission validation
+- Duplicate flight validation
+- Duplicate aircraft registration validation
+- Duplicate airport identifier validation
+- Aircraft existence validation
+- Airport existence validation
+- Route existence validation
+- Aircraft scheduling conflict detection
+- DTO validation
+- Flight status validation
+- User lifecycle validation
+- Role and permission validation
+- Booking validation
+- Passenger validation
+- Resource existence validation
 
 ---
 
@@ -188,14 +250,14 @@ AirHive includes backend authentication and authorization infrastructure.
 
 Current capabilities include:
 
-* User authentication
-* JWT-based authentication
-* Role-based access control
-* Protected API endpoints
-* Password security
-* Security exception handling
-* User lifecycle validation
-* WebSocket security foundation
+- User authentication
+- JWT-based authentication
+- Role-based access control
+- Protected API endpoints
+- Password security
+- Security exception handling
+- WebSocket security foundation
+- Runtime security configuration
 
 ---
 
@@ -205,12 +267,12 @@ The platform includes real-time operational notifications.
 
 Current functionality includes:
 
-* Notification creation
-* Real-time notification delivery
-* Read/unread state
-* Notification clearing
-* Flight-related notifications
-* Navigation from notifications to flight details
+- Notification creation
+- Real-time notification delivery
+- Read/unread state
+- Notification clearing
+- Flight-related notifications
+- Navigation from notifications to flight details
 
 ---
 
@@ -220,20 +282,18 @@ AirHive includes an analytics backend for operational monitoring.
 
 Current analytics include:
 
-* Operations overview
-* Flight status distribution
-* Delayed flight count
-* Cancelled flight count
-* Airborne flight count
-* Aircraft utilization
-* Aircraft status distribution
-* Airport activity
-* Route activity
-* Historical flight activity
-* Historical delayed flight counts
-* Historical cancelled flight counts
-
-Analytics are exposed through dedicated DTOs and service-layer processing.
+- Operations overview
+- Flight status distribution
+- Delayed flight count
+- Cancelled flight count
+- Airborne flight count
+- Aircraft utilization
+- Aircraft status distribution
+- Airport activity
+- Route activity
+- Historical flight activity
+- Historical delayed flight counts
+- Historical cancelled flight counts
 
 ---
 
@@ -294,44 +354,70 @@ Repository
 PostgreSQL
 ```
 
+### Docker Runtime Architecture
+
+```text
+                    ┌─────────────────────┐
+                    │   AirHive Frontend  │
+                    │      Port 3000      │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   AirHive Backend   │
+                    │      Port 8080      │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────┴──────────┐
+                    │                     │
+                    ▼                     ▼
+             ┌─────────────┐       ┌─────────────┐
+             │  PostgreSQL  │       │    Redis    │
+             │    :5432     │       │    :6379    │
+             └─────────────┘       └─────────────┘
+```
+
 ---
 
 # 🧰 Technology Stack
 
 ## Frontend
 
-| Technology    | Purpose                   |
-| ------------- | ------------------------- |
-| React         | UI framework              |
-| TypeScript    | Type-safe development     |
-| Vite          | Development/build tooling |
-| Tailwind CSS  | Styling                   |
-| Framer Motion | UI animations             |
-| Lucide        | Icons                     |
-| STOMP.js      | WebSocket client          |
+| Technology | Purpose |
+|---|---|
+| React | UI framework |
+| TypeScript | Type-safe development |
+| Vite | Development/build tooling |
+| TanStack Start | Application framework |
+| Tailwind CSS | Styling |
+| Framer Motion | UI animations |
+| Lucide | Icons |
+| STOMP.js | WebSocket client |
 
 ## Backend
 
-| Technology           | Purpose                          |
-| -------------------- | -------------------------------- |
-| Java 26              | Backend language                 |
-| Spring Boot 4.1.0    | Application framework            |
-| Spring Web           | REST APIs                        |
-| Spring Data JPA      | Database access                  |
-| Spring Security      | Authentication and authorization |
-| Spring WebSocket     | Real-time communication          |
-| Spring Cache         | Application caching              |
-| Spring Boot Actuator | Health and observability         |
-| Maven                | Dependency/build management      |
+| Technology | Purpose |
+|---|---|
+| Java 26 | Backend language |
+| Spring Boot 4.1.0 | Application framework |
+| Spring Web | REST APIs |
+| Spring Data JPA | Database access |
+| Spring Security | Authentication and authorization |
+| Spring WebSocket | Real-time communication |
+| Spring Cache | Application caching |
+| Spring Boot Actuator | Health and observability |
+| Maven | Dependency/build management |
 
 ## Infrastructure
 
-| Technology | Purpose                          |
-| ---------- | -------------------------------- |
-| PostgreSQL | Primary relational database      |
-| Redis      | Caching                          |
-| Git        | Version control                  |
-| GitHub     | Source control and collaboration |
+| Technology | Purpose |
+|---|---|
+| PostgreSQL 18 | Primary relational database |
+| Redis 8 | Caching |
+| Docker | Containerization |
+| Docker Compose | Local multi-service orchestration |
+| Git | Version control |
+| GitHub | Source control and collaboration |
 
 ---
 
@@ -339,7 +425,6 @@ PostgreSQL
 
 ```text
 AirHive/
-
 │
 ├── backend/
 │   ├── src/
@@ -358,6 +443,8 @@ AirHive/
 │   │   │       └── application.yml
 │   │   └── test/
 │   │       └── java/
+│   ├── .dockerignore
+│   ├── Dockerfile
 │   ├── pom.xml
 │   ├── mvnw
 │   └── mvnw.cmd
@@ -371,11 +458,15 @@ AirHive/
 │   └── ...
 │
 ├── public/
+│
+├── .dockerignore
+├── .env.example
+├── Dockerfile
+├── docker-compose.yml
 ├── package.json
 ├── package-lock.json
 ├── vite.config.ts
 ├── tailwind.config.ts
-├── .env.example
 └── README.md
 ```
 
@@ -383,15 +474,16 @@ AirHive/
 
 # ⚙️ Prerequisites
 
-Before running AirHive, install:
+Before running AirHive locally, install:
 
-* Java 26
-* Maven
-* Node.js
-* npm
-* PostgreSQL
-* Redis
-* Git
+- Java 26
+- Maven
+- Node.js
+- npm
+- PostgreSQL
+- Redis
+- Docker Desktop
+- Git
 
 Verify installations:
 
@@ -402,7 +494,11 @@ node -v
 npm -v
 psql --version
 redis-server --version
+docker --version
+docker compose version
 ```
+
+Docker is required for the containerized AirHive environment.
 
 ---
 
@@ -416,11 +512,25 @@ git clone https://github.com/edtheninja/AirHive.git
 cd AirHive
 ```
 
+## 2. Configure Environment Variables
+
+Create the local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Configure the required values in `.env`.
+
+Do not commit `.env`.
+
 ---
 
 # 🗄️ Database Setup
 
 AirHive uses PostgreSQL as its primary database.
+
+## Manual Local PostgreSQL Setup
 
 Create the database:
 
@@ -448,10 +558,6 @@ psql -U airhive_user -d airhive
 
 ## Database Configuration
 
-Database configuration is supplied through environment variables.
-
-Example:
-
 ```text
 AIRHIVE_DB_URL=jdbc:postgresql://localhost:5432/airhive
 AIRHIVE_DB_USERNAME=airhive_user
@@ -477,7 +583,7 @@ spring:
 
 AirHive uses Redis for caching frequently accessed backend data.
 
-Install on macOS with Homebrew:
+## Local Redis Installation
 
 ```bash
 brew install redis
@@ -503,14 +609,12 @@ PONG
 
 ## Redis Configuration
 
-Runtime configuration:
-
 ```text
 AIRHIVE_REDIS_HOST=localhost
 AIRHIVE_REDIS_PORT=6379
 ```
 
-The default cache TTL is:
+The default airport cache TTL is:
 
 ```text
 10 minutes
@@ -520,11 +624,11 @@ The default cache TTL is:
 
 # ▶️ Running the Application
 
-AirHive requires the frontend and backend to run separately during development.
+AirHive supports both traditional local development and a Dockerized development environment.
 
-## Start the Backend
+## Local Development
 
-Open Terminal 1:
+### Start the Backend
 
 ```bash
 cd AirHive/backend
@@ -540,9 +644,7 @@ Backend:
 http://localhost:8080
 ```
 
-## Start the Frontend
-
-Open Terminal 2:
+### Start the Frontend
 
 ```bash
 cd AirHive
@@ -556,6 +658,161 @@ Frontend:
 
 ```text
 http://localhost:5173
+```
+
+---
+
+# 🐳 Docker
+
+AirHive is fully containerized using Docker and Docker Compose.
+
+The Docker environment contains four services:
+
+| Service | Image | Port |
+|---|---|---:|
+| Frontend | `airhive-frontend:dev` | 3000 |
+| Backend | `airhive-backend:dev` | 8080 |
+| PostgreSQL | `postgres:18-alpine` | 5432 |
+| Redis | `redis:8-alpine` | 6379 |
+
+## Start the Docker Environment
+
+```bash
+cp .env.example .env
+```
+
+Configure the required environment variables.
+
+Then:
+
+```bash
+docker compose up -d --build
+```
+
+Check the services:
+
+```bash
+docker compose ps
+```
+
+Expected services:
+
+```text
+airhive-postgres
+airhive-redis
+airhive-backend
+airhive-frontend
+```
+
+## Docker Healthchecks
+
+Docker healthchecks are configured for:
+
+- PostgreSQL
+- Redis
+- Backend
+
+The backend waits for healthy PostgreSQL and Redis services before starting.
+
+The frontend waits for the backend to become healthy before starting.
+
+## Docker Logs
+
+```bash
+docker compose logs
+docker compose logs -f
+docker compose logs backend
+docker compose logs frontend
+docker compose logs postgres
+docker compose logs redis
+```
+
+## Stop Docker Services
+
+```bash
+docker compose down
+```
+
+This stops and removes the containers while preserving the named PostgreSQL and Redis volumes.
+
+## Rebuild Docker Services
+
+```bash
+docker compose up -d --build
+```
+
+---
+
+# 💾 Persistent Docker Storage
+
+AirHive uses Docker named volumes:
+
+```text
+postgres_data
+redis_data
+```
+
+These preserve PostgreSQL and Redis data across container recreation.
+
+The current Docker environment has been verified to preserve application data after container restarts.
+
+Do not remove these volumes unless intentionally resetting the development environment.
+
+---
+
+# ❤️ Application Health & Observability
+
+AirHive uses Spring Boot Actuator for application health monitoring.
+
+Exposed Actuator functionality includes:
+
+```text
+/actuator/health
+/actuator/health/liveness
+/actuator/health/readiness
+/actuator/info
+```
+
+Only the required Actuator endpoints are exposed.
+
+## Health Endpoint
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+## Liveness Probe
+
+```bash
+curl http://localhost:8080/actuator/health/liveness
+```
+
+## Readiness Probe
+
+```bash
+curl http://localhost:8080/actuator/health/readiness
+```
+
+Current verified state:
+
+```text
+Overall Health: UP
+Liveness:       UP
+Readiness:      UP
+```
+
+## Application Information
+
+```text
+/actuator/info
+```
+
+Current metadata:
+
+```text
+Name: AirHive Backend
+Description: Airline Management System backend
+Version: 1.0.0
 ```
 
 ---
@@ -624,9 +881,9 @@ DELETE /api/flights/{id}
 
 AirHive supports real-time flight updates using:
 
-* Spring WebSocket
-* STOMP
-* STOMP.js
+- Spring WebSocket
+- STOMP
+- STOMP.js
 
 ## WebSocket Endpoint
 
@@ -635,8 +892,6 @@ ws://localhost:8080/ws
 ```
 
 ## Flight Topic
-
-Clients subscribe to:
 
 ```text
 /topic/flights
@@ -650,28 +905,6 @@ FLIGHT_UPDATED
 FLIGHT_DELETED
 ```
 
-Example:
-
-```json
-{
-  "eventType": "FLIGHT_UPDATED",
-  "flight": {
-    "id": 1,
-    "flightNumber": "AH101",
-    "aircraftId": 2,
-    "aircraftRegistration": "VT-AIR01",
-    "departureAirportId": 2,
-    "departureAirportCode": "DEL",
-    "arrivalAirportId": 3,
-    "arrivalAirportCode": "BOM",
-    "routeId": 2,
-    "scheduledDeparture": "2026-08-17T09:00:00",
-    "scheduledArrival": "2026-08-17T11:15:00",
-    "status": "SCHEDULED"
-  }
-}
-```
-
 The frontend receives these events and updates the live operations dashboard without requiring a page refresh.
 
 ---
@@ -680,10 +913,10 @@ The frontend receives these events and updates the live operations dashboard wit
 
 Redis caching is implemented for:
 
-* Airports
-* Aircraft Types
-* Aircraft
-* Other frequently accessed backend resources
+- Airports
+- Aircraft Types
+- Aircraft
+- Other frequently accessed backend resources
 
 Cache flow:
 
@@ -707,41 +940,36 @@ Redis Cache
      Return response
 ```
 
-Mutation operations invalidate relevant cache entries to prevent stale data.
-
-### Flight DTO Cache
+Cache mutation operations invalidate relevant entries.
 
 Flight DTO caching is currently disabled because the Redis JSON serializer was returning cached values as `LinkedHashMap` instead of `FlightResponseDTO`.
 
-The flight APIs therefore currently load flight data directly from PostgreSQL.
-
-Future work may revisit typed flight cache serialization.
+Flight APIs therefore currently load flight data directly from PostgreSQL.
 
 ---
 
 # 📊 Analytics
 
-AirHive now includes a backend analytics layer.
+AirHive includes a backend analytics layer.
 
-The analytics overview provides:
+Current analytics include:
 
-* Total flights
-* Delayed flights
-* Cancelled flights
-* Airborne flights
-* Total aircraft
-* Active aircraft
-* Inactive aircraft
-* Maintenance aircraft
-* Flight status distribution
-* Aircraft utilization
-* Airport activity
-* Route activity
-* Historical activity
+- Operations overview
+- Flight status distribution
+- Delayed flight count
+- Cancelled flight count
+- Airborne flight count
+- Aircraft utilization
+- Aircraft status distribution
+- Airport activity
+- Route activity
+- Historical flight activity
+- Historical delayed flight counts
+- Historical cancelled flight counts
 
 Analytics are generated through the backend service layer using existing flight, aircraft, airport, and route data.
 
-The analytics architecture uses dedicated DTOs including:
+Current analytics DTOs include:
 
 ```text
 AnalyticsOverviewResponseDTO
@@ -751,54 +979,47 @@ ActivityCountDTO
 HistoricalActivityDTO
 ```
 
-Analytics were integrated into the backend and verified through the automated test suite.
-
 ---
 
 # 🧪 Testing
 
 The backend contains tests covering:
 
-* Controllers
-* Services
-* Repositories
-* Validation
-* Exception handling
-* Redis behavior
-* WebSocket publishing
-* Flight business rules
-* Authentication
-* Authorization
-* Notifications
-* Analytics
-* Regression scenarios
+- Controllers
+- Services
+- Repositories
+- Validation
+- Exception handling
+- Redis behavior
+- WebSocket publishing
+- Flight business rules
+- Authentication
+- Authorization
+- Notifications
+- Analytics
+- Regression scenarios
 
 Run all backend tests:
 
 ```bash
 cd backend
-
 ./mvnw test
 ```
 
-### Current Test Checkpoint
+## Current Test Checkpoint
 
 ```text
-Tests: 313
+Tests:    313
 Failures: 0
-Errors: 0
-Skipped: 0
+Errors:   0
+Skipped:  0
 ```
 
-This represents the current verified backend regression checkpoint.
-
-## Frontend Type Checking
+Frontend type checking:
 
 ```bash
 npx tsc --noEmit
 ```
-
-A successful run should return without TypeScript errors.
 
 ---
 
@@ -806,41 +1027,13 @@ A successful run should return without TypeScript errors.
 
 Frontend API communication is separated from UI components.
 
-Important areas:
-
-```text
-src/
-
-├── components/
-
-├── lib/
-│   ├── api/
-│   │   ├── aircraft.ts
-│   │   ├── flights.ts
-│   │   ├── websocket.ts
-│   │   └── ...
-│   │
-│   └── ams/
-│       └── live-ops.tsx
-
-└── routes/
-    ├── aircraft.tsx
-    ├── flights.tsx
-    ├── routes.tsx
-    └── ...
-```
-
 Useful commands:
 
 ```bash
 npm install
-
 npm run dev
-
 npm run build
-
 npm run preview
-
 npx tsc --noEmit
 ```
 
@@ -880,183 +1073,139 @@ Business rules are implemented primarily within the service layer.
 
 AirHive separates source-code configuration from environment-specific runtime configuration.
 
-The root `.env.example` documents the variables required by both the frontend and backend.
+Create:
 
-Actual secrets and deployment-specific values must be provided by the runtime environment and must not be committed to Git.
+```bash
+cp .env.example .env
+```
+
+Actual secrets must not be committed to Git.
 
 ## Frontend Variables
 
-| Variable            | Purpose                    | Example                     |
-| ------------------- | -------------------------- | --------------------------- |
-| `VITE_API_BASE_URL` | Backend REST API URL       | `http://localhost:8080/api` |
-| `VITE_WS_URL`       | Backend WebSocket endpoint | `ws://localhost:8080/ws`    |
+| Variable | Purpose | Example |
+|---|---|---|
+| `VITE_API_BASE_URL` | Backend REST API URL | `http://localhost:8080/api` |
+| `VITE_WS_URL` | Backend WebSocket endpoint | `ws://localhost:8080/ws` |
 
 ## Backend Variables
 
-### Database
-
-| Variable              | Purpose                        |
-| --------------------- | ------------------------------ |
-| `AIRHIVE_DB_URL`      | PostgreSQL JDBC connection URL |
-| `AIRHIVE_DB_USERNAME` | PostgreSQL username            |
-| `AIRHIVE_DB_PASSWORD` | PostgreSQL password            |
-
-### Redis
-
-| Variable             | Purpose        |
-| -------------------- | -------------- |
+| Variable | Purpose |
+|---|---|
+| `AIRHIVE_DB_URL` | PostgreSQL JDBC connection URL |
+| `AIRHIVE_DB_USERNAME` | PostgreSQL username |
+| `AIRHIVE_DB_PASSWORD` | PostgreSQL password |
 | `AIRHIVE_REDIS_HOST` | Redis hostname |
-| `AIRHIVE_REDIS_PORT` | Redis port     |
-
-### Security
-
-| Variable             | Purpose                            |
-| -------------------- | ---------------------------------- |
-| `AIRHIVE_JWT_SECRET` | Secret used for JWT authentication |
-
-`AIRHIVE_JWT_SECRET` must be supplied by the runtime environment.
-
-A secure production secret must be used in deployed environments.
-
-### Cross-Origin Configuration
-
-| Variable                     | Purpose                                        |
-| ---------------------------- | ---------------------------------------------- |
-| `AIRHIVE_CORS_ORIGINS`       | Allowed frontend origins for REST API requests |
-| `AIRHIVE_WS_ALLOWED_ORIGINS` | Allowed origins for WebSocket connections      |
+| `AIRHIVE_REDIS_PORT` | Redis port |
+| `AIRHIVE_JWT_SECRET` | JWT signing secret |
+| `AIRHIVE_CORS_ORIGINS` | Allowed REST origins |
+| `AIRHIVE_WS_ALLOWED_ORIGINS` | Allowed WebSocket origins |
 
 Production deployments should replace local development origins with the actual deployed frontend origin.
 
-## Production Configuration
+---
 
-Production environments should provide backend runtime variables through the deployment platform's environment/secrets configuration rather than committing secrets to the repository.
+# 🔒 Secret Management
 
-The backend currently uses:
+The actual `.env` file is intentionally excluded from Git.
 
-* `ddl-auto: validate`
-* SQL statement logging disabled
-* Configurable PostgreSQL connection settings
-* Configurable Redis connection settings
-* Externally supplied JWT secret
-* Configurable REST API CORS origins
-* Configurable WebSocket origins
-* Configurable WebSocket runtime settings
+Verify:
+
+```bash
+git check-ignore -v .env
+```
+
+The repository should not contain:
+
+- Database passwords
+- JWT secrets
+- Production API keys
+- Deployment credentials
+- Other private runtime secrets
+
+The `.env.example` file contains configuration templates only.
 
 ---
 
-# ❤️ Application Health & Observability
+# 🛡️ Security
 
-AirHive now includes Spring Boot Actuator health monitoring as part of the deployment and observability work.
+AirHive includes:
 
-## Health Endpoint
+- Authentication
+- JWT-based security
+- Role-based access control
+- Protected API endpoints
+- User lifecycle validation
+- Password security
+- Security exception handling
+- WebSocket security foundation
+- Runtime security configuration
 
-```text
-/actuator/health
-```
+Production-oriented configuration includes:
 
-## Liveness Probe
-
-```text
-/actuator/health/liveness
-```
-
-## Readiness Probe
-
-```text
-/actuator/health/readiness
-```
-
-The application health configuration exposes liveness and readiness probes for deployment and runtime monitoring.
-
-The health endpoints have been verified successfully with:
-
-```text
-Status: UP
-```
-
-for:
-
-* Overall application health
-* Liveness
-* Readiness
-
-## Application Information
-
-Application information is exposed through the configured Actuator information endpoint.
-
-The current application metadata includes:
-
-```text
-Name: AirHive Backend
-Description: Airline Management System backend
-Version: 1.0.0
-```
-
-These capabilities provide the foundation for future deployment monitoring, container orchestration, and production observability.
+- `ddl-auto: validate`
+- SQL statement logging disabled
+- Configurable database settings
+- Configurable Redis settings
+- Externally supplied JWT secret
+- Configurable CORS origins
+- Configurable WebSocket origins
+- Limited Actuator exposure
 
 ---
 
-# 🔐 Security
+# 🐳 Container Security & Runtime Hardening
 
-AirHive includes a production-oriented Spring Security foundation.
+The Docker environment has been reviewed for:
 
-Current security capabilities include:
+- Container privileges
+- Runtime configuration
+- Secret handling
+- Port exposure
+- Docker networking
+- Restart policies
+- Persistent storage
+- Healthchecks
+- Service dependency ordering
 
-* Authentication
-* JWT-based security
-* Role-based access control
-* Protected API endpoints
-* User lifecycle validation
-* Password security
-* Security exception handling
-* WebSocket security foundation
-* Configurable security-related runtime settings
+Application containers are not configured as privileged containers.
 
-Authentication and authorization are integrated into the backend and frontend rather than being treated as a future-only feature.
-
-A final production security review remains part of the finalization process.
+Runtime secrets are supplied through environment configuration rather than baked into Docker images.
 
 ---
 
 # 🧑‍💻 Git Workflow
 
-Pull the latest changes:
+Pull:
 
 ```bash
 git pull origin main
 ```
 
-Run frontend validation:
+Frontend validation:
 
 ```bash
 npx tsc --noEmit
 ```
 
-Run backend tests:
+Backend tests:
 
 ```bash
 cd backend
-
 ./mvnw test
 ```
 
-Check formatting:
+Check:
 
 ```bash
 git diff --check
-```
-
-Check Git status:
-
-```bash
 git status
 ```
 
-Commit changes:
+Commit:
 
 ```bash
 git add .
-
 git commit -m "type: description"
 ```
 
@@ -1068,95 +1217,62 @@ git push origin main
 
 ## Commit Convention
 
-| Prefix      | Usage                      |
-| ----------- | -------------------------- |
-| `feat:`     | New feature                |
-| `fix:`      | Bug fix                    |
-| `test:`     | Tests                      |
-| `refactor:` | Code restructuring         |
-| `style:`    | Formatting/UI-only changes |
-| `docs:`     | Documentation              |
-| `chore:`    | Maintenance                |
-
-Examples:
-
-```text
-feat: integrate flight websocket updates
-
-test: improve flight service validation coverage
-
-docs: update project README
-```
+| Prefix | Usage |
+|---|---|
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `test:` | Tests |
+| `refactor:` | Code restructuring |
+| `style:` | Formatting/UI-only changes |
+| `docs:` | Documentation |
+| `chore:` | Maintenance |
 
 ---
 
 # 📊 Current Project Status
 
-| Area                            | Status                  |
-| ------------------------------- | ----------------------- |
-| Core Architecture               | ✅ Complete              |
-| PostgreSQL Database             | ✅ Complete              |
-| Airport APIs                    | ✅ Complete              |
-| Aircraft Type APIs              | ✅ Complete              |
-| Aircraft APIs                   | ✅ Complete              |
-| Route APIs                      | ✅ Complete              |
-| Flight APIs                     | ✅ Complete              |
-| Business Validation             | ✅ Complete              |
-| Frontend API Integration        | ✅ Complete              |
-| Backend Testing                 | ✅ Complete              |
-| Redis Integration               | ✅ Complete              |
-| Airport Caching                 | ✅ Complete              |
-| Aircraft Type Caching           | ✅ Complete              |
-| Aircraft Caching                | ✅ Complete              |
-| Flight DTO Caching              | ⚠️ Temporarily Disabled |
-| Cache Invalidation              | ✅ Complete              |
-| TTL Verification                | ✅ Complete              |
-| Flight WebSockets               | ✅ Complete              |
-| Frontend Live Flight Updates    | ✅ Complete              |
-| Authentication                  | ✅ Complete              |
-| JWT Security                    | ✅ Complete              |
-| Role-Based Access Control       | ✅ Complete              |
-| Protected API Endpoints         | ✅ Complete              |
-| Security Hardening Foundation   | ✅ Complete              |
-| Notification System             | ✅ Complete              |
-| Real-Time Notification Delivery | ✅ Complete              |
-| Notification Read/Unread UX     | ✅ Complete              |
-| Notification Clearing           | ✅ Complete              |
-| Flight Notification Navigation  | ✅ Complete              |
-| Flight Detail View              | ✅ Complete              |
-| Advanced Flight Operations      | ✅ Complete              |
-| Flight History                  | ✅ Complete              |
-| Analytics Backend               | ✅ Complete              |
-| Analytics Overview              | ✅ Complete              |
-| Flight Status Analytics         | ✅ Complete              |
-| Airport Activity Analytics      | ✅ Complete              |
-| Aircraft Utilization Analytics  | ✅ Complete              |
-| Route Activity Analytics        | ✅ Complete              |
-| Historical Flight Analytics     | ✅ Complete              |
-| Backend Regression Suite        | ✅ 313 Tests Passing     |
-| Environment Externalization     | ✅ Complete              |
-| Database Runtime Configuration  | ✅ Complete              |
-| Redis Runtime Configuration     | ✅ Complete              |
-| JWT Runtime Configuration       | ✅ Complete              |
-| CORS Configuration              | ✅ Complete              |
-| WebSocket Origin Configuration  | ✅ Complete              |
-| SQL Logging Reduction           | ✅ Complete              |
-| Actuator Health Endpoint        | ✅ Complete              |
-| Liveness Probe                  | ✅ Complete              |
-| Readiness Probe                 | ✅ Complete              |
-| Application Info Endpoint       | ✅ Complete              |
-| UI/Design System Polish         | 🔄 In Progress          |
-| Deployment Configuration        | 🔄 In Progress          |
-| Production Runtime Verification | 🔄 In Progress          |
-| Docker                          | 🔜 Planned              |
-| CI/CD                           | 🔜 Planned              |
-| Application Monitoring          | 🔜 Planned              |
-| Logging & Tracing               | 🔜 Planned              |
-| Production Database Strategy    | 🔜 Planned              |
-| Backup & Recovery               | 🔜 Planned              |
-| Redis Production Configuration  | 🔜 Planned              |
-| AI Features                     | 🔮 Future Phase         |
-| Final QA & Documentation        | 🔜 Planned              |
+| Area | Status |
+|---|---|
+| Core Architecture | ✅ Complete |
+| PostgreSQL Database | ✅ Complete |
+| Airport APIs | ✅ Complete |
+| Aircraft Type APIs | ✅ Complete |
+| Aircraft APIs | ✅ Complete |
+| Route APIs | ✅ Complete |
+| Flight APIs | ✅ Complete |
+| Passenger Management | ✅ Complete |
+| Crew Management | ✅ Complete |
+| Booking Management | ✅ Complete |
+| Maintenance Management | ✅ Complete |
+| Business Validation | ✅ Complete |
+| Frontend API Integration | ✅ Complete |
+| Backend Testing | ✅ Complete |
+| Redis Integration | ✅ Complete |
+| Redis Caching | ✅ Complete |
+| Cache Invalidation | ✅ Complete |
+| Flight WebSockets | ✅ Complete |
+| Live Flight Updates | ✅ Complete |
+| Authentication | ✅ Complete |
+| JWT Security | ✅ Complete |
+| Role-Based Access Control | ✅ Complete |
+| Notifications | ✅ Complete |
+| Advanced Flight Operations | ✅ Complete |
+| Flight History | ✅ Complete |
+| Analytics Backend | ✅ Complete |
+| Historical Analytics | ✅ Complete |
+| Environment Externalization | ✅ Complete |
+| Dockerization | ✅ Complete |
+| Docker Compose Environment | ✅ Complete |
+| Docker Healthchecks | ✅ Complete |
+| Persistent Docker Storage | ✅ Complete |
+| Actuator Health | ✅ Complete |
+| Liveness Probe | ✅ Complete |
+| Readiness Probe | ✅ Complete |
+| Deployment Hardening | ✅ Complete |
+| Phase 12 Analytics | ✅ Complete |
+| Phase 13 AI | 🔮 Future / Postponed |
+| Phase 14 Deployment & Observability | ✅ Complete |
+| Phase 15 Finalization & Release | 🔄 Current |
 
 ---
 
@@ -1164,188 +1280,173 @@ docs: update project README
 
 ## Phase 1 — Core Architecture
 
-* [x] Project structure
-* [x] Frontend architecture
-* [x] Backend architecture
-* [x] Database model
-* [x] API client structure
-* [x] Shared frontend components
-
----
+- [x] Project structure
+- [x] Frontend architecture
+- [x] Backend architecture
+- [x] Database model
+- [x] API client structure
+- [x] Shared frontend components
 
 ## Phase 2 — Database
 
-* [x] PostgreSQL integration
-* [x] Airport schema
-* [x] Aircraft type schema
-* [x] Aircraft schema
-* [x] Route schema
-* [x] Flight schema
-* [x] User and role schema
-* [x] Notification schema
-
----
+- [x] PostgreSQL integration
+- [x] Airport schema
+- [x] Aircraft type schema
+- [x] Aircraft schema
+- [x] Route schema
+- [x] Flight schema
+- [x] User and role schema
+- [x] Notification schema
+- [x] Passenger schema
+- [x] Crew schema
+- [x] Booking schema
+- [x] Maintenance schema
 
 ## Phase 3 — REST APIs
 
-* [x] Airport APIs
-* [x] Aircraft Type APIs
-* [x] Aircraft APIs
-* [x] Route APIs
-* [x] Flight APIs
-* [x] Authentication APIs
-* [x] User management APIs
-* [x] Notification APIs
-
----
+- [x] Airport APIs
+- [x] Aircraft Type APIs
+- [x] Aircraft APIs
+- [x] Route APIs
+- [x] Flight APIs
+- [x] Authentication APIs
+- [x] User management APIs
+- [x] Notification APIs
+- [x] Passenger APIs
+- [x] Crew APIs
+- [x] Booking APIs
+- [x] Maintenance APIs
 
 ## Phase 4 — Business Logic
 
-* [x] Request validation
-* [x] Duplicate detection
-* [x] Resource validation
-* [x] Aircraft scheduling conflict detection
-* [x] Exception handling
-* [x] Flight status validation
-* [x] User lifecycle validation
-* [x] Role and permission validation
-
----
+- [x] Request validation
+- [x] Duplicate detection
+- [x] Resource validation
+- [x] Aircraft scheduling conflict detection
+- [x] Exception handling
+- [x] Flight status validation
+- [x] User lifecycle validation
+- [x] Role and permission validation
+- [x] Booking validation
+- [x] Passenger validation
 
 ## Phase 5 — Frontend Integration
 
-* [x] API client layer
-* [x] Flight integration
-* [x] Aircraft integration
-* [x] Route integration
-* [x] Live operations integration
-* [x] Authentication flow
-* [x] Session handling
-* [x] Protected frontend routes
-* [x] Notification panel
-* [x] Flight detail page
-* [x] Flight detail navigation
-
----
+- [x] API client layer
+- [x] Flight integration
+- [x] Aircraft integration
+- [x] Route integration
+- [x] Live operations integration
+- [x] Authentication flow
+- [x] Session handling
+- [x] Protected frontend routes
+- [x] Notification panel
+- [x] Flight detail page
+- [x] Passenger management
+- [x] Crew management
+- [x] Booking management
+- [x] Maintenance management
 
 ## Phase 6 — Testing
 
-* [x] Service tests
-* [x] Controller tests
-* [x] Repository tests
-* [x] Validation tests
-* [x] Authentication tests
-* [x] RBAC tests
-* [x] WebSocket tests
-* [x] Notification tests
-* [x] Regression testing
-
----
+- [x] Service tests
+- [x] Controller tests
+- [x] Repository tests
+- [x] Validation tests
+- [x] Authentication tests
+- [x] RBAC tests
+- [x] WebSocket tests
+- [x] Notification tests
+- [x] Analytics tests
+- [x] Regression testing
+- [x] 313 backend tests passing
 
 ## Phase 7 — Redis and Caching
 
-* [x] Redis integration
-* [x] Airport caching
-* [x] Aircraft type caching
-* [x] Aircraft caching
-* [x] Cache invalidation
-* [x] TTL verification
-* [x] Redis health verification
-* [ ] Correctly typed flight DTO caching
-* [ ] Flight cache serialization review
-
-> Flight DTO caching is currently disabled because the Redis JSON serializer was returning cached values as `LinkedHashMap` instead of `FlightResponseDTO`. Flight APIs currently load flight data directly from PostgreSQL.
-
----
+- [x] Redis integration
+- [x] Airport caching
+- [x] Aircraft type caching
+- [x] Aircraft caching
+- [x] Cache invalidation
+- [x] TTL verification
+- [x] Redis health verification
+- [ ] Correctly typed flight DTO caching
+- [ ] Flight cache serialization review
 
 ## Phase 8 — Real-Time Operations
 
-* [x] Spring WebSocket
-* [x] STOMP broker
-* [x] Flight event DTO
-* [x] Flight created events
-* [x] Flight updated events
-* [x] Flight deleted events
-* [x] Frontend STOMP client
-* [x] Live flight dashboard updates
-* [x] Real-time notification delivery
-* [x] Notification read/unread state
-* [x] Notification clearing
-* [x] Flight notification navigation
-
----
+- [x] Spring WebSocket
+- [x] STOMP broker
+- [x] Flight event DTO
+- [x] Flight created events
+- [x] Flight updated events
+- [x] Flight deleted events
+- [x] Frontend STOMP client
+- [x] Live flight dashboard updates
+- [x] Real-time notification delivery
+- [x] Notification read/unread state
+- [x] Notification clearing
+- [x] Flight notification navigation
 
 ## Phase 9 — UI and Design System
 
-* [x] macOS-inspired application shell
-* [x] Shared design primitives
-* [x] Glass-style cards
-* [x] Status pills
-* [x] Responsive layout foundation
-* [x] Loading states
-* [x] Empty states
-* [x] Error states
-* [x] Accessibility improvements
-* [ ] Final design system refinement
-* [ ] Advanced dashboard interactions
-* [ ] Full responsive QA
-* [ ] Visual consistency review
-
----
+- [x] macOS-inspired application shell
+- [x] Shared design primitives
+- [x] Glass-style cards
+- [x] Status pills
+- [x] Responsive layout foundation
+- [x] Loading states
+- [x] Empty states
+- [x] Error states
+- [x] Accessibility improvements
+- [ ] Final design system refinement
+- [ ] Advanced dashboard interactions
+- [ ] Full responsive QA
+- [ ] Visual consistency review
 
 ## Phase 10 — Security
 
-* [x] Authentication
-* [x] JWT/session strategy
-* [x] Role-based access control
-* [x] Protected endpoints
-* [x] User lifecycle management
-* [x] Password security
-* [x] Security exception handling
-* [x] WebSocket security foundation
-* [x] Production security configuration foundation
-* [ ] Final security audit
-
----
+- [x] Authentication
+- [x] JWT/session strategy
+- [x] Role-based access control
+- [x] Protected endpoints
+- [x] User lifecycle management
+- [x] Password security
+- [x] Security exception handling
+- [x] WebSocket security foundation
+- [x] Production security configuration foundation
+- [x] Runtime secret externalization
+- [ ] Final security review
 
 ## Phase 11 — Advanced Flight Operations
 
-* [x] Dynamic flight detail route
-* [x] Flight detail information view
-* [x] Flight schedule information
-* [x] Aircraft information display
-* [x] Flight status display
-* [x] Flight status update from detail page
-* [x] Flight activity timeline
-* [x] Delay and cancellation reasons
-* [x] Aircraft and route detail links
-* [x] Operational action permissions
-* [x] Advanced flight filtering
-* [x] Flight history
-
----
+- [x] Dynamic flight detail route
+- [x] Flight detail information view
+- [x] Flight schedule information
+- [x] Aircraft information display
+- [x] Flight status display
+- [x] Flight status update from detail page
+- [x] Flight activity timeline
+- [x] Delay and cancellation reasons
+- [x] Aircraft and route detail links
+- [x] Operational action permissions
+- [x] Advanced flight filtering
+- [x] Flight history
 
 ## Phase 12 — Analytics
 
 **Status: ✅ Complete**
 
-* [x] Operations dashboard analytics
-* [x] Flight status distribution
-* [x] Delay analytics
-* [x] Airport activity analytics
-* [x] Aircraft utilization analytics
-* [x] Route activity analytics
-* [x] Historical reporting
-* [x] Analytics backend integration
-* [x] Analytics DTOs
-* [x] Analytics service layer
-* [x] Analytics regression testing
-
-The analytics backend was integrated into the existing AirHive architecture without introducing a separate analytics data store.
-
-Current analytics are derived from the existing flight, aircraft, airport, and route data.
-
----
+- [x] Operations dashboard analytics
+- [x] Flight status distribution
+- [x] Delay analytics
+- [x] Airport activity analytics
+- [x] Aircraft utilization analytics
+- [x] Route activity analytics
+- [x] Historical reporting
+- [x] Analytics DTOs
+- [x] Analytics service layer
+- [x] Analytics regression testing
 
 ## Phase 13 — AI Features
 
@@ -1353,93 +1454,133 @@ Current analytics are derived from the existing flight, aircraft, airport, and r
 
 AI development is intentionally postponed.
 
-The project will first complete deployment, observability, production configuration, and final stabilization.
-
 Planned future capabilities:
 
-* [ ] AI-assisted operational insights
-* [ ] Delay prediction
-* [ ] Flight disruption analysis
-* [ ] Natural-language operations search
-* [ ] AI recommendations
-* [ ] AI monitoring and evaluation
+- [ ] AI-assisted operational insights
+- [ ] Delay prediction
+- [ ] Flight disruption analysis
+- [ ] Natural-language operations search
+- [ ] AI recommendations
+- [ ] AI monitoring and evaluation
 
----
+Phase 13 is not part of the current release scope.
 
 ## Phase 14 — Deployment and Observability
 
+**Status: ✅ Complete**
+
+Completed:
+
+- [x] Runtime configuration externalization
+- [x] Database configuration externalization
+- [x] Redis configuration externalization
+- [x] JWT secret externalization
+- [x] CORS configuration
+- [x] WebSocket origin configuration
+- [x] Production-oriented JPA configuration
+- [x] SQL logging reduction
+- [x] Dockerfiles
+- [x] Docker Compose
+- [x] PostgreSQL container
+- [x] Redis container
+- [x] Backend container
+- [x] Frontend container
+- [x] Docker healthchecks
+- [x] Persistent volumes
+- [x] Docker network verification
+- [x] Actuator health
+- [x] Liveness
+- [x] Readiness
+- [x] Application information
+- [x] Secret handling audit
+- [x] Container runtime audit
+- [x] Final deployment verification
+
+## Phase 15 — Finalization & Release
+
 **Status: 🔄 Current Development Phase**
 
-### Runtime Configuration
+### 15.1 Final Repository & Code Audit
 
-* [x] Externalize database configuration
-* [x] Externalize Redis configuration
-* [x] Externalize JWT secret
-* [x] Externalize REST API CORS configuration
-* [x] Externalize WebSocket origin configuration
-* [x] Externalize frontend API URL
-* [x] Externalize frontend WebSocket URL
+- [x] Working tree clean
+- [x] Main branch synchronized
+- [x] Docker files verified
+- [x] `.env.example` verified
+- [x] `.env` excluded from Git
+- [x] Build/log artifacts checked
+- [x] TODO/FIXME markers reviewed
+- [x] Git repository integrity checked
 
-### Production Configuration
+### 15.2 README & Documentation
 
-* [x] Disable automatic Hibernate schema modification
-* [x] Configure `ddl-auto: validate`
-* [x] Disable SQL statement logging
-* [x] Reduce unnecessary security logging
-* [x] Make WebSocket configuration configurable
-* [x] Make CORS configuration configurable
-* [x] Document runtime environment variables
+- [x] Project status updated
+- [x] Phase 14 marked complete
+- [x] Phase 15 marked current
+- [x] Phase 13 marked future/postponed
+- [x] Docker workflow documented
+- [x] Environment variables documented
+- [x] Health endpoints documented
+- [x] Testing documented
+- [x] Deployment configuration documented
+- [ ] Final documentation review
 
-### Application Health
+### 15.3 Environment & Setup Documentation
 
-* [x] Spring Boot Actuator integration
-* [x] Health endpoint
-* [x] Liveness probe
-* [x] Readiness probe
-* [x] Health group verification
-* [x] Application information endpoint
+- [ ] Verify `.env.example`
+- [ ] Verify fresh setup instructions
+- [ ] Verify Docker setup from clean environment
+- [ ] Verify local development instructions
 
-Verified endpoints:
+### 15.4 Final Application QA
 
-```text
-/actuator/health
-/actuator/health/liveness
-/actuator/health/readiness
-```
+- [ ] Frontend smoke test
+- [ ] Authentication flow
+- [ ] Flight management
+- [ ] Airport management
+- [ ] Aircraft management
+- [ ] Route management
+- [ ] Passenger management
+- [ ] Crew management
+- [ ] Booking management
+- [ ] Maintenance management
+- [ ] Analytics
+- [ ] Notifications
+- [ ] WebSocket functionality
 
-Current health verification:
+### 15.5 Deployment Documentation
 
-```text
-Overall Health: UP
-Liveness:       UP
-Readiness:      UP
-```
+- [ ] Final deployment instructions
+- [ ] Runtime configuration documentation
+- [ ] Environment variable reference
+- [ ] Healthcheck documentation
+- [ ] Deployment troubleshooting
+- [ ] Backup/recovery notes
 
-### Remaining Deployment Work
+### 15.6 Final Build & Regression Verification
 
-* [x] Docker configuration
-* [ ] Production environment configuration
-* [ ] CI/CD pipeline
-* [ ] Automated deployment
-* [ ] Application monitoring
-* [ ] Logging and tracing
-* [ ] Production database strategy
-* [ ] Backup and recovery strategy
-* [ ] Redis production configuration
-* [ ] Production runtime verification
+- [ ] Frontend production build
+- [ ] Backend clean build
+- [x] Backend regression suite
+- [x] Docker rebuild
+- [x] Docker runtime verification
+- [x] Final health verification
 
----
+### 15.7 Git & Release Audit
 
-## Phase 15 — Finalization
+- [x] Working tree clean
+- [x] Branch synchronized
+- [ ] Final documentation commit
+- [ ] Final push
+- [ ] Final release state verification
 
-* [ ] End-to-end QA
-* [ ] Performance testing
-* [ ] Final security review
-* [ ] API documentation
-* [ ] Developer documentation
-* [ ] Deployment documentation
-* [ ] Final project report
-* [ ] Final presentation
+### 15.8 Final Release Checkpoint
+
+- [ ] Release documentation complete
+- [ ] Application stable
+- [x] Backend regression suite passing
+- [x] Docker environment verified
+- [x] No accidental secrets committed
+- [ ] Final release checkpoint
 
 ---
 
@@ -1449,13 +1590,9 @@ Readiness:      UP
 
 ```bash
 npm install
-
 npm run dev
-
 npm run build
-
 npm run preview
-
 npx tsc --noEmit
 ```
 
@@ -1463,13 +1600,9 @@ npx tsc --noEmit
 
 ```bash
 cd backend
-
 ./mvnw clean install
-
 ./mvnw spring-boot:run
-
 ./mvnw test
-
 ./mvnw clean
 ```
 
@@ -1477,7 +1610,6 @@ cd backend
 
 ```bash
 psql --version
-
 psql -U airhive_user -d airhive
 ```
 
@@ -1485,22 +1617,48 @@ psql -U airhive_user -d airhive
 
 ```bash
 redis-cli ping
-
 redis-cli KEYS '*'
+```
 
+Development-only Redis reset:
+
+```bash
 redis-cli FLUSHDB
 ```
 
-> Use `FLUSHDB` carefully because it removes all keys from the currently selected Redis database.
+> ⚠️ `FLUSHDB` removes all keys from the selected Redis database. Use it only when intentionally clearing development Redis data.
 
-## Actuator Health
+## Docker
 
 ```bash
-curl -s http://localhost:8080/actuator/health | jq
+docker compose up -d --build
+docker compose ps
+docker compose logs
+docker compose logs -f
+docker compose down
+docker compose config --quiet
+```
 
-curl -s http://localhost:8080/actuator/health/readiness | jq
+## Actuator
 
-curl -s http://localhost:8080/actuator/health/liveness | jq
+```bash
+curl -s http://localhost:8080/actuator/health
+curl -s http://localhost:8080/actuator/health/readiness
+curl -s http://localhost:8080/actuator/health/liveness
+```
+
+---
+
+# 🔍 Useful Docker Diagnostics
+
+```bash
+docker compose ps
+docker compose logs backend
+docker compose logs frontend
+docker compose logs postgres
+docker compose logs redis
+docker compose logs -f
+docker compose config
 ```
 
 ---
@@ -1508,7 +1666,6 @@ curl -s http://localhost:8080/actuator/health/liveness | jq
 # 🐛 Troubleshooting
 
 <details>
-
 <summary><strong>Backend cannot connect to PostgreSQL</strong></summary>
 
 Check PostgreSQL:
@@ -1517,13 +1674,13 @@ Check PostgreSQL:
 brew services list
 ```
 
-Test the database:
+Test:
 
 ```bash
 psql -U airhive_user -d airhive
 ```
 
-Then verify the environment variables:
+Verify:
 
 ```text
 AIRHIVE_DB_URL
@@ -1531,13 +1688,16 @@ AIRHIVE_DB_USERNAME
 AIRHIVE_DB_PASSWORD
 ```
 
+For Docker, the backend should connect using:
+
+```text
+jdbc:postgresql://postgres:5432/airhive
+```
+
 </details>
 
 <details>
-
 <summary><strong>Redis connection fails</strong></summary>
-
-Check:
 
 ```bash
 redis-cli ping
@@ -1549,46 +1709,54 @@ Expected:
 PONG
 ```
 
-Start Redis if necessary:
+Start Redis:
 
 ```bash
 brew services start redis
 ```
 
-Also verify:
+For Docker:
 
 ```text
-AIRHIVE_REDIS_HOST
-AIRHIVE_REDIS_PORT
+redis:6379
 ```
 
 </details>
 
 <details>
-
 <summary><strong>Port 8080 is already in use</strong></summary>
-
-Find the process:
 
 ```bash
 lsof -i :8080
 ```
 
-Stop it if appropriate:
+Stop the process if appropriate:
 
 ```bash
 kill <PID>
 ```
 
-Then restart Spring Boot.
+</details>
+
+<details>
+<summary><strong>Port 3000 is already in use</strong></summary>
+
+```bash
+lsof -i :3000
+```
+
+Stop the process if appropriate:
+
+```bash
+kill <PID>
+```
 
 </details>
 
 <details>
-
 <summary><strong>JWT configuration error</strong></summary>
 
-Verify that the JWT secret is supplied:
+Verify:
 
 ```text
 AIRHIVE_JWT_SECRET
@@ -1596,21 +1764,14 @@ AIRHIVE_JWT_SECRET
 
 The backend requires a runtime JWT secret.
 
-Never commit the production JWT secret to Git.
+Never commit the production JWT secret.
 
 </details>
 
 <details>
-
 <summary><strong>WebSocket does not connect</strong></summary>
 
-Verify the backend is running:
-
-```text
-http://localhost:8080
-```
-
-WebSocket endpoint:
+Verify:
 
 ```text
 ws://localhost:8080/ws
@@ -1628,42 +1789,58 @@ Also verify:
 AIRHIVE_WS_ALLOWED_ORIGINS
 ```
 
-Browser debugging:
-
-```text
-Developer Tools → Network → WS
-```
-
 </details>
 
 <details>
-
 <summary><strong>Redis returns unexpected cached data</strong></summary>
 
-Clear the development Redis database:
+Development-only reset:
 
 ```bash
 redis-cli FLUSHDB
 ```
 
-Restart the backend if necessary.
+> ⚠️ This removes all keys from the selected Redis database.
 
 </details>
 
 <details>
+<summary><strong>Docker backend is unhealthy</strong></summary>
 
-<summary><strong>Actuator health endpoint returns 401</strong></summary>
-
-Actuator endpoints may be protected by the application's security configuration.
-
-When authentication is required, provide a valid bearer token when querying the endpoint.
-
-Example:
+Check:
 
 ```bash
-curl -H "Authorization: Bearer <TOKEN>" \
-  http://localhost:8080/actuator/health
+docker compose ps
+docker compose logs backend
 ```
+
+Then:
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+Also verify:
+
+```bash
+docker compose ps postgres
+docker compose ps redis
+```
+
+</details>
+
+<details>
+<summary><strong>Actuator health endpoint returns 401</strong></summary>
+
+The following endpoints are configured for runtime health checks:
+
+```text
+/actuator/health
+/actuator/health/liveness
+/actuator/health/readiness
+```
+
+Review `SecurityConfig` if health endpoints unexpectedly require authentication.
 
 </details>
 
@@ -1673,11 +1850,15 @@ curl -H "Authorization: Bearer <TOKEN>" \
 
 Frontend deployment:
 
+```text
 https://skyward-zenith-ops.lovable.app
+```
 
 The deployed frontend represents the current user-facing airline operations experience.
 
-The local development environment remains the primary environment for backend, API, database, Redis, WebSocket, analytics, and deployment configuration development.
+The local development and Docker environments remain the primary environments for backend, API, database, Redis, WebSocket, analytics, and deployment configuration development.
+
+The current Docker Compose setup is a **development/local deployment environment** and should not be interpreted as a production hosting deployment.
 
 ---
 
@@ -1718,14 +1899,24 @@ Environment Externalization
        ↓
 Production Configuration Hardening
        ↓
+Dockerization
+       ↓
 Actuator Health & Readiness Monitoring
        ↓
-Deployment & Observability
+Deployment Hardening
+       ↓
+Phase 15 Finalization & Release
 ```
 
-The current development focus is **Phase 14 — Deployment and Observability**.
+Phase 12 completed the analytics layer.
 
-AI capabilities have deliberately been moved to a future phase so that the core airline management platform can first reach a stable, deployable, and observable state.
+Phase 13 AI capabilities were deliberately moved to a future phase.
+
+Phase 14 completed deployment, Dockerization, observability, runtime configuration, and hardening.
+
+The current development focus is:
+
+**Phase 15 — Finalization & Release**
 
 ---
 
@@ -1757,11 +1948,19 @@ Major backend functionality is supported by automated tests before progressing t
 
 ### 7. Production-Oriented Configuration
 
-Environment-specific values such as database credentials, Redis settings, JWT secrets, CORS origins, and WebSocket origins are externalized rather than hard-coded into the application.
+Environment-specific values such as database credentials, Redis settings, JWT secrets, CORS origins, and WebSocket origins are externalized.
 
-### 8. Operational Observability
+### 8. Containerized Development
 
-Spring Boot Actuator health, liveness, readiness, and application information endpoints provide a foundation for monitoring the application during deployment and production operation.
+Docker Compose provides a reproducible environment containing the frontend, backend, PostgreSQL, and Redis infrastructure.
+
+### 9. Operational Observability
+
+Spring Boot Actuator health, liveness, readiness, and application information endpoints provide a foundation for monitoring the application during deployment and operation.
+
+### 10. Stable Core Before AI
+
+The AI roadmap is intentionally separated from the current release so the core airline management platform can first reach a stable, tested, documented, and deployable state.
 
 ---
 
@@ -1784,8 +1983,10 @@ Built with:
 ```text
 React
 TypeScript
+Vite
+TanStack Start
 Spring Boot
-Java
+Java 26
 PostgreSQL
 Redis
 WebSockets
@@ -1793,7 +1994,8 @@ STOMP
 Spring Security
 Spring Boot Actuator
 Maven
-Vite
+Docker
+Docker Compose
 ```
 
 ---
