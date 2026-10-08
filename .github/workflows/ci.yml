@@ -58,10 +58,9 @@ jobs:
   docker:
     name: Docker Build Validation
     runs-on: ubuntu-latest
-    needs:cat .github/workflows/ci.yml
-      - frontend
-      - backend
-
+    needs:
+    - frontend
+    - backend
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
