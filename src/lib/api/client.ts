@@ -1,4 +1,5 @@
 import { clearSession, getToken } from "../auth/session";
+import { disconnectWebSocket } from "./websocket";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api";
 
@@ -29,6 +30,7 @@ export async function apiRequest<T>(endpoint: string, options?: RequestInit): Pr
 
     if (response.status === 401) {
       clearSession();
+      void disconnectWebSocket();
       message = "Your session has expired. Please log in again.";
 
       if (typeof window !== "undefined" && window.location.pathname !== "/login") {
