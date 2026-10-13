@@ -64,8 +64,6 @@ export type CrewMember = {
   initials: string;
 };
 
-
-
 export type OpsNotification = {
   id: string;
   title: string;
@@ -350,7 +348,6 @@ export const CREW: CrewMember[] = [
     initials: "AR",
   },
 ];
-
 
 function pick<T>(arr: T[], i: number) {
   return arr[i % arr.length];

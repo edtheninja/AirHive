@@ -22,7 +22,8 @@ export const Route = createFileRoute("/flights")({
       },
       {
         property: "og:description",
-        content: "Monitor and filter every scheduled, boarding, airborne and delayed flight in one board.",
+        content:
+          "Monitor and filter every scheduled, boarding, airborne and delayed flight in one board.",
       },
     ],
   }),
@@ -66,8 +67,7 @@ function FlightsPage() {
     return Array.from(uniqueAirports).sort();
   }, [flights]);
 
-  const hasAdvancedFilters =
-    origin !== "ALL" || destination !== "ALL" || departureDate !== "";
+  const hasAdvancedFilters = origin !== "ALL" || destination !== "ALL" || departureDate !== "";
 
   const clearFilters = () => {
     setFilter("ALL");
@@ -87,13 +87,11 @@ function FlightsPage() {
         .join(" ")
         .toLowerCase();
 
-      const matchesSearch =
-        normalizedQuery === "" || searchable.includes(normalizedQuery);
+      const matchesSearch = normalizedQuery === "" || searchable.includes(normalizedQuery);
 
       const matchesOrigin = origin === "ALL" || flight.origin === origin;
 
-      const matchesDestination =
-        destination === "ALL" || flight.destination === destination;
+      const matchesDestination = destination === "ALL" || flight.destination === destination;
 
       const matchesDepartureDate =
         departureDate === "" || flight.scheduledDeparture.slice(0, 10) === departureDate;
@@ -215,9 +213,7 @@ function FlightsPage() {
             <div className="px-3 py-8 text-sm text-muted-foreground">Loading flights...</div>
           )}
 
-          {!loading && error && (
-            <div className="px-3 py-8 text-sm text-destructive">{error}</div>
-          )}
+          {!loading && error && <div className="px-3 py-8 text-sm text-destructive">{error}</div>}
 
           {!loading && !error && visible.length === 0 && (
             <div className="px-3 py-8 text-sm text-muted-foreground">

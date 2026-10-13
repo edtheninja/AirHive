@@ -124,9 +124,7 @@ function MaintenancePage() {
                     transition={{ delay: i * 0.04 }}
                     className="hover:bg-foreground/4"
                   >
-                    <td className="num rounded-l-2xl px-3 py-3 font-medium">
-                      {m.orderNumber}
-                    </td>
+                    <td className="num rounded-l-2xl px-3 py-3 font-medium">{m.orderNumber}</td>
                     <td className="num px-3 py-3">{m.aircraft}</td>
                     <td className="px-3 py-3">{m.type}</td>
                     <td className="px-3 py-3">
@@ -143,9 +141,7 @@ function MaintenancePage() {
                         {m.progress}%
                       </span>
                     </td>
-                    <td className="rounded-r-2xl px-3 py-3 text-muted-foreground">
-                      {m.engineer}
-                    </td>
+                    <td className="rounded-r-2xl px-3 py-3 text-muted-foreground">{m.engineer}</td>
                   </motion.tr>
                 ))
               )}

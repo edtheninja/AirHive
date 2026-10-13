@@ -70,17 +70,12 @@ function PassengersPage() {
       animate="animate"
       className="mx-auto max-w-[1600px] space-y-6 py-6"
     >
-      <PageHeader
-        title="Passengers"
-        description="Manifest view across today's departures."
-      />
+      <PageHeader title="Passengers" description="Manifest view across today's departures." />
 
       <SectionCard
         title="Manifest"
         subtitle={
-          loading
-            ? "Loading passengers..."
-            : `${passengers.length} passengers on active flights`
+          loading ? "Loading passengers..." : `${passengers.length} passengers on active flights`
         }
       >
         {loading ? (
@@ -88,9 +83,7 @@ function PassengersPage() {
             Loading passenger manifest...
           </div>
         ) : error ? (
-          <div className="py-12 text-center text-sm text-destructive">
-            {error}
-          </div>
+          <div className="py-12 text-center text-sm text-destructive">{error}</div>
         ) : passengers.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">
             No passengers found.
@@ -100,20 +93,13 @@ function PassengersPage() {
             <table className="w-full min-w-[720px] border-separate border-spacing-y-1 text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground">
-                  {[
-                    "Passenger",
-                    "Ref",
-                    "Tier",
-                    "Flight",
-                    "Route",
-                    "Seat",
-                    "Bags",
-                    "Check-in",
-                  ].map((heading) => (
-                    <th key={heading} className="px-3 pb-2 font-medium">
-                      {heading}
-                    </th>
-                  ))}
+                  {["Passenger", "Ref", "Tier", "Flight", "Route", "Seat", "Bags", "Check-in"].map(
+                    (heading) => (
+                      <th key={heading} className="px-3 pb-2 font-medium">
+                        {heading}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
 
@@ -126,9 +112,7 @@ function PassengersPage() {
                     transition={{ delay: index * 0.02 }}
                     className="hover:bg-foreground/4"
                   >
-                    <td className="rounded-l-2xl px-3 py-3 font-medium">
-                      {passenger.name}
-                    </td>
+                    <td className="rounded-l-2xl px-3 py-3 font-medium">{passenger.name}</td>
 
                     <td className="num px-3 py-3 text-muted-foreground">
                       {passenger.passengerCode}
@@ -137,8 +121,7 @@ function PassengersPage() {
                     <td className="px-3 py-3">
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs ${
-                          tierTone[passenger.tier] ??
-                          "bg-foreground/6 text-muted-foreground"
+                          tierTone[passenger.tier] ?? "bg-foreground/6 text-muted-foreground"
                         }`}
                       >
                         {passenger.tier}
@@ -147,15 +130,11 @@ function PassengersPage() {
 
                     <td className="num px-3 py-3">{passenger.flight}</td>
 
-                    <td className="num px-3 py-3 text-muted-foreground">
-                      {passenger.route}
-                    </td>
+                    <td className="num px-3 py-3 text-muted-foreground">{passenger.route}</td>
 
                     <td className="num px-3 py-3">{passenger.seat}</td>
 
-                    <td className="num px-3 py-3 text-muted-foreground">
-                      {passenger.bags}
-                    </td>
+                    <td className="num px-3 py-3 text-muted-foreground">{passenger.bags}</td>
 
                     <td className="rounded-r-2xl px-3 py-3">
                       <span

@@ -84,10 +84,7 @@ function RouteDetailPage() {
         description="Detailed information about this network route."
       />
 
-      <SectionCard
-        title="Route information"
-        subtitle={`Route ID: ${routeid}`}
-      >
+      <SectionCard title="Route information" subtitle={`Route ID: ${routeid}`}>
         {loading && (
           <div className="px-3 py-6">
             <p className="text-sm text-muted-foreground">Loading route...</p>
@@ -110,9 +107,7 @@ function RouteDetailPage() {
         {!loading && !error && route && (
           <div className="space-y-6 px-3 py-4">
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                Route
-              </p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Route</p>
               <p className="mt-1 text-2xl font-semibold">
                 {route.departureAirportCode} → {route.arrivalAirportCode}
               </p>
@@ -131,16 +126,12 @@ function RouteDetailPage() {
 
               <div>
                 <p className="text-xs text-muted-foreground">Distance</p>
-                <p className="mt-1 font-medium">
-                  {route.distanceKm.toLocaleString()} km
-                </p>
+                <p className="mt-1 font-medium">{route.distanceKm.toLocaleString()} km</p>
               </div>
 
               <div>
                 <p className="text-xs text-muted-foreground">Estimated duration</p>
-                <p className="mt-1 font-medium">
-                  {formatDuration(route.estimatedDurationMinutes)}
-                </p>
+                <p className="mt-1 font-medium">{formatDuration(route.estimatedDurationMinutes)}</p>
               </div>
             </div>
 
