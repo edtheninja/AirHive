@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { pageVariants } from "@/lib/ams/motion";
 import { GlassCard, PageHeader, SectionCard } from "@/components/ams/primitives";
+import { useAuth } from "@/lib/auth/auth-context";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -21,7 +22,52 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
+function formatRole(role: string) {
+  return role.charAt(0) + role.slice(1).toLowerCase();
+}
+
+function getInitials(username: string) {
+  const parts = username
+    .trim()
+    .split(/[\s._-]+/)
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    return "U";
+  }
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+}
+
 function ProfilePage() {
+  const { session } = useAuth();
+
+  const username = session?.username ?? "Unknown user";
+  const role = session?.role;
+  const initials = getInitials(username);
+
+  const permissions = [
+    {
+      name: "View flights, routes and airports",
+      allowed: Boolean(role),
+    },
+    {
+      name: "Manage flight operations",
+      allowed: role === "ADMIN" || role === "OPERATOR",
+    },
+    {
+      name: "Manage aircraft and airport records",
+      allowed: role === "ADMIN" || role === "OPERATOR",
+    },
+    {
+      name: "Manage user accounts",
+      allowed: role === "ADMIN",
+    },
+  ];
+
   return (
     <motion.div
       variants={pageVariants}
@@ -30,54 +76,50 @@ function ProfilePage() {
       className="mx-auto max-w-[1000px] space-y-6 py-6"
     >
       <PageHeader title="User Profile" description="Operations profile and access overview." />
+
       <GlassCard hover={false} className="flex flex-wrap items-center gap-5 p-6">
         <span className="num flex h-16 w-16 items-center justify-center rounded-3xl bg-primary text-lg font-semibold text-primary-foreground">
-          NK
+          {initials}
         </span>
+
         <div>
-          <h2 className="text-lg font-semibold">Navneet Kaur</h2>
+          <h2 className="text-lg font-semibold">{username}</h2>
+
           <p className="text-sm text-muted-foreground">
-            Operations Supervisor · DEL Control Centre
+            {role ? `${formatRole(role)} Account` : "Account details unavailable"}
           </p>
+
           <p className="num mt-1 text-xs text-muted-foreground">
-            Employee ID 44-8120 · Shift 06:00–18:00
+            User ID: {session?.userId ?? "Unavailable"}
           </p>
         </div>
       </GlassCard>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <SectionCard title="Permissions" subtitle="Prototype access configuration">
+        <SectionCard title="Permissions" subtitle="Access associated with your account role">
           <ul className="space-y-3 text-sm">
-            {[
-              "Flight dispatch",
-              "Delay publishing",
-              "Crew reassignment",
-              "Maintenance approval",
-              "Emergency broadcast",
-            ].map((p) => (
-              <li key={p} className="flex items-center justify-between">
-                <span className="text-muted-foreground">{p}</span>
-                <span className="rounded-full bg-success/14 px-2.5 py-1 text-xs text-success">
-                  Allowed
+            {permissions.map((permission) => (
+              <li key={permission.name} className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">{permission.name}</span>
+
+                <span
+                  className={
+                    permission.allowed
+                      ? "shrink-0 rounded-full bg-success/14 px-2.5 py-1 text-xs text-success"
+                      : "shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"
+                  }
+                >
+                  {permission.allowed ? "Available" : "Restricted"}
                 </span>
               </li>
             ))}
           </ul>
         </SectionCard>
-        <SectionCard title="Recent activity" subtitle="Prototype activity feed">
-          <ul className="space-y-3 text-sm">
-            {[
-              ["Published delay for AI302", "12 min ago"],
-              ["Reassigned VT-AXN to AI458", "38 min ago"],
-              ["Approved MX-4416 closure", "1 h ago"],
-              ["Exported bookings report", "2 h ago"],
-            ].map(([k, v]) => (
-              <li key={k} className="flex items-center justify-between">
-                <span>{k}</span>
-                <span className="num text-xs text-muted-foreground">{v}</span>
-              </li>
-            ))}
-          </ul>
+
+        <SectionCard title="Recent activity" subtitle="Recorded account activity">
+          <div className="py-4 text-sm text-muted-foreground">
+            No activity history is available yet.
+          </div>
         </SectionCard>
       </div>
     </motion.div>
