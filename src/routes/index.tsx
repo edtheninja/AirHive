@@ -120,7 +120,10 @@ function Dashboard() {
             <FlightsTable flights={flights} />
           </SectionCard>
 
-          <SectionCard title="Live world map" subtitle="Real-time aircraft tracking preview">
+          <SectionCard
+            title="Route network preview"
+            subtitle="Illustrative routes alongside live flight operations data."
+          >
             <FlightMap />
           </SectionCard>
         </div>

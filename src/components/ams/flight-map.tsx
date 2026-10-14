@@ -25,7 +25,7 @@ export function FlightMap() {
         viewBox="0 0 960 420"
         className="h-full w-full"
         role="img"
-        aria-label="Live aircraft tracking map"
+        aria-label="Illustrative airline route network, not live aircraft positions"
       >
         <defs>
           <linearGradient id="pathGrad" x1="0" x2="1">
@@ -51,6 +51,7 @@ export function FlightMap() {
             strokeWidth="1"
           />
         ))}
+
         {Array.from({ length: 7 }).map((_, i) => (
           <line
             key={`h${i}`}
@@ -109,9 +110,12 @@ export function FlightMap() {
         animate={{ opacity: 1, y: 0 }}
         className="glass absolute bottom-4 left-4 rounded-2xl px-4 py-2.5 text-xs"
       >
-        <p className="text-muted-foreground">Live tracking preview</p>
+        <p className="text-muted-foreground">Illustrative route network</p>
         <p className="num mt-0.5 text-sm">
-          {loading ? "—" : `${kpis.activeFlights} flights airborne`}
+          {loading ? "—" : `${kpis.activeFlights} active flights`}
+        </p>
+        <p className="mt-1 text-[10px] text-muted-foreground">
+          Animated paths are illustrative, not live aircraft positions.
         </p>
       </motion.div>
     </div>
