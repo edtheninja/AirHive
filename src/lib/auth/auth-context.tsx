@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState, useEffect, type ReactNode } from "react";
-
+import { disconnectWebSocket } from "@/lib/api/websocket";
 import { login as loginRequest, signup as signupRequest } from "./api";
 import { clearSession, getSession, saveSession, type AuthSession } from "./session";
 import type { LoginRequest, SignupRequest } from "./types";
@@ -58,6 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   function logout() {
     clearSession();
     setSession(null);
+    void disconnectWebSocket();
   }
 
   const value = useMemo(

@@ -1,4 +1,4 @@
-import { Client, type IMessage } from "@stomp/stompjs";
+import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
 import { getToken } from "@/lib/auth/session";
 
 import type { Notification } from "./notifications";
@@ -26,151 +26,199 @@ export type FlightEvent = {
   };
 };
 
+type FlightHandler = (event: FlightEvent) => void;
+type NotificationHandler = (notification: Notification) => void;
+
 const client = new Client({
   brokerURL: WS_URL,
-
   connectHeaders: {},
-
   reconnectDelay: 5000,
-
   debug: (message) => {
     if (import.meta.env.DEV) {
       console.debug("[STOMP]", message);
     }
   },
 });
-let flightSubscription: ReturnType<Client["subscribe"]> | null = null;
-let notificationSubscription: ReturnType<Client["subscribe"]> | null = null;
 
-let flightMessageHandler: ((event: FlightEvent) => void) | null = null;
-let notificationMessageHandler: ((notification: Notification) => void) | null = null;
-let notificationUserId: number | null = null;
+const flightHandlers = new Set<FlightHandler>();
+const notificationHandlers = new Map<number, Set<NotificationHandler>>();
+const notificationSubscriptions = new Map<number, StompSubscription>();
+
+let flightSubscription: StompSubscription | null = null;
+
 client.beforeConnect = async () => {
   const token = getToken();
 
-  client.connectHeaders = token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
+  client.connectHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 };
+
+function processFlightMessage(message: IMessage) {
+  try {
+    const parsed: unknown = JSON.parse(message.body);
+
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("Invalid flight event payload");
+    }
+
+    const event = parsed as Partial<FlightEvent>;
+
+    if (
+      event.eventType !== "FLIGHT_CREATED" &&
+      event.eventType !== "FLIGHT_UPDATED" &&
+      event.eventType !== "FLIGHT_DELETED"
+    ) {
+      throw new Error(`Unknown flight event type: ${String(event.eventType)}`);
+    }
+
+    if (!event.flight || typeof event.flight !== "object") {
+      throw new Error("Flight event is missing flight data");
+    }
+
+    flightHandlers.forEach((handler) => handler(event as FlightEvent));
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error("[STOMP] Failed to process flight event:", error);
+    }
+  }
+}
+
+function processNotificationMessage(message: IMessage, userId: number) {
+  try {
+    const parsed: unknown = JSON.parse(message.body);
+
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("Invalid notification payload");
+    }
+
+    const notification = parsed as Notification;
+
+    if (
+      typeof notification.id !== "number" ||
+      typeof notification.userId !== "number" ||
+      typeof notification.title !== "string" ||
+      typeof notification.message !== "string"
+    ) {
+      throw new Error("Invalid notification payload");
+    }
+
+    // Never deliver a notification to handlers registered for another user.
+    if (notification.userId !== userId) {
+      throw new Error("Notification user does not match subscription user");
+    }
+
+    notificationHandlers.get(userId)?.forEach((handler) => {
+      handler(notification);
+    });
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error("[STOMP] Failed to process notification:", error);
+    }
+  }
+}
+
+function subscribeToFlightUpdates() {
+  if (!client.connected || flightSubscription || flightHandlers.size === 0) {
+    return;
+  }
+
+  flightSubscription = client.subscribe(FLIGHTS_TOPIC, processFlightMessage);
+}
+
+function subscribeToNotificationUpdates(userId: number) {
+  if (
+    !client.connected ||
+    notificationSubscriptions.has(userId) ||
+    !notificationHandlers.has(userId)
+  ) {
+    return;
+  }
+
+  notificationSubscriptions.set(
+    userId,
+    client.subscribe(`/topic/notifications/${userId}`, (message) => {
+      processNotificationMessage(message, userId);
+    }),
+  );
+}
+
+function subscribeToActiveStreams() {
+  subscribeToFlightUpdates();
+
+  notificationHandlers.forEach((_handlers, userId) => {
+    subscribeToNotificationUpdates(userId);
+  });
+}
+
 client.onConnect = () => {
-  if (flightMessageHandler && !flightSubscription) {
-    flightSubscription = client.subscribe(FLIGHTS_TOPIC, (message: IMessage) => {
-      try {
-        const parsed: unknown = JSON.parse(message.body);
-
-        if (!parsed || typeof parsed !== "object") {
-          throw new Error("Invalid flight event payload");
-        }
-
-        const event = parsed as Partial<FlightEvent>;
-
-        if (
-          event.eventType !== "FLIGHT_CREATED" &&
-          event.eventType !== "FLIGHT_UPDATED" &&
-          event.eventType !== "FLIGHT_DELETED"
-        ) {
-          throw new Error(`Unknown flight event type: ${String(event.eventType)}`);
-        }
-
-        if (!event.flight || typeof event.flight !== "object") {
-          throw new Error("Flight event is missing flight data");
-        }
-
-        flightMessageHandler?.(event as FlightEvent);
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("[STOMP] Failed to process flight event:", error);
-        }
-      }
-    });
-  }
-
-  if (notificationMessageHandler && notificationUserId !== null && !notificationSubscription) {
-    const topic = `/topic/notifications/${notificationUserId}`;
-
-    notificationSubscription = client.subscribe(topic, (message: IMessage) => {
-      try {
-        const parsed: unknown = JSON.parse(message.body);
-
-        if (!parsed || typeof parsed !== "object") {
-          throw new Error("Invalid notification payload");
-        }
-
-        const notification = parsed as Notification;
-
-        if (
-          typeof notification.id !== "number" ||
-          typeof notification.userId !== "number" ||
-          typeof notification.title !== "string" ||
-          typeof notification.message !== "string"
-        ) {
-          throw new Error("Invalid notification payload");
-        }
-
-        notificationMessageHandler?.(notification);
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("[STOMP] Failed to process notification:", error);
-        }
-      }
-    });
-  }
+  subscribeToActiveStreams();
 };
 
 client.onWebSocketClose = () => {
+  // The broker has closed the connection. STOMP will reconnect automatically.
+  // New subscriptions will be created by onConnect after reconnection.
   flightSubscription = null;
-  notificationSubscription = null;
+  notificationSubscriptions.clear();
 };
 
-export function connectToFlightUpdates(onMessage: (event: FlightEvent) => void) {
-  flightMessageHandler = onMessage;
-
+function ensureConnected() {
   if (!client.active) {
-    client.activate();
-  } else if (client.connected && !flightSubscription) {
-    client.onConnect?.(client as never);
+    void client.activate();
+  } else if (client.connected) {
+    // Handle consumers registering while the client is already connected.
+    subscribeToActiveStreams();
   }
+}
+
+export function connectToFlightUpdates(onMessage: FlightHandler) {
+  flightHandlers.add(onMessage);
+  ensureConnected();
 
   return () => {
-    flightMessageHandler = null;
-    flightSubscription?.unsubscribe();
-    flightSubscription = null;
+    flightHandlers.delete(onMessage);
+
+    if (flightHandlers.size === 0 && flightSubscription) {
+      flightSubscription.unsubscribe();
+      flightSubscription = null;
+    }
   };
 }
 
-export function connectToNotificationUpdates(
-  userId: number,
-  onMessage: (notification: Notification) => void,
-) {
-  notificationUserId = userId;
-  notificationMessageHandler = onMessage;
+export function connectToNotificationUpdates(userId: number, onMessage: NotificationHandler) {
+  let handlers = notificationHandlers.get(userId);
 
-  if (!client.active) {
-    client.activate();
-  } else if (client.connected && !notificationSubscription) {
-    client.onConnect?.(client as never);
+  if (!handlers) {
+    handlers = new Set<NotificationHandler>();
+    notificationHandlers.set(userId, handlers);
   }
 
+  handlers.add(onMessage);
+  ensureConnected();
+
   return () => {
-    notificationMessageHandler = null;
-    notificationUserId = null;
-    notificationSubscription?.unsubscribe();
-    notificationSubscription = null;
+    const currentHandlers = notificationHandlers.get(userId);
+    currentHandlers?.delete(onMessage);
+
+    if (currentHandlers?.size === 0) {
+      notificationHandlers.delete(userId);
+
+      const subscription = notificationSubscriptions.get(userId);
+      subscription?.unsubscribe();
+      notificationSubscriptions.delete(userId);
+    }
   };
 }
 
 export async function disconnectWebSocket() {
   flightSubscription?.unsubscribe();
-  notificationSubscription?.unsubscribe();
-
   flightSubscription = null;
-  notificationSubscription = null;
 
-  flightMessageHandler = null;
-  notificationMessageHandler = null;
-  notificationUserId = null;
+  notificationSubscriptions.forEach((subscription) => {
+    subscription.unsubscribe();
+  });
+  notificationSubscriptions.clear();
+
+  flightHandlers.clear();
+  notificationHandlers.clear();
 
   if (client.active) {
     await client.deactivate();
