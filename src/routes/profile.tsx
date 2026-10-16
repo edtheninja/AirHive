@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { pageVariants } from "@/lib/ams/motion";
 import { GlassCard, PageHeader, SectionCard } from "@/components/ams/primitives";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useNotifications } from "@/lib/notifications/notification-context";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -42,12 +43,34 @@ function getInitials(username: string) {
     .join("");
 }
 
+function formatTimestamp(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 function ProfilePage() {
   const { session } = useAuth();
+  const {
+    notifications,
+    loading: notificationsLoading,
+    error: notificationsError,
+  } = useNotifications();
 
   const username = session?.username ?? "Unknown user";
   const role = session?.role;
   const initials = getInitials(username);
+
+  const recentNotifications = [...notifications]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
 
   const permissions = [
     {
@@ -116,10 +139,40 @@ function ProfilePage() {
           </ul>
         </SectionCard>
 
-        <SectionCard title="Recent activity" subtitle="Recorded account activity">
-          <div className="py-4 text-sm text-muted-foreground">
-            No activity history is available yet.
-          </div>
+        <SectionCard title="Recent activity" subtitle="Your latest recorded notifications">
+          {notificationsLoading ? (
+            <div className="py-4 text-sm text-muted-foreground" role="status">
+              Loading recent activity…
+            </div>
+          ) : notificationsError ? (
+            <div className="py-4 text-sm text-destructive" role="alert">
+              Unable to load recent activity.
+            </div>
+          ) : recentNotifications.length === 0 ? (
+            <div className="py-4 text-sm text-muted-foreground">
+              No recent notifications are available.
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {recentNotifications.map((notification) => (
+                <li key={notification.id} className="space-y-2 py-3 first:pt-1">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <p className="text-sm font-medium">{notification.title}</p>
+
+                    <span className="shrink-0 rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
+                      {notification.severity}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground">{notification.message}</p>
+
+                  <p className="num text-xs text-muted-foreground">
+                    {formatTimestamp(notification.createdAt)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
         </SectionCard>
       </div>
     </motion.div>
