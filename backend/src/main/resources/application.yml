@@ -52,10 +52,6 @@ management:
     env:
       enabled: true
 
-  tracing:
-    sampling:
-      probability: ${OTEL_TRACES_SAMPLER_ARG:1.0}
-
   otlp:
     metrics:
       export:
