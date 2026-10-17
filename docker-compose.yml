@@ -31,6 +31,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+  
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.140.0
+    container_name: airhive-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./observability/otel-collector.yml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
 
   backend:
     build:
@@ -49,6 +60,9 @@ services:
       AIRHIVE_CORS_ORIGINS: http://localhost:3000,http://localhost:8081,http://localhost:5173
       AIRHIVE_WS_ALLOWED_ORIGINS: http://localhost:*,http://127.0.0.1:*
       SPRING_PROFILES_ACTIVE: dev
+      OTEL_SERVICE_NAME: airhive-backend
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
+      OTEL_TRACES_SAMPLER_ARG: "1.0"
 
     ports:
       - "8080:8080"
@@ -57,6 +71,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      otel-collector:
+        condition: service_started 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
