@@ -1125,6 +1125,25 @@ The repository should not contain:
 
 The `.env.example` file contains configuration templates only.
 
+### OpenTelemetry Tracing
+
+AirHive's local Docker Compose environment includes an OpenTelemetry Collector for receiving and inspecting backend traces.
+
+- The Spring Boot backend exports traces using OTLP over HTTP.
+- The collector receives OTLP traffic on ports `4317` (gRPC) and `4318` (HTTP).
+- The collector's debug exporter writes received trace batches to its logs.
+- Local trace delivery has been verified through collector logs.
+
+The backend uses these environment variables to configure tracing:
+
+| Variable | Purpose |
+|---|---|
+| `OTEL_SERVICE_NAME` | Identifies the backend service in telemetry |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Configures the trace export endpoint |
+| `OTEL_TRACES_SAMPLER_ARG` | Configures the trace sampling probability |
+
+**Production limitation:** OpenTelemetry trace export on Render is not yet configured. The local Docker Compose collector hostname is only valid within the Compose network. Production tracing requires a collector reachable from Render or a compatible hosted observability endpoint.
+
 ---
 
 # 🛡️ Security
@@ -1495,6 +1514,10 @@ Completed:
 - [x] Secret handling audit
 - [x] Container runtime audit
 - [x] Final deployment verification
+- [x] OpenTelemetry tracing dependency and backend configuration
+- [x] Docker Compose OpenTelemetry Collector
+- [x] OTLP HTTP trace export
+- [x] Local trace delivery verification
 
 ## Phase 15 — Finalization & Release
 
@@ -1522,6 +1545,8 @@ Completed:
 - [x] Health endpoints documented
 - [x] Testing documented
 - [x] Deployment configuration documented
+- [x] OpenTelemetry local tracing documented
+- [x] Production tracing limitation documented
 - [x] Final documentation review
 
 ### 15.3 Environment & Setup Documentation
