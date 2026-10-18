@@ -37,3 +37,9 @@ dist-ssr
 !.env.example
 
 # Docker
+
+# Local AirHive credentials and observability backups
+.airhive-local-token
+observability/otel-collector.yml.bak
+observability/otel-collector.yml.before-metrics-debug
+observability/otel-collector.yml.pre-grafana.bak
