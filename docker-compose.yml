@@ -37,6 +37,10 @@ services:
     container_name: airhive-otel-collector
     restart: unless-stopped
     command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    environment:
+      GRAFANA_CLOUD_PROMETHEUS_REMOTE_WRITE_URL: ${GRAFANA_CLOUD_PROMETHEUS_REMOTE_WRITE_URL}
+      GRAFANA_CLOUD_PROMETHEUS_USERNAME: ${GRAFANA_CLOUD_PROMETHEUS_USERNAME}
+      GRAFANA_CLOUD_PROMETHEUS_TOKEN: ${GRAFANA_CLOUD_PROMETHEUS_TOKEN}
     volumes:
       - ./observability/otel-collector.yml:/etc/otelcol-contrib/config.yaml:ro
     ports:

@@ -126,6 +126,10 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
         <!-- Testcontainers: isolated PostgreSQL integration tests -->
         <dependency>
             <groupId>org.testcontainers</groupId>
