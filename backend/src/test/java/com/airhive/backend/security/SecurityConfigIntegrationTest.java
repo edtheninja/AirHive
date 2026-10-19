@@ -23,7 +23,10 @@ import com.airhive.backend.service.MaintenanceService;
 import com.airhive.backend.service.NotificationService;
 import com.airhive.backend.service.PassengerService;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @AutoConfigureMockMvc
 class SecurityConfigIntegrationTest {
         @Autowired

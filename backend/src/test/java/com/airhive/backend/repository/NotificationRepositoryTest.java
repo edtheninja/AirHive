@@ -15,7 +15,10 @@ import com.airhive.backend.entity.Role;
 import com.airhive.backend.notification.NotificationSeverity;
 import com.airhive.backend.notification.NotificationType;
 
-@DataJpaTest
+@DataJpaTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 class NotificationRepositoryTest {
 
     @Autowired

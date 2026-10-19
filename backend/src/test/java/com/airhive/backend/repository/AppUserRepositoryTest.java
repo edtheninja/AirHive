@@ -11,7 +11,10 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import com.airhive.backend.entity.AppUser;
 import com.airhive.backend.entity.Role;
 
-@DataJpaTest
+@DataJpaTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 class AppUserRepositoryTest {
 
     @Autowired

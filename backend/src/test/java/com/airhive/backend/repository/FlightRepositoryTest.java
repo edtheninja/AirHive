@@ -16,7 +16,10 @@ import com.airhive.backend.entity.Airport;
 import com.airhive.backend.entity.Flight;
 import com.airhive.backend.entity.Route;
 
-@DataJpaTest
+@DataJpaTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @AutoConfigureTestDatabase(
         replace = AutoConfigureTestDatabase.Replace.ANY
 )

@@ -24,7 +24,10 @@ import com.airhive.backend.entity.Role;
 import com.airhive.backend.repository.AppUserRepository;
 import com.airhive.backend.service.AirportService;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 class AuthIntegrationTest {

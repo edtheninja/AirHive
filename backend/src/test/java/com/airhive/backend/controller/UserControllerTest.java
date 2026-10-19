@@ -29,7 +29,10 @@ import com.airhive.backend.entity.Role;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.service.UserManagementService;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @AutoConfigureMockMvc
 class UserControllerTest {
 

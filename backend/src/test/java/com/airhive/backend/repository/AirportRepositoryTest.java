@@ -9,7 +9,10 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import com.airhive.backend.entity.Airport;
 
-@DataJpaTest
+@DataJpaTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 class AirportRepositoryTest {
 
     @Autowired
