@@ -10,6 +10,9 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.data.redis.RedisConnectionFailureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,6 +26,21 @@ public class GlobalExceptionHandler {
                                 .body(Map.of(
                                                 "status", HttpStatus.NOT_FOUND.value(),
                                                 "message", exception.getMessage()));
+        }
+
+        private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+        @ExceptionHandler(RedisConnectionFailureException.class)
+        public ResponseEntity<Map<String, Object>> handleRedisConnectionFailure(
+                        RedisConnectionFailureException exception) {
+
+                logger.error("Redis is unavailable; a cache operation failed.", exception);
+
+                return ResponseEntity
+                                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                                .body(Map.of(
+                                                "status", HttpStatus.SERVICE_UNAVAILABLE.value(),
+                                                "message", "A required service is temporarily unavailable"));
         }
 
         @ExceptionHandler(DuplicateResourceException.class)

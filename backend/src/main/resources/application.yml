@@ -25,6 +25,8 @@ spring:
     redis:
       host: ${AIRHIVE_REDIS_HOST:localhost}
       port: ${AIRHIVE_REDIS_PORT:6379}
+      connect-timeout: 2s
+      timeout: 2s
 
   logging:
    level:
