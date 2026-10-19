@@ -22,6 +22,7 @@ import com.airhive.backend.service.CrewMemberService;
 import com.airhive.backend.service.MaintenanceService;
 import com.airhive.backend.service.NotificationService;
 import com.airhive.backend.service.PassengerService;
+import com.airhive.backend.service.AnalyticsService;
 
 @SpringBootTest(properties = {
         "spring.flyway.enabled=false",
@@ -49,6 +50,9 @@ class SecurityConfigIntegrationTest {
 
         @MockitoBean
         private NotificationService notificationService;
+
+        @MockitoBean
+        private AnalyticsService analyticsService;
 
         @Test
         void unauthenticatedGetReturns401() throws Exception {
@@ -366,4 +370,35 @@ class SecurityConfigIntegrationTest {
                                 .with(csrf()))
                                 .andExpect(status().isUnauthorized());
         }
+
+@Test
+void unauthenticatedAnalyticsRequestReturns401() throws Exception {
+        mockMvc.perform(get("/api/analytics/overview"))
+                        .andExpect(status().isUnauthorized());
+}
+
+@Test
+void viewerCanReadAnalyticsOverview() throws Exception {
+        mockMvc.perform(get("/api/analytics/overview")
+                        .with(jwt().authorities(
+                                        new SimpleGrantedAuthority("ROLE_VIEWER"))))
+                        .andExpect(status().isOk());
+}
+
+@Test
+void operatorCanReadAnalyticsOverview() throws Exception {
+        mockMvc.perform(get("/api/analytics/overview")
+                        .with(jwt().authorities(
+                                        new SimpleGrantedAuthority("ROLE_OPERATOR"))))
+                        .andExpect(status().isOk());
+}
+
+@Test
+void adminCanReadAnalyticsOverview() throws Exception {
+        mockMvc.perform(get("/api/analytics/overview")
+                        .with(jwt().authorities(
+                                        new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                        .andExpect(status().isOk());
+}
+
 }
