@@ -213,3 +213,63 @@ The following improvements will make rollback more reproducible:
 - Document and rehearse PostgreSQL backup and restoration.
 - Define explicit compatibility rules for Flyway migrations.
 - Retain known-good images and deployment configuration for recovery.
+
+## Rollback rehearsal record — 2026-10-20
+
+### Objective
+
+Validate that an older AirHive backend image can start and pass health checks in isolation, without replacing or interrupting the currently running Compose deployment.
+
+### Test setup
+
+| Item | Recorded value |
+|---|---|
+| Candidate source commit | `027a7fa` — `fix: configure database resilience and readiness` |
+| Candidate image | `airhive-backend:rollback-test-027a7fa` |
+| Candidate image ID | `sha256:911fadc2447598b781676b3480a69f4c4adcc669ea8f2d0b588dc5954ac17057` |
+| Candidate container | `airhive-rollback-candidate` |
+| Candidate host endpoint | `127.0.0.1:18080` |
+| Isolated database | `airhive_rollback_test_20261020` |
+| Database initialization | Candidate's `V1__initial_schema.sql`; 12 application tables confirmed |
+| Network | `airhive-main_default` |
+| Restart policy | `no` |
+
+The candidate used the isolated rollback-test database. It did not use the active application's `airhive` database.
+
+### Baseline image references
+
+The following baseline tags were created and preserved before the rehearsal:
+
+- Backend: `airhive-backend:rollback-baseline-20261020`
+  - Image ID: `sha256:bafb2c67bec104f1edb3106fc58acd89c134a90cf20092180576b6c56e0a5907`
+- Frontend: `airhive-frontend:rollback-baseline-20261020`
+  - Image ID: `sha256:5be32e7747c34859c131d7f7795ac1ea25abf11dfa16383a7127b93c53227b85`
+
+### Results
+
+| Check | Result | Evidence |
+|---|---|---|
+| Candidate container startup | PASS | Container reported `Status=running`, `Running=true`, `ExitCode=0` |
+| Candidate liveness | PASS | `GET /actuator/health/liveness` returned HTTP 200 |
+| Candidate readiness | PASS — operator-confirmed | Operator reported readiness was up; raw response was not retained in this record |
+| Candidate overall health | PASS — operator-confirmed | Operator reported overall health was up; raw response was not retained in this record |
+| Candidate database initialization | PASS | Logs showed connection to `airhive_rollback_test_20261020` and JPA initialization |
+| Active Compose deployment | PASS | Backend, PostgreSQL, and Redis reported healthy; frontend and OpenTelemetry Collector remained running |
+| Active deployment replaced | NO | Candidate ran separately on host port 18080; active backend continued on port 8080 |
+
+### Conclusion and limitations
+
+The older backend candidate started successfully and passed the recorded liveness check. Readiness and overall health were also confirmed as up by the operator. The active Compose deployment remained running and healthy during the rehearsal.
+
+This establishes isolated startup and basic health-check evidence, **not a complete production rollback validation**. The candidate used a separate database initialized with its own historical schema. Compatibility with a newer production schema, restoration of application workflows, and rollback timing have not been established by this rehearsal.
+
+Before relying on this procedure for a real incident:
+
+1. Confirm the target image tag and immutable image ID.
+2. Verify database migration compatibility and take a recoverable database backup where appropriate.
+3. Deploy the selected image using the documented deployment procedure.
+4. Check readiness and representative authenticated business workflows.
+5. Verify monitoring and alert recovery, and record recovery duration.
+6. Preserve logs and the exact image/commit references as evidence.
+
+Do not treat the isolated candidate test as authorization to downgrade the production database or replace the active service without the normal recovery checks.
