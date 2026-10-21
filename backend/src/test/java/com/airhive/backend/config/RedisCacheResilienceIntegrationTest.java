@@ -26,7 +26,9 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.ToxiproxyContainer;
-
+import static org.junit.jupiter.api.Assertions.assertNull;
+import org.springframework.cache.interceptor.SimpleKey;
+import org.springframework.data.redis.connection.RedisConnection;
 
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.repository.AirportRepository;
@@ -42,15 +44,13 @@ class RedisCacheResilienceIntegrationTest {
 
     private static final Network NETWORK = Network.newNetwork();
 
-    private static final GenericContainer<?> REDIS =
-            new GenericContainer<>("redis:8-alpine")
-                    .withNetwork(NETWORK)
-                    .withNetworkAliases("redis-cache-test")
-                    .withExposedPorts(6379);
+    private static final GenericContainer<?> REDIS = new GenericContainer<>("redis:8-alpine")
+            .withNetwork(NETWORK)
+            .withNetworkAliases("redis-cache-test")
+            .withExposedPorts(6379);
 
-    private static final ToxiproxyContainer TOXIPROXY =
-            new ToxiproxyContainer("ghcr.io/shopify/toxiproxy:2.5.0")
-                    .withNetwork(NETWORK);
+    private static final ToxiproxyContainer TOXIPROXY = new ToxiproxyContainer("ghcr.io/shopify/toxiproxy:2.5.0")
+            .withNetwork(NETWORK);
 
     private static final ToxiproxyContainer.ContainerProxy REDIS_PROXY;
 
@@ -92,15 +92,13 @@ class RedisCacheResilienceIntegrationTest {
 
         @Bean
         RedisConnectionFactory redisConnectionFactory() {
-            RedisStandaloneConfiguration server =
-                    new RedisStandaloneConfiguration(
-                            TOXIPROXY.getHost(),
-                            REDIS_PROXY.getProxyPort());
+            RedisStandaloneConfiguration server = new RedisStandaloneConfiguration(
+                    TOXIPROXY.getHost(),
+                    REDIS_PROXY.getProxyPort());
 
-            LettuceClientConfiguration client =
-                    LettuceClientConfiguration.builder()
-                            .commandTimeout(Duration.ofSeconds(3))
-                            .build();
+            LettuceClientConfiguration client = LettuceClientConfiguration.builder()
+                    .commandTimeout(Duration.ofSeconds(3))
+                    .build();
 
             return new LettuceConnectionFactory(server, client);
         }
@@ -140,6 +138,9 @@ class RedisCacheResilienceIntegrationTest {
 
     @Autowired
     private AirportRepository airportRepository;
+
+    @Autowired
+    private RedisConnectionFactory redisConnectionFactory;
 
     @BeforeEach
     void clearTestCache() {
@@ -185,19 +186,30 @@ class RedisCacheResilienceIntegrationTest {
             // the result obtained from the underlying service.
             assertEquals(1, airportService.getAllAirports().size());
             verify(airportRepository, times(2)).findAll();
-                } finally {
+        } finally {
             REDIS_PROXY.setConnectionCut(false);
         }
 
-        // Redis is reachable again. Start recovery verification with an
-        // empty cache so the next request must query the underlying service.
+        // Redis is reachable again. Clear the cache and verify that
+        // the no-argument method's cache entry is actually removed.
         cache.clear();
 
-        // The first request repopulates the cache.
+        try (RedisConnection connection = redisConnectionFactory.getConnection()) {
+            assertNotNull(connection, "Redis connection should be available");
+
+            System.out.println(
+                    "Airport cache keys after clear: "
+                            + connection.keyCommands().keys(
+                                    "airports::*".getBytes(
+                                            java.nio.charset.StandardCharsets.UTF_8)));
+        }
+
+        // The first request should query the repository and repopulate
+        // the cache. The second request should use the cached result.
         assertEquals(1, airportService.getAllAirports().size());
+        verify(airportRepository, times(3)).findAll();
 
         assertEquals(1, airportService.getAllAirports().size());
-
         verify(airportRepository, times(3)).findAll();
     }
 }
