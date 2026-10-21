@@ -2,6 +2,7 @@ package com.airhive.backend.config;
 
 import java.util.List;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -15,13 +16,14 @@ import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.testcontainers.containers.GenericContainer;
 
 import com.airhive.backend.entity.Airport;
 import com.airhive.backend.repository.AirportRepository;
@@ -29,27 +31,31 @@ import com.airhive.backend.repository.FlightRepository;
 import com.airhive.backend.repository.RouteRepository;
 import com.airhive.backend.service.AirportService;
 
-
 @SpringJUnitConfig(classes = {
+        CacheConfig.class,
         CacheConfigTest.TestConfig.class
 })
 class CacheConfigTest {
 
-    @Configuration
-    @EnableCaching(proxyTargetClass = true)
+    private static final GenericContainer<?> REDIS =
+            new GenericContainer<>("redis:8-alpine").withExposedPorts(6379);
+
+    static {
+        REDIS.start();
+    }
+
+    @AfterAll
+    static void stopRedis() {
+        REDIS.stop();
+    }
+
+    @Configuration(proxyBeanMethods = false)
     static class TestConfig {
 
         @Bean
         RedisConnectionFactory redisConnectionFactory() {
-            return new LettuceConnectionFactory("localhost", 6379);
-        }
-
-        @Bean
-        CacheManager cacheManager(
-                RedisConnectionFactory redisConnectionFactory) {
-
-            return new CacheConfig()
-                    .cacheManager(redisConnectionFactory);
+            return new LettuceConnectionFactory(
+                    new RedisStandaloneConfiguration(REDIS.getHost(), REDIS.getMappedPort(6379)));
         }
 
         @Bean
@@ -92,7 +98,6 @@ class CacheConfigTest {
     @BeforeEach
     void clearCache() {
         Cache cache = cacheManager.getCache("airports");
-
         if (cache != null) {
             cache.clear();
         }
@@ -101,7 +106,6 @@ class CacheConfigTest {
     @AfterEach
     void cleanupCache() {
         Cache cache = cacheManager.getCache("airports");
-
         if (cache != null) {
             cache.clear();
         }

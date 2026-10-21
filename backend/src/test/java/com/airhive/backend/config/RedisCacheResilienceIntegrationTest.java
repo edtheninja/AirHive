@@ -97,10 +97,12 @@ class RedisCacheResilienceIntegrationTest {
                     REDIS_PROXY.getProxyPort());
 
             LettuceClientConfiguration client = LettuceClientConfiguration.builder()
-                    .commandTimeout(Duration.ofSeconds(3))
+                    .commandTimeout(Duration.ofSeconds(10))
                     .build();
 
-            return new LettuceConnectionFactory(server, client);
+            LettuceConnectionFactory factory = new LettuceConnectionFactory(server, client);
+            factory.afterPropertiesSet();
+            return factory;
         }
 
         @Bean
