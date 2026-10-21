@@ -17,14 +17,16 @@ Docker resource-monitoring samples have been committed, but their overlap with a
 
 ### Recorded results
 
-- Backend automated test suite: **341 tests passed, zero failures, zero errors, zero skipped** in the recorded run.
+- Backend automated test suite: **341 tests passed, zero failures, zero errors, zero skipped** in the latest full run on 2026-10-21.
+- The Redis cache outage/recovery integration test passed in both the latest isolated run and the subsequent full backend suite.
+- An earlier full-suite run exposed an intermittent Redis cache recovery assertion failure. The latest runs passed, but the cause of the intermittent failure has not been conclusively established.
 - Flyway configuration and H2 test isolation were implemented in commit `b61e7fc`.
 - A fresh-database migration validation was performed against the isolated database `airhive_flyway_test_20261019`.
 - The existing database was baselined at Flyway version 1 without intentionally replacing its existing data.
 - Redis outage/recovery integration coverage was added in commit `8117088`.
 - Additional test coverage was recorded in commit `c145ba9`.
 
-These are recorded historical results, not a claim that the complete suite was rerun on the report date.
+The latest full-suite result above was obtained on the report date. Other migration, coverage, load-test, and resilience results in this report remain historical results unless explicitly identified otherwise.
 
 ## 3. API Load Testing
 
