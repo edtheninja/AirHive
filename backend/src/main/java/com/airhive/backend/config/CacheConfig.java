@@ -13,12 +13,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 @Configuration
-@EnableCaching
+@EnableCaching(proxyTargetClass = true)
 public class CacheConfig implements CachingConfigurer {
 
     private static final Logger logger =
@@ -39,7 +40,11 @@ public class CacheConfig implements CachingConfigurer {
                                 RedisSerializationContext.SerializationPair
                                         .fromSerializer(serializer));
 
-        return RedisCacheManager.builder(redisConnectionFactory)
+        RedisCacheWriter cacheWriter = RedisCacheWriter.create(
+                redisConnectionFactory,
+                writerConfigurer -> writerConfigurer.immediateWrites());
+
+        return RedisCacheManager.builder(cacheWriter)
                 .cacheDefaults(configuration)
                 .build();
     }

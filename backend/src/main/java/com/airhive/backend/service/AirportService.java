@@ -33,7 +33,7 @@ public class AirportService {
         this.routeRepository = routeRepository;
 }
 
-    @Cacheable("airports")
+    @Cacheable(value = "airports", key = "'all'")
     public List<AirportResponseDTO> getAllAirports() {
         return airportRepository.findAll()
                 .stream()
