@@ -185,8 +185,8 @@ class AuthIntegrationTest {
         appUserRepository.saveAndFlush(user);
 
         mockMvc.perform(get("/api/airports")
-                .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk());
+        .header("Authorization", "Bearer " + token))
+        .andExpect(status().isUnauthorized());
     }
 
     @Test

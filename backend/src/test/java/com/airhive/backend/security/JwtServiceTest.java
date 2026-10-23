@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -14,11 +16,15 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import com.airhive.backend.config.JwtConfig;
 import com.airhive.backend.entity.AppUser;
 import com.airhive.backend.entity.Role;
+import com.airhive.backend.repository.AppUserRepository;
+import static org.mockito.Mockito.when;
+import java.util.Optional;
 
 class JwtServiceTest {
 
     private JwtService jwtService;
     private JwtDecoder jwtDecoder;
+    private AppUserRepository appUserRepository;
 
     @BeforeEach
     void setUp() {
@@ -35,7 +41,8 @@ class JwtServiceTest {
                 86_400_000L
         );
 
-        jwtDecoder = jwtConfig.jwtDecoder(secretKey);
+        appUserRepository = mock(AppUserRepository.class);
+        jwtDecoder = jwtConfig.jwtDecoder(secretKey, appUserRepository);
     }
 
     @Test
@@ -47,6 +54,9 @@ class JwtServiceTest {
         user.setPassword("ignored");
         user.setRole(Role.ADMIN);
         user.setEnabled(true);
+
+        when(appUserRepository.findByUsername("admin"))
+        .thenReturn(Optional.of(user));
 
         String token = jwtService.generateToken(user);
 
@@ -76,6 +86,9 @@ class JwtServiceTest {
         user.setEnabled(true);
 
         Instant before = Instant.now();
+
+        when(appUserRepository.findByUsername("operator"))
+        .thenReturn(Optional.of(user));
 
         String token = jwtService.generateToken(user);
 
