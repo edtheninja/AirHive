@@ -4,6 +4,8 @@ extensions:
       username: ${env:GRAFANA_CLOUD_PROMETHEUS_USERNAME}
       password: ${env:GRAFANA_CLOUD_PROMETHEUS_TOKEN}
 
+  health_check:
+    endpoint: 0.0.0.0:13133
 receivers:
   otlp:
     protocols:
@@ -19,14 +21,28 @@ exporters:
   debug:
     verbosity: basic
 
+
   prometheusremotewrite:
     endpoint: ${env:GRAFANA_CLOUD_PROMETHEUS_REMOTE_WRITE_URL}
     auth:
       authenticator: basicauth/grafana
+    timeout: 15s
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 10m
+      multiplier: 1.5
+    remote_write_queue:
+      enabled: true
+      queue_size: 10000
+      num_consumers: 5
+
 
 service:
   extensions:
     - basicauth/grafana
+    - health_check
 
   pipelines:
     traces:

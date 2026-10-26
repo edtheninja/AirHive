@@ -632,6 +632,62 @@ void deleteFlight_shouldRejectFlightWithActivityRecords() throws Exception {
     assertTrue(flightRepository.findById(flightId).isPresent());
 }
 
+@Test
+void getFlightActivities_shouldReturnCreationAndStatusChangeEvents()
+        throws Exception {
+
+    LocalDateTime departure = LocalDateTime.of(2027, 1, 17, 10, 0);
+    LocalDateTime arrival = departure.plusMinutes(135);
+
+    String createRequest = objectMapper.writeValueAsString(
+            createFlightRequest(
+                    "AH-ACTIVITY01",
+                    departure,
+                    arrival,
+                    "SCHEDULED"));
+
+    String createResponse = mockMvc.perform(post("/api/flights")
+                    .with(jwt().authorities(
+                            new SimpleGrantedAuthority("ROLE_ADMIN")))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(createRequest))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    Long flightId = objectMapper.readTree(createResponse)
+            .get("id")
+            .asLong();
+
+    mockMvc.perform(patch("/api/flights/{id}/status", flightId)
+                    .with(jwt().authorities(
+                            new SimpleGrantedAuthority("ROLE_ADMIN")))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            {
+                                "status": "DELAYED",
+                                "reason": "Weather conditions"
+                            }
+                            """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("DELAYED"));
+
+    mockMvc.perform(get("/api/flights/{id}/activities", flightId)
+                    .with(jwt().authorities(
+                            new SimpleGrantedAuthority("ROLE_ADMIN"))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].eventType").value("STATUS_CHANGED"))
+            .andExpect(jsonPath("$[0].previousStatus").value("SCHEDULED"))
+            .andExpect(jsonPath("$[0].currentStatus").value("DELAYED"))
+            .andExpect(jsonPath("$[0].reason").value("Weather conditions"))
+            .andExpect(jsonPath("$[1].eventType").value("FLIGHT_CREATED"))
+            .andExpect(jsonPath("$[1].currentStatus").value("SCHEDULED"));
+}
+
+
 
 
         private Airport createAirport(

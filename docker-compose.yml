@@ -31,7 +31,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-  
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.140.0
     container_name: airhive-otel-collector
@@ -46,6 +46,12 @@ services:
     ports:
       - "4317:4317"
       - "4318:4318"
+    healthcheck:
+      test: ["CMD", "/otelcol-contrib", "validate", "--config=/etc/otelcol-contrib/config.yaml"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   backend:
     build:
@@ -76,13 +82,14 @@ services:
       redis:
         condition: service_healthy
       otel-collector:
-        condition: service_started 
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS --max-time 3 http://localhost:8080/actuator/health/liveness || exit 1"]
       interval: 15s
       timeout: 5s
       start_period: 90s
       retries: 10
+
 
   frontend:
     build:
@@ -96,6 +103,12 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
 
 volumes:
   postgres_data:
