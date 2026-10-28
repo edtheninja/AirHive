@@ -78,10 +78,18 @@ function useTheme() {
 
 function NavItems({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { session } = useAuth();
+
+  const items =
+    session?.role === "PASSENGER"
+      ? NAV.filter((item) => ["/", "/bookings", "/profile"].includes(item.to))
+      : NAV;
+
   return (
     <nav className="flex flex-col gap-1">
-      {NAV.map((item) => {
+      {items.map((item) => {
         const active = pathname === item.to;
+
         return (
           <Link
             key={item.to}
@@ -108,6 +116,7 @@ function NavItems({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: 
                   className="absolute inset-0 rounded-2xl bg-sidebar-accent shadow-float"
                 />
               ) : null}
+
               <item.icon
                 className={cn(
                   "relative z-10 h-4.5 w-4.5 shrink-0 transition-transform duration-300",
@@ -115,6 +124,7 @@ function NavItems({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: 
                 )}
                 strokeWidth={1.6}
               />
+
               {!collapsed ? (
                 <span className={cn("relative z-10 truncate", active && "font-medium")}>
                   {item.label}
@@ -138,7 +148,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { notifications } = useLiveOps();
   const { unreadCount } = useNotifications();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const current = NAV.find((n) => n.to === pathname)?.label ?? "Dashboard";
+  const current =
+    (session?.role === "PASSENGER"
+      ? NAV.filter((item) => ["/", "/bookings", "/profile"].includes(item.to))
+      : NAV
+    ).find((item) => item.to === pathname)?.label ?? "Dashboard";
   const userInitials = session?.username?.slice(0, 2).toUpperCase() ?? "AH";
 
   const [isHydrated, setIsHydrated] = useState(false);
@@ -220,22 +234,24 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Moon className="h-4.5 w-4.5" strokeWidth={1.7} />
               )}
             </button>
-            <Link
-              to="/notifications"
-              aria-label="Open Notifications"
-              className="relative rounded-2xl p-2 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
-            >
-              <Bell className="h-4.5 w-4.5" strokeWidth={1.7} />
+            {session?.role !== "PASSENGER" ? (
+              <Link
+                to="/notifications"
+                aria-label="Open Notifications"
+                className="relative rounded-2xl p-2 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+              >
+                <Bell className="h-4.5 w-4.5" strokeWidth={1.7} />
 
-              {unreadCount > 0 ? (
-                <span
-                  className="absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-semibold leading-none text-destructive-foreground"
-                  aria-label={`${unreadCount} unread notifications`}
-                >
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              ) : null}
-            </Link>
+                {unreadCount > 0 ? (
+                  <span
+                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-semibold leading-none text-destructive-foreground"
+                    aria-label={`${unreadCount} unread notifications`}
+                  >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                ) : null}
+              </Link>
+            ) : null}
 
             <div className="relative">
               <details className="group">

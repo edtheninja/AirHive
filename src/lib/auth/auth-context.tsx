@@ -1,4 +1,12 @@
-import { createContext, useContext, useMemo, useState, useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { disconnectWebSocket } from "@/lib/api/websocket";
 import { login as loginRequest, signup as signupRequest } from "./api";
 import { clearSession, getSession, saveSession, type AuthSession } from "./session";
@@ -25,41 +33,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setSession(getSession());
   }, []);
 
-  function createSession(response: {
-    userId: number;
-    token: string;
-    username: string;
-    role: AuthSession["role"];
-  }) {
-    saveSession(response);
+  const createSession = useCallback(
+    (response: { userId: number; token: string; username: string; role: AuthSession["role"] }) => {
+      saveSession(response);
 
-    const nextSession: AuthSession = {
-      userId: response.userId,
-      token: response.token,
-      username: response.username,
-      role: response.role,
-    };
+      const nextSession: AuthSession = {
+        userId: response.userId,
+        token: response.token,
+        username: response.username,
+        role: response.role,
+      };
 
-    setSession(nextSession);
+      setSession(nextSession);
 
-    return nextSession;
-  }
+      return nextSession;
+    },
+    [],
+  );
 
-  async function login(request: LoginRequest) {
-    const response = await loginRequest(request);
-    return createSession(response);
-  }
+  const login = useCallback(
+    async (request: LoginRequest) => {
+      const response = await loginRequest(request);
+      return createSession(response);
+    },
+    [createSession],
+  );
 
-  async function signup(request: SignupRequest) {
-    const response = await signupRequest(request);
-    return createSession(response);
-  }
+  const signup = useCallback(
+    async (request: SignupRequest) => {
+      const response = await signupRequest(request);
+      return createSession(response);
+    },
+    [createSession],
+  );
 
-  function logout() {
+  const logout = useCallback(() => {
     clearSession();
     setSession(null);
     void disconnectWebSocket();
-  }
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -69,7 +81,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signup,
       logout,
     }),
-    [session],
+    [session, login, signup, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

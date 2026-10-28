@@ -6,6 +6,175 @@ import { toast } from "sonner";
 import { pageVariants, spring } from "@/lib/ams/motion";
 import { getBookings, type Booking } from "@/lib/api/bookings";
 import { PageHeader, SectionCard } from "@/components/ams/primitives";
+import { useAuth } from "@/lib/auth/auth-context";
+
+function PassengerBookingsPage() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadBookings() {
+      setLoading(true);
+      setError(false);
+
+      try {
+        const data = await getBookings();
+
+        if (mounted) {
+          setBookings(data);
+        }
+      } catch {
+        if (mounted) {
+          setError(true);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadBookings();
+
+    return () => {
+      mounted = false;
+    };
+  }, [retryKey]);
+
+  const upcoming = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return bookings
+      .filter((booking) => {
+        if (booking.status === "Cancelled") return false;
+
+        const date = new Date(booking.travelDate);
+        if (Number.isNaN(date.getTime())) return false;
+
+        date.setHours(0, 0, 0, 0);
+        return date >= today;
+      })
+      .sort((a, b) => new Date(a.travelDate).getTime() - new Date(b.travelDate).getTime());
+  }, [bookings]);
+
+  return (
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      className="mx-auto max-w-[1200px] space-y-6 py-6"
+    >
+      <PageHeader
+        title="My bookings"
+        description="View your reservations, travel dates, seats, and booking status."
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {[
+          { label: "Total bookings", value: bookings.length },
+          {
+            label: "Upcoming trips",
+            value: upcoming.length,
+          },
+          {
+            label: "Confirmed",
+            value: bookings.filter((b) => b.status === "Confirmed").length,
+          },
+        ].map((stat) => (
+          <div key={stat.label} className="glass rounded-3xl p-5">
+            <p className="text-sm text-muted-foreground">{stat.label}</p>
+            <p className="num mt-3 text-3xl font-semibold">{loading ? "—" : stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <SectionCard title="Your reservations" subtitle="Your personal booking history">
+        {loading ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            Loading your bookings...
+          </p>
+        ) : error ? (
+          <div className="py-10 text-center">
+            <p className="text-sm text-muted-foreground">
+              We couldn't load your bookings. Please try again.
+            </p>
+            <button
+              type="button"
+              onClick={() => setRetryKey((key) => key + 1)}
+              className="mt-4 rounded-xl border border-border px-4 py-2 text-sm hover:bg-foreground/5"
+            >
+              Retry
+            </button>
+          </div>
+        ) : bookings.length === 0 ? (
+          <div className="py-10 text-center">
+            <p className="font-medium">No bookings yet</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your reservations will appear here when you have booked a trip.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {bookings
+              .slice()
+              .sort((a, b) => new Date(b.travelDate).getTime() - new Date(a.travelDate).getTime())
+              .map((booking) => (
+                <article
+                  key={booking.id}
+                  className="rounded-2xl border border-border/60 p-4 sm:p-5"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Booking reference</p>
+                      <p className="num mt-1 font-semibold">{booking.pnr}</p>
+                    </div>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusTone[booking.status]}`}
+                    >
+                      {booking.status}
+                    </span>
+                  </div>
+
+                  <div className="mt-4">
+                    <h3 className="text-lg font-semibold">{booking.route}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">Flight {booking.flight}</p>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border/60 pt-4 sm:grid-cols-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Travel date</p>
+                      <p className="mt-1 text-sm font-medium">
+                        {booking.travelDate || "Not available"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Cabin</p>
+                      <p className="mt-1 text-sm font-medium">{booking.cabin}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Seat</p>
+                      <p className="mt-1 text-sm font-medium">{booking.seat || "Not assigned"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Amount</p>
+                      <p className="num mt-1 text-sm font-medium">
+                        ${booking.amount.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+          </div>
+        )}
+      </SectionCard>
+    </motion.div>
+  );
+}
 
 export const Route = createFileRoute("/bookings")({
   head: () => ({
@@ -36,6 +205,12 @@ const statusTone: Record<Booking["status"], string> = {
 };
 
 function BookingsPage() {
+  const { session } = useAuth();
+
+  return session?.role === "PASSENGER" ? <PassengerBookingsPage /> : <StaffBookingsPage />;
+}
+
+function StaffBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -43,6 +218,8 @@ function BookingsPage() {
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Booking | null>(null);
 
+  // Keep the existing staff useEffect, filtering logic,
+  // table, pagination, and booking-details modal below.
   useEffect(() => {
     let mounted = true;
 
