@@ -67,7 +67,20 @@ public class SecurityConfig {
                                                                 "/api/users/**")
                                                 .hasRole("ADMIN")
 
-                                                // Read access for all authenticated roles
+                                                // Passenger endpoints perform ownership filtering in their controllers.
+                                                // This matcher must precede the generic read rule.
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/bookings",
+                                                                "/api/passengers")
+                                                .hasAnyRole(
+                                                                "PASSENGER",
+                                                                "VIEWER",
+                                                                "OPERATOR",
+                                                                "ADMIN")
+
+                                                // Read access for staff roles across the operational API.
+                                                // PASSENGER is intentionally excluded from this broad rule.
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
                                                                 "/api/**")
@@ -135,7 +148,7 @@ public class SecurityConfig {
 
                                                 // Any unmatched endpoint requires authentication
                                                 .anyRequest()
-                                                .authenticated());
+                                                .denyAll());
 
                 return http.build();
         }

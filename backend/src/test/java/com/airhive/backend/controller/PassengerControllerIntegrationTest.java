@@ -20,7 +20,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import com.airhive.backend.entity.AppUser;
 import com.airhive.backend.entity.Passenger;
+import com.airhive.backend.entity.Role;
+import com.airhive.backend.repository.AppUserRepository;
 import com.airhive.backend.repository.PassengerRepository;
 
 @SpringBootTest
@@ -61,6 +64,9 @@ class PassengerControllerIntegrationTest {
 
     @Autowired
     private PassengerRepository passengerRepository;
+
+    @Autowired
+    private AppUserRepository appUserRepository;
 
     @BeforeEach
     void setUp() {
@@ -111,5 +117,50 @@ class PassengerControllerIntegrationTest {
                 .andExpect(jsonPath("$[0].seat").value("12A"))
                 .andExpect(jsonPath("$[0].bags").value(2))
                 .andExpect(jsonPath("$[0].checkedIn").value(true));
+    }
+
+    @Test
+    void passengerCanOnlyReadPassengerRecordsAssignedToTheirAccount() throws Exception {
+        AppUser owner = createPassengerAccount("passenger-owner");
+        AppUser other = createPassengerAccount("passenger-other");
+
+        Passenger ownedPassenger = createPassengerRecord("PAX-OWNED-001", owner);
+        createPassengerRecord("PAX-OTHER-001", other);
+        createPassengerRecord("PAX-LEGACY-001", null);
+
+        mockMvc.perform(get("/api/passengers")
+                        .with(jwt()
+                                .jwt(token -> token
+                                        .subject(owner.getUsername())
+                                        .claim("userId", owner.getId())
+                                        .claim("role", "PASSENGER"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_PASSENGER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(ownedPassenger.getId().intValue()))
+                .andExpect(jsonPath("$[0].passengerCode").value("PAX-OWNED-001"));
+    }
+
+    private AppUser createPassengerAccount(String prefix) {
+        AppUser user = new AppUser();
+        user.setUsername(prefix + "-" + System.nanoTime());
+        user.setPassword("test-password-hash");
+        user.setRole(Role.PASSENGER);
+        user.setEnabled(true);
+        return appUserRepository.saveAndFlush(user);
+    }
+
+    private Passenger createPassengerRecord(String code, AppUser owner) {
+        Passenger passenger = new Passenger();
+        passenger.setPassengerCode(code);
+        passenger.setName("Test Passenger");
+        passenger.setTier("GOLD");
+        passenger.setFlight("AH101");
+        passenger.setRoute("DEL-BOM");
+        passenger.setSeat("12A");
+        passenger.setBags(2);
+        passenger.setCheckedIn(true);
+        passenger.setUser(owner);
+        return passengerRepository.saveAndFlush(passenger);
     }
 }

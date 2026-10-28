@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.airhive.backend.dto.CreateUserRequest;
 import com.airhive.backend.dto.UpdateUserStatusRequest;
+import com.airhive.backend.dto.UpdateUserRoleRequest;
 import com.airhive.backend.dto.UserResponse;
 import com.airhive.backend.service.UserManagementService;
 
@@ -41,6 +42,15 @@ public class UserController {
 
         return ResponseEntity.ok(
                 userManagementService.updateUserStatus(id, request));
+    }
+
+    @PatchMapping("/{id}/role")
+    public ResponseEntity<UserResponse> updateUserRole(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserRoleRequest request) {
+
+        return ResponseEntity.ok(
+                userManagementService.updateUserRole(id, request));
     }
 
     @PostMapping

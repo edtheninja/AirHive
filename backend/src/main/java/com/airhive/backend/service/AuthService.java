@@ -65,8 +65,8 @@ public class AuthService {
                 user.setUsername(request.username());
                 user.setPassword(passwordEncoder.encode(request.password()));
 
-                // Public signup accounts are always VIEWER accounts.
-                user.setRole(Role.VIEWER);
+                // Public signup accounts are passengers, never operational staff.
+                user.setRole(Role.PASSENGER);
                 user.setEnabled(true);
 
                 AppUser savedUser = appUserRepository.save(user);

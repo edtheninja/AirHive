@@ -8,6 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -47,6 +50,14 @@ public class Booking {
 
     @Column(name = "travel_date", nullable = false)
     private LocalDate travelDate;
+
+    /**
+     * Nullable for legacy bookings that predate application-user ownership.
+     * Passenger access is only granted when this relationship is populated.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private AppUser user;
 
     public Booking() {
     }
@@ -125,5 +136,13 @@ public class Booking {
 
     public void setTravelDate(LocalDate travelDate) {
         this.travelDate = travelDate;
+    }
+
+    public AppUser getUser() {
+        return user;
+    }
+
+    public void setUser(AppUser user) {
+        this.user = user;
     }
 }

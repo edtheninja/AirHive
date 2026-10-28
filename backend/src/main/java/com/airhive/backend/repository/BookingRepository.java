@@ -7,4 +7,6 @@ import com.airhive.backend.entity.Booking;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     boolean existsByPnr(String pnr);
+
+    java.util.List<Booking> findByUser_Id(Long userId);
 }

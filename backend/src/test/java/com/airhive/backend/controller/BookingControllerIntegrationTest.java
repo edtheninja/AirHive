@@ -22,7 +22,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import com.airhive.backend.entity.AppUser;
 import com.airhive.backend.entity.Booking;
+import com.airhive.backend.entity.Role;
+import com.airhive.backend.repository.AppUserRepository;
 import com.airhive.backend.repository.BookingRepository;
 
 @SpringBootTest
@@ -63,6 +66,9 @@ class BookingControllerIntegrationTest {
 
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Autowired
+    private AppUserRepository appUserRepository;
 
     @BeforeEach
     void setUp() {
@@ -115,5 +121,51 @@ class BookingControllerIntegrationTest {
                 .andExpect(jsonPath("$[0].status").value("CONFIRMED"))
                 .andExpect(jsonPath("$[0].amount").value(1499.50))
                 .andExpect(jsonPath("$[0].travelDate").value("2026-11-15"));
+    }
+
+    @Test
+    void passengerCanOnlyReadBookingsAssignedToTheirAccount() throws Exception {
+        AppUser owner = createPassenger("booking-owner");
+        AppUser other = createPassenger("booking-other");
+
+        Booking ownedBooking = createBooking("OWNEDPNR001", owner);
+        createBooking("OTHERPNR001", other);
+        createBooking("LEGACYPNR001", null);
+
+        mockMvc.perform(get("/api/bookings")
+                        .with(jwt()
+                                .jwt(token -> token
+                                        .subject(owner.getUsername())
+                                        .claim("userId", owner.getId())
+                                        .claim("role", "PASSENGER"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_PASSENGER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(ownedBooking.getId().intValue()))
+                .andExpect(jsonPath("$[0].pnr").value("OWNEDPNR001"));
+    }
+
+    private AppUser createPassenger(String prefix) {
+        AppUser user = new AppUser();
+        user.setUsername(prefix + "-" + System.nanoTime());
+        user.setPassword("test-password-hash");
+        user.setRole(Role.PASSENGER);
+        user.setEnabled(true);
+        return appUserRepository.saveAndFlush(user);
+    }
+
+    private Booking createBooking(String pnr, AppUser owner) {
+        Booking booking = new Booking();
+        booking.setPnr(pnr);
+        booking.setPassenger("Test Passenger");
+        booking.setFlight("AH101");
+        booking.setRoute("DEL-BOM");
+        booking.setCabin("ECONOMY");
+        booking.setSeat("12A");
+        booking.setStatus("CONFIRMED");
+        booking.setAmount(new BigDecimal("1499.50"));
+        booking.setTravelDate(LocalDate.of(2026, 11, 15));
+        booking.setUser(owner);
+        return bookingRepository.saveAndFlush(booking);
     }
 }

@@ -401,4 +401,35 @@ void adminCanReadAnalyticsOverview() throws Exception {
                         .andExpect(status().isOk());
 }
 
+
+        @Test
+        void passengerCanReadOnlyTheirBookingAndPassengerEndpoints() throws Exception {
+                mockMvc.perform(get("/api/bookings")
+                                .with(jwt()
+                                                .jwt(token -> token.claim("userId", 42L))
+                                                .authorities(new SimpleGrantedAuthority("ROLE_PASSENGER"))))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(get("/api/passengers")
+                                .with(jwt()
+                                                .jwt(token -> token.claim("userId", 42L))
+                                                .authorities(new SimpleGrantedAuthority("ROLE_PASSENGER"))))
+                                .andExpect(status().isOk());
+        }
+
+        @Test
+        void passengerCannotReadBroadOperationalEndpoints() throws Exception {
+                mockMvc.perform(get("/api/airports")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_PASSENGER"))))
+                                .andExpect(status().isForbidden());
+        }
+        @Test
+void passengerCannotAccessUnmatchedMutationEndpoint() throws Exception {
+    mockMvc.perform(patch("/api/unmatched-resource")
+                    .with(csrf())
+                    .with(jwt().authorities(
+                            new SimpleGrantedAuthority("ROLE_PASSENGER"))))
+            .andExpect(status().isForbidden());
+}
 }

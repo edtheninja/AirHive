@@ -52,20 +52,27 @@ public class JwtConfig {
 
         OAuth2TokenValidator<Jwt> accountStatusValidator = jwt -> {
             String username = jwt.getSubject();
+            String tokenRole = jwt.getClaimAsString("role");
+            Object tokenUserId = jwt.getClaims().get("userId");
 
-            boolean enabled = username != null
+            boolean validAccount = username != null
                     && appUserRepository.findByUsername(username)
                             .filter(user -> user.isEnabled())
+                            .filter(user -> user.getRole() != null
+                                    && user.getRole().name().equals(tokenRole))
+                            .filter(user -> tokenUserId instanceof Number number
+                                    && user.getId() != null
+                                    && user.getId().longValue() == number.longValue())
                             .isPresent();
 
-            if (enabled) {
+            if (validAccount) {
                 return OAuth2TokenValidatorResult.success();
             }
 
             return OAuth2TokenValidatorResult.failure(
                     new OAuth2Error(
                             "invalid_token",
-                            "The token belongs to a missing or disabled user.",
+                            "The token belongs to a missing, disabled, or changed user account.",
                             null));
         };
 

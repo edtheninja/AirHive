@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.airhive.backend.dto.CreateUserRequest;
 import com.airhive.backend.dto.UpdateUserStatusRequest;
+import com.airhive.backend.dto.UpdateUserRoleRequest;
 import com.airhive.backend.dto.UserResponse;
 import com.airhive.backend.entity.Role;
 import com.airhive.backend.exception.ResourceNotFoundException;
@@ -282,5 +283,54 @@ void missingUserShouldReturnNotFound() throws Exception {
                             }
                             """))
             .andExpect(status().isNotFound());
+}
+
+@Test
+void adminCanRestoreVerifiedStaffToViewerRole() throws Exception {
+    UserResponse response =
+            new UserResponse(1L, "verified-staff", Role.VIEWER, true);
+
+    when(userManagementService.updateUserRole(
+            eq(1L),
+            any(UpdateUserRoleRequest.class)))
+            .thenReturn(response);
+
+    mockMvc.perform(patch("/api/users/1/role")
+                    .with(user("admin").roles("ADMIN"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            {
+                              "role": "VIEWER"
+                            }
+                            """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.username").value("verified-staff"))
+            .andExpect(jsonPath("$.role").value("VIEWER"))
+            .andExpect(jsonPath("$.enabled").value(true));
+}
+
+@Test
+void operatorCannotChangeUserRole() throws Exception {
+    mockMvc.perform(patch("/api/users/1/role")
+                    .with(user("operator").roles("OPERATOR"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            {
+                              "role": "VIEWER"
+                            }
+                            """))
+            .andExpect(status().isForbidden());
+}
+
+@Test
+void invalidRoleRequestShouldReturnBadRequest() throws Exception {
+    mockMvc.perform(patch("/api/users/1/role")
+                    .with(user("admin").roles("ADMIN"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            {}
+                            """))
+            .andExpect(status().isBadRequest());
 }
 }
