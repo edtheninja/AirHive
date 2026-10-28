@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.airhive.backend.dto.LoginRequest;
 import com.airhive.backend.dto.LoginResponse;
+import com.airhive.backend.dto.SignupRequest;
 import com.airhive.backend.entity.AppUser;
 import com.airhive.backend.entity.Role;
 import com.airhive.backend.repository.AppUserRepository;
@@ -103,5 +104,26 @@ class AuthServiceTest {
 
         verify(appUserRepository, never()).findByUsername(anyString());
         verify(jwtService, never()).generateToken(any());
+    }
+
+    @Test
+    void publicSignupCreatesPassengerRoleOnly() {
+        SignupRequest request = new SignupRequest("new-passenger", "password123");
+
+        when(appUserRepository.existsByUsername("new-passenger")).thenReturn(false);
+        when(passwordEncoder.encode("password123")).thenReturn("encoded-password");
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(invocation -> {
+            AppUser saved = invocation.getArgument(0);
+            saved.setId(12L);
+            return saved;
+        });
+        when(jwtService.generateToken(any(AppUser.class))).thenReturn("passenger-token");
+
+        LoginResponse response = authService.signup(request);
+
+        assertEquals("PASSENGER", response.role());
+        assertEquals("new-passenger", response.username());
+        verify(appUserRepository).save(org.mockito.ArgumentMatchers.argThat(
+                user -> user.getRole() == Role.PASSENGER && user.isEnabled()));
     }
 }

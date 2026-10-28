@@ -1,4 +1,4 @@
-export type UserRole = "ADMIN" | "OPERATOR" | "VIEWER";
+export type UserRole = "ADMIN" | "OPERATOR" | "VIEWER" | "PASSENGER";
 
 export type LoginRequest = {
   username: string;

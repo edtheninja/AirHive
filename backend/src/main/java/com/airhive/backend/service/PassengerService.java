@@ -19,6 +19,13 @@ public class PassengerService {
         this.passengerRepository = passengerRepository;
     }
 
+    public List<PassengerResponseDTO> getPassengersForUser(Long userId) {
+        return passengerRepository.findByUser_Id(userId)
+                .stream()
+                .map(PassengerMapper::toResponse)
+                .toList();
+    }
+
     public List<PassengerResponseDTO> getAllPassengers() {
         return passengerRepository.findAll()
                 .stream()

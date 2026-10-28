@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.airhive.backend.dto.CreateUserRequest;
 import com.airhive.backend.dto.UpdateUserStatusRequest;
+import com.airhive.backend.dto.UpdateUserRoleRequest;
 import com.airhive.backend.dto.UserResponse;
 import com.airhive.backend.entity.AppUser;
 import com.airhive.backend.exception.DuplicateResourceException;
@@ -48,6 +49,25 @@ public class UserManagementService {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole(request.role());
         user.setEnabled(true);
+
+        AppUser savedUser = appUserRepository.save(user);
+
+        return new UserResponse(
+                savedUser.getId(),
+                savedUser.getUsername(),
+                savedUser.getRole(),
+                savedUser.isEnabled());
+    }
+
+    public UserResponse updateUserRole(
+            Long userId,
+            UpdateUserRoleRequest request) {
+
+        AppUser user = appUserRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found with id: " + userId));
+
+        user.setRole(request.role());
 
         AppUser savedUser = appUserRepository.save(user);
 

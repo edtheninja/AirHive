@@ -7,4 +7,6 @@ import com.airhive.backend.entity.Passenger;
 public interface PassengerRepository extends JpaRepository<Passenger, Long> {
 
     boolean existsByPassengerCode(String passengerCode);
+
+    java.util.List<Passenger> findByUser_Id(Long userId);
 }

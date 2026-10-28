@@ -61,7 +61,7 @@ function SignupPage() {
             <CardTitle className="text-2xl">Create your AirHive account</CardTitle>
 
             <CardDescription>
-              Sign up for viewer access to the airline operations system.
+              Create a passenger account for AirHive.
             </CardDescription>
           </CardHeader>
 

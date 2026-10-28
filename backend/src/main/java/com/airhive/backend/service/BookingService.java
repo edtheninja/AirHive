@@ -19,6 +19,14 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
+    public List<BookingResponseDTO> getBookingsForUser(Long userId) {
+        return bookingRepository.findByUser_Id(userId)
+                .stream()
+                .map(BookingMapper::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<BookingResponseDTO> getAllBookings() {
         return bookingRepository.findAll()
                 .stream()
