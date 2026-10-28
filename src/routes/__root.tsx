@@ -91,6 +91,15 @@ export const Route = createRootRouteWithContext<{
     ) {
       throw redirect({ to: "/login" });
     }
+
+    const session = getSession();
+
+    if (
+      session?.role === "PASSENGER" &&
+      !["/", "/bookings", "/profile"].includes(location.pathname)
+    ) {
+      throw redirect({ to: "/" });
+    }
   },
 
   head: () => ({

@@ -18,6 +18,8 @@ import { FlightsTable } from "@/components/ams/flights-table";
 import { FlightMap } from "@/components/ams/flight-map";
 import { NotificationsPanel } from "@/components/ams/notifications-panel";
 import { PageHeader, SectionCard } from "@/components/ams/primitives";
+import { useAuth } from "@/lib/auth/auth-context";
+import { PassengerDashboard } from "@/components/passenger/passenger-dashboard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,6 +59,16 @@ const QUICK_ACTIONS = [
 ];
 
 function Dashboard() {
+  const { session } = useAuth();
+
+  if (session?.role === "PASSENGER") {
+    return <PassengerDashboard />;
+  }
+
+  return <OperationsDashboard />;
+}
+
+function OperationsDashboard() {
   const navigate = useNavigate();
   const { kpis, flights } = useLiveOps();
   const flightStatusCounts = flights.reduce<Record<string, number>>((counts, flight) => {
