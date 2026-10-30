@@ -31,6 +31,7 @@ The project combines a modern React frontend with a Spring Boot backend, Postgre
 - [Environment Configuration](#-environment-configuration)
 - [Application Health & Observability](#-application-health--observability)
 - [Security](#-security)
+- [Account Roles & Provisioning](#-account-roles--provisioning)
 - [Git Workflow](#-git-workflow)
 - [Current Project Status](#-current-project-status)
 - [Roadmap](#-roadmap)
@@ -77,6 +78,12 @@ The system currently provides functionality for:
 - Application health monitoring
 - Liveness and readiness probes
 - Automated backend testing
+
+### Current Authentication Milestone
+
+Public registration now creates a `PASSENGER` account by default. Passenger access is separated from staff operations, and passenger booking/passenger reads are scoped to the authenticated account. Staff account provisioning is supported by admin-protected backend APIs; a dedicated User Management screen and stronger administrator lifecycle safeguards remain future work.
+
+The current passenger milestone covers account registration, role assignment, protected passenger access, and ownership-aware reads. It does **not** yet provide a passenger self-service booking-creation workflow.
 
 The project is being developed with an emphasis on:
 
@@ -246,18 +253,23 @@ Examples include:
 
 ## 🔐 Authentication & Authorization
 
-AirHive includes backend authentication and authorization infrastructure.
+AirHive uses JWT authentication and role-based access control. Public signup is deliberately restricted to passenger accounts. The role is assigned by the backend; the signup request does not accept a role from the browser.
 
 Current capabilities include:
 
-- User authentication
+- Username/password signup and login
 - JWT-based authentication
-- Role-based access control
-- Protected API endpoints
-- Password security
+- Public signup always creates an enabled `PASSENGER` account
+- Role-based access control for `ADMIN`, `OPERATOR`, `VIEWER`, and `PASSENGER`
+- Passenger ownership checks for passenger booking and passenger records
+- JWT role freshness and user-identity validation
+- Admin-protected backend APIs for creating users, changing roles, and enabling/disabling accounts
+- Password hashing and protected API endpoints
 - Security exception handling
 - WebSocket security foundation
 - Runtime security configuration
+
+See [Account Roles & Provisioning](#-account-roles--provisioning) for the role model and account lifecycle.
 
 ---
 
@@ -875,6 +887,26 @@ PUT    /api/flights/{id}
 DELETE /api/flights/{id}
 ```
 
+## Authentication
+
+```http
+POST   /api/auth/signup
+POST   /api/auth/login
+```
+
+Public signup creates a `PASSENGER` account only.
+
+## User administration (ADMIN only)
+
+```http
+GET    /api/users
+POST   /api/users
+PATCH  /api/users/{id}/role
+PATCH  /api/users/{id}/status
+```
+
+`POST /api/users` accepts `username`, `password`, and `role`. The caller must already be authenticated as an administrator. Do not expose this endpoint from public registration.
+
 ---
 
 # 🛰️ WebSocket Real-Time Updates
@@ -1173,6 +1205,63 @@ Production-oriented configuration includes:
 
 ---
 
+# 👤 Account Roles & Provisioning
+
+AirHive separates public passenger registration from employee account provisioning. A person registering through the public signup page must never be able to choose an operational or administrative role.
+
+## Roles
+
+| Role | Intended use | Account creation / assignment |
+|---|---|---|
+| `PASSENGER` | Customer access to their own passenger information and bookings | Automatically assigned by public signup |
+| `VIEWER` | Read-only staff access to operational information | Assigned by an administrator |
+| `OPERATOR` | Staff access to permitted airline operations | Assigned by an administrator |
+| `ADMIN` | User administration and privileged system management | Assigned through the protected admin workflow or a separately secured bootstrap process |
+
+## Public signup
+
+`POST /api/auth/signup` accepts a username and password. `AuthService` assigns `Role.PASSENGER` on the server and returns a JWT for that passenger account. A role supplied by a client is not part of the signup DTO and cannot elevate the account.
+
+## Existing administrator APIs
+
+The backend already exposes the following endpoints under `/api/users`. All are restricted to `ADMIN` by `SecurityConfig`.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/api/users` | List user accounts |
+| `POST` | `/api/users` | Create an account with a selected role |
+| `PATCH` | `/api/users/{id}/role` | Change an account's role |
+| `PATCH` | `/api/users/{id}/status` | Enable or disable an account |
+
+An administrator can use these APIs to provision `OPERATOR` and `VIEWER` accounts and, where authorized, additional `ADMIN` accounts. The backend API exists; a dedicated frontend User Management screen is not yet documented as complete.
+
+## Passenger data ownership
+
+The passenger ownership migration adds nullable `user_id` references to bookings and passenger records. Nullable ownership preserves historical rows. Passenger endpoints filter records by the authenticated JWT user ID; staff roles retain their permitted operational visibility. A passenger cannot choose another account's `user_id` through the public signup or passenger read flow.
+
+The migration also converts existing `VIEWER` accounts to `PASSENGER`, because those accounts were created through public signup in the previous application version. Verified staff accounts must be restored to `VIEWER` by an administrator after deployment. Review existing accounts before performing that restoration.
+
+## Initial administrator and production bootstrap
+
+The uploaded codebase contains `DevAdminSeeder`, which is active only under the Spring `dev` profile. It creates a local development administrator when one does not already exist. Its current development credential is hardcoded in source (`admin` / `AirHiveAdmin123!`). This is a development convenience only: do not use it in a deployed environment, do not reuse the credential, and rotate it if it has ever been exposed outside a disposable local environment. The hardcoded development credential should be replaced with externally supplied configuration.
+
+The project does not yet contain a production-grade first-administrator bootstrap workflow. Production provisioning must use a one-time controlled process (for example, a deployment-time bootstrap secret or a secured operator-run command) and must not add an admin role to public signup. Once the first administrator exists, that administrator can create additional admins through the admin-protected `/api/users` API.
+
+## Operational safeguards still required
+
+The current user-management implementation is a foundation, not a complete production identity-governance workflow. Before production rollout, add and test:
+
+- A one-time, secure initial-admin bootstrap procedure with no hardcoded production credentials.
+- Protection against an administrator demoting or disabling their own account unintentionally.
+- Protection against removing or disabling the last enabled administrator.
+- Audit records for account creation, role changes, and account enable/disable actions, including actor and timestamp.
+- A dedicated, role-protected User Management interface for authorized administrators.
+- Appropriate credential delivery and password-reset/invitation flows for staff accounts.
+
+Until these safeguards and the frontend workflow are implemented, treat administrator provisioning as a controlled backend operation rather than a finished self-service admin console.
+
+---
+
 # 🐳 Container Security & Runtime Hardening
 
 The Docker environment has been reviewed for:
@@ -1272,8 +1361,15 @@ git push origin main
 | Flight WebSockets | ✅ Complete |
 | Live Flight Updates | ✅ Complete |
 | Authentication | ✅ Complete |
-| JWT Security | ✅ Complete |
-| Role-Based Access Control | ✅ Complete |
+| Public signup assigns PASSENGER | ✅ Complete |
+| JWT Security and role freshness | ✅ Complete |
+| Passenger ownership-aware reads | ✅ Complete |
+| Admin-protected user management APIs | ✅ Backend complete |
+| Admin User Management frontend | 🛠️ Pending |
+| Secure initial-admin bootstrap | 🛠️ Pending |
+| Admin lifecycle safeguards and audit history | 🛠️ Pending |
+| Passenger self-service booking creation | 🛠️ Pending |
+| Role-Based Access Control | ✅ Complete (current API policies) |
 | Notifications | ✅ Complete |
 | Advanced Flight Operations | ✅ Complete |
 | Flight History | ✅ Complete |
@@ -1435,7 +1531,14 @@ git push origin main
 - [x] WebSocket security foundation
 - [x] Production security configuration foundation
 - [x] Runtime secret externalization
-- [x] Final security review
+- [x] Public signup restricted to PASSENGER
+- [x] Passenger ownership migration for bookings and passenger records
+- [x] Passenger-scoped booking and passenger reads
+- [x] Admin-protected user provisioning and role/status APIs
+- [ ] Secure initial-admin bootstrap procedure
+- [ ] Last-admin and self-demotion safeguards
+- [ ] Audit history for user and role changes
+- [ ] Admin User Management frontend
 
 ## Phase 11 — Advanced Flight Operations
 
@@ -1930,7 +2033,9 @@ Actuator Health & Readiness Monitoring
        ↓
 Deployment Hardening
        ↓
-Phase 15 Finalization & Release
+Passenger Signup & Ownership-Aware Access
+       ↓
+Phase 15 Finalization & Release (ongoing)
 ```
 
 Phase 12 completed the analytics layer.
@@ -1939,9 +2044,11 @@ Phase 13 AI capabilities were deliberately moved to a future phase.
 
 Phase 14 completed deployment, Dockerization, observability, runtime configuration, and hardening.
 
-The current development focus is:
+The passenger-account milestone now separates customer signup from staff roles and scopes passenger record reads to the authenticated account. The next identity-management work is secure admin bootstrap, administrator safeguards, audit history, and an admin-facing user-management interface. Passenger self-service booking creation remains a separate pending workflow.
 
-**Phase 15 — Finalization & Release**
+The broader development focus remains:
+
+**Phase 15 — Finalization & Release (ongoing)**
 
 ---
 
