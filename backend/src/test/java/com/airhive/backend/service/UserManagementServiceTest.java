@@ -1,3 +1,4 @@
+
 package com.airhive.backend.service;
 
 import java.util.List;
@@ -21,246 +22,435 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.airhive.backend.dto.CreateUserRequest;
+import com.airhive.backend.dto.UpdateUserRoleRequest;
 import com.airhive.backend.dto.UpdateUserStatusRequest;
 import com.airhive.backend.dto.UserResponse;
 import com.airhive.backend.entity.AppUser;
+import com.airhive.backend.entity.GovernanceLock;
 import com.airhive.backend.entity.Role;
+import com.airhive.backend.entity.UserAuditLog;
 import com.airhive.backend.exception.DuplicateResourceException;
+import com.airhive.backend.exception.LastAdminException;
 import com.airhive.backend.exception.ResourceNotFoundException;
 import com.airhive.backend.repository.AppUserRepository;
+import com.airhive.backend.repository.GovernanceLockRepository;
+import com.airhive.backend.repository.UserAuditLogRepository;
 
 @ExtendWith(MockitoExtension.class)
 class UserManagementServiceTest {
 
-        @Mock
-        private AppUserRepository appUserRepository;
+    private static final Long ACTOR_ID = 1L;
+    private static final Long TARGET_ID = 2L;
 
-        @Mock
-        private PasswordEncoder passwordEncoder;
+    @Mock
+    private AppUserRepository appUserRepository;
 
-        @InjectMocks
-        private UserManagementService userManagementService;
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
-        private CreateUserRequest request;
+    @Mock
+    private GovernanceLockRepository governanceLockRepository;
 
-        @BeforeEach
-        void setUp() {
-                request = new CreateUserRequest(
-                                "new-user",
-                                "password123",
-                                Role.OPERATOR);
-        }
+    @Mock
+    private UserAuditLogRepository userAuditLogRepository;
 
-        @Test
-        void createUserShouldSaveUserWithHashedPassword() {
+    @InjectMocks
+    private UserManagementService userManagementService;
 
-                when(appUserRepository.existsByUsername("new-user"))
-                                .thenReturn(false);
+    private CreateUserRequest request;
+    private AppUser admin;
 
-                when(passwordEncoder.encode("password123"))
-                                .thenReturn("hashed-password");
+    @BeforeEach
+    void setUp() {
+        request = new CreateUserRequest(
+                "new-user",
+                "password123",
+                Role.OPERATOR);
 
-                AppUser savedUser = new AppUser();
-                savedUser.setId(1L);
-                savedUser.setUsername("new-user");
-                savedUser.setPassword("hashed-password");
-                savedUser.setRole(Role.OPERATOR);
-                savedUser.setEnabled(true);
+        admin = createUser(ACTOR_ID, "admin-user", Role.ADMIN, true);
+    }
 
-                when(appUserRepository.save(any(AppUser.class)))
-                                .thenReturn(savedUser);
+    private AppUser createUser(
+            Long id,
+            String username,
+            Role role,
+            boolean enabled) {
 
-                UserResponse response = userManagementService.createUser(request);
+        AppUser user = new AppUser();
+        user.setId(id);
+        user.setUsername(username);
+        user.setRole(role);
+        user.setEnabled(enabled);
+        return user;
+    }
 
-                assertEquals(1L, response.id());
-                assertEquals("new-user", response.username());
-                assertEquals(Role.OPERATOR, response.role());
-                assertFalse(response.username().isBlank());
+    private void mockGovernanceActor() {
+        when(governanceLockRepository.lockById(1L))
+                .thenReturn(Optional.of(GovernanceLock.of(1L)));
 
-                verify(passwordEncoder).encode("password123");
-                verify(appUserRepository).save(any(AppUser.class));
-        }
+        when(appUserRepository.findById(ACTOR_ID))
+                .thenReturn(Optional.of(admin));
+    }
 
-        @Test
-        void createUserShouldNotStorePlainTextPassword() {
+    @Test
+    void createUserShouldSaveUserWithHashedPassword() {
 
-                when(appUserRepository.existsByUsername("new-user"))
-                                .thenReturn(false);
+        mockGovernanceActor();
 
-                when(passwordEncoder.encode("password123"))
-                                .thenReturn("hashed-password");
+        when(appUserRepository.existsByUsername("new-user"))
+                .thenReturn(false);
 
-                AppUser savedUser = new AppUser();
-                savedUser.setId(1L);
-                savedUser.setUsername("new-user");
-                savedUser.setPassword("hashed-password");
-                savedUser.setRole(Role.OPERATOR);
-                savedUser.setEnabled(true);
+        when(passwordEncoder.encode("password123"))
+                .thenReturn("hashed-password");
 
-                when(appUserRepository.save(any(AppUser.class)))
-                                .thenReturn(savedUser);
+        AppUser savedUser = createUser(
+                3L, "new-user", Role.OPERATOR, true);
+        savedUser.setPassword("hashed-password");
 
-                userManagementService.createUser(request);
+        when(appUserRepository.saveAndFlush(any(AppUser.class)))
+                .thenReturn(savedUser);
 
-                verify(passwordEncoder).encode("password123");
+        UserResponse response =
+                userManagementService.createUser(ACTOR_ID, request);
 
-                assertNotEquals(
-                                "password123",
-                                savedUser.getPassword());
-        }
+        assertEquals(3L, response.id());
+        assertEquals("new-user", response.username());
+        assertEquals(Role.OPERATOR, response.role());
+        assertTrue(response.enabled());
 
-        @Test
-        void createUserShouldBeEnabledByDefault() {
+        verify(passwordEncoder).encode("password123");
+        verify(appUserRepository).saveAndFlush(any(AppUser.class));
+        verify(userAuditLogRepository).save(any(UserAuditLog.class));
+    }
 
-                when(appUserRepository.existsByUsername("new-user"))
-                                .thenReturn(false);
+    @Test
+    void createUserShouldNotStorePlainTextPassword() {
 
-                when(passwordEncoder.encode("password123"))
-                                .thenReturn("hashed-password");
+        mockGovernanceActor();
 
-                AppUser savedUser = new AppUser();
-                savedUser.setId(1L);
-                savedUser.setUsername("new-user");
-                savedUser.setPassword("hashed-password");
-                savedUser.setRole(Role.VIEWER);
-                savedUser.setEnabled(true);
+        when(appUserRepository.existsByUsername("new-user"))
+                .thenReturn(false);
 
-                when(appUserRepository.save(any(AppUser.class)))
-                                .thenReturn(savedUser);
+        when(passwordEncoder.encode("password123"))
+                .thenReturn("hashed-password");
 
-                UserResponse response = userManagementService.createUser(
-                                new CreateUserRequest(
-                                                "new-user",
-                                                "password123",
-                                                Role.VIEWER));
+        AppUser savedUser = createUser(
+                3L, "new-user", Role.OPERATOR, true);
+        savedUser.setPassword("hashed-password");
 
-                assertEquals(Role.VIEWER, response.role());
-                assertEquals(true, response.enabled());
-        }
+        when(appUserRepository.saveAndFlush(any(AppUser.class)))
+                .thenReturn(savedUser);
 
-        @Test
-        void duplicateUsernameShouldThrowException() {
+        userManagementService.createUser(ACTOR_ID, request);
 
-                when(appUserRepository.existsByUsername("new-user"))
-                                .thenReturn(true);
+        verify(passwordEncoder).encode("password123");
+        assertNotEquals("password123", savedUser.getPassword());
+    }
 
-                assertThrows(
-                                DuplicateResourceException.class,
-                                () -> userManagementService.createUser(request));
+    @Test
+    void createUserShouldBeEnabledByDefault() {
 
-                verify(appUserRepository, never()).save(any(AppUser.class));
-                verify(passwordEncoder, never()).encode(any(String.class));
-        }
+        mockGovernanceActor();
 
-        @Test
-        void getAllUsersShouldReturnUserResponses() {
+        when(appUserRepository.existsByUsername("new-user"))
+                .thenReturn(false);
 
-                AppUser admin = new AppUser();
-                admin.setId(1L);
-                admin.setUsername("admin-user");
-                admin.setPassword("hashed-admin");
-                admin.setRole(Role.ADMIN);
-                admin.setEnabled(true);
+        when(passwordEncoder.encode("password123"))
+                .thenReturn("hashed-password");
 
-                AppUser viewer = new AppUser();
-                viewer.setId(2L);
-                viewer.setUsername("viewer-user");
-                viewer.setPassword("hashed-viewer");
-                viewer.setRole(Role.VIEWER);
-                viewer.setEnabled(false);
+        AppUser savedUser = createUser(
+                3L, "new-user", Role.VIEWER, true);
+        savedUser.setPassword("hashed-password");
 
-                when(appUserRepository.findAll())
-                                .thenReturn(List.of(admin, viewer));
+        when(appUserRepository.saveAndFlush(any(AppUser.class)))
+                .thenReturn(savedUser);
 
-                List<UserResponse> responses = userManagementService.getAllUsers();
+        UserResponse response = userManagementService.createUser(
+                ACTOR_ID,
+                new CreateUserRequest(
+                        "new-user",
+                        "password123",
+                        Role.VIEWER));
 
-                assertEquals(2, responses.size());
+        assertEquals(Role.VIEWER, response.role());
+        assertTrue(response.enabled());
+    }
 
-                assertEquals(1L, responses.get(0).id());
-                assertEquals("admin-user", responses.get(0).username());
-                assertEquals(Role.ADMIN, responses.get(0).role());
-                assertTrue(responses.get(0).enabled());
+    @Test
+    void duplicateUsernameShouldThrowException() {
 
-                assertEquals(2L, responses.get(1).id());
-                assertEquals("viewer-user", responses.get(1).username());
-                assertEquals(Role.VIEWER, responses.get(1).role());
-                assertFalse(responses.get(1).enabled());
+        mockGovernanceActor();
 
-                verify(appUserRepository).findAll();
-        }
+        when(appUserRepository.existsByUsername("new-user"))
+                .thenReturn(true);
 
-        @Test
-        void getAllUsersShouldReturnEmptyListWhenNoUsersExist() {
+        assertThrows(
+                DuplicateResourceException.class,
+                () -> userManagementService.createUser(ACTOR_ID, request));
 
-                when(appUserRepository.findAll())
-                                .thenReturn(List.of());
+        verify(appUserRepository, never())
+                .saveAndFlush(any(AppUser.class));
 
-                List<UserResponse> responses = userManagementService.getAllUsers();
+        verify(passwordEncoder, never()).encode(any(String.class));
+        verify(userAuditLogRepository, never())
+                .save(any(UserAuditLog.class));
+    }
 
-                assertTrue(responses.isEmpty());
+    @Test
+    void getAllUsersShouldReturnUserResponses() {
 
-                verify(appUserRepository).findAll();
-        }
+        AppUser viewer = createUser(
+                2L, "viewer-user", Role.VIEWER, false);
 
-        @Test
-        void updateUserStatusShouldDisableUser() {
-                AppUser user = new AppUser();
-                user.setId(1L);
-                user.setUsername("operator1");
-                user.setRole(Role.OPERATOR);
-                user.setEnabled(true);
+        when(appUserRepository.findAll())
+                .thenReturn(List.of(admin, viewer));
 
-                UpdateUserStatusRequest request = new UpdateUserStatusRequest(false);
+        List<UserResponse> responses =
+                userManagementService.getAllUsers();
 
-                when(appUserRepository.findById(1L))
-                                .thenReturn(Optional.of(user));
+        assertEquals(2, responses.size());
 
-                when(appUserRepository.save(user))
-                                .thenReturn(user);
+        assertEquals(1L, responses.get(0).id());
+        assertEquals("admin-user", responses.get(0).username());
+        assertEquals(Role.ADMIN, responses.get(0).role());
+        assertTrue(responses.get(0).enabled());
 
-                UserResponse response = userManagementService.updateUserStatus(1L, request);
+        assertEquals(2L, responses.get(1).id());
+        assertEquals("viewer-user", responses.get(1).username());
+        assertEquals(Role.VIEWER, responses.get(1).role());
+        assertFalse(responses.get(1).enabled());
 
-                assertFalse(response.enabled());
-                assertFalse(user.isEnabled());
+        verify(appUserRepository).findAll();
+    }
 
-                verify(appUserRepository).save(user);
-        }
+    @Test
+    void getAllUsersShouldReturnEmptyListWhenNoUsersExist() {
 
-        @Test
-        void updateUserStatusShouldEnableUser() {
-                AppUser user = new AppUser();
-                user.setId(1L);
-                user.setUsername("operator1");
-                user.setRole(Role.OPERATOR);
-                user.setEnabled(false);
+        when(appUserRepository.findAll())
+                .thenReturn(List.of());
 
-                UpdateUserStatusRequest request = new UpdateUserStatusRequest(true);
+        List<UserResponse> responses =
+                userManagementService.getAllUsers();
 
-                when(appUserRepository.findById(1L))
-                                .thenReturn(Optional.of(user));
+        assertTrue(responses.isEmpty());
+        verify(appUserRepository).findAll();
+    }
 
-                when(appUserRepository.save(user))
-                                .thenReturn(user);
+    @Test
+    void updateUserStatusShouldDisableUser() {
 
-                UserResponse response = userManagementService.updateUserStatus(1L, request);
+        mockGovernanceActor();
 
-                assertTrue(response.enabled());
-                assertTrue(user.isEnabled());
+        AppUser target = createUser(
+                TARGET_ID, "operator1", Role.OPERATOR, true);
 
-                verify(appUserRepository).save(user);
-        }
+        when(appUserRepository.findById(TARGET_ID))
+                .thenReturn(Optional.of(target));
 
-        @Test
-        void updateUserStatusShouldThrowWhenUserDoesNotExist() {
-                when(appUserRepository.findById(999L))
-                                .thenReturn(Optional.empty());
+        when(appUserRepository.saveAndFlush(target))
+                .thenReturn(target);
 
-                UpdateUserStatusRequest request = new UpdateUserStatusRequest(false);
+        UserResponse response = userManagementService.updateUserStatus(
+                ACTOR_ID,
+                TARGET_ID,
+                new UpdateUserStatusRequest(false));
 
-                assertThrows(
-                                ResourceNotFoundException.class,
-                                () -> userManagementService.updateUserStatus(999L, request));
+        assertFalse(response.enabled());
+        assertFalse(target.isEnabled());
 
-                verify(appUserRepository, never()).save(any());
-        }
+        verify(appUserRepository).saveAndFlush(target);
+        verify(userAuditLogRepository).save(any(UserAuditLog.class));
+    }
+
+    @Test
+    void updateUserStatusShouldEnableUser() {
+
+        mockGovernanceActor();
+
+        AppUser target = createUser(
+                TARGET_ID, "operator1", Role.OPERATOR, false);
+
+        when(appUserRepository.findById(TARGET_ID))
+                .thenReturn(Optional.of(target));
+
+        when(appUserRepository.saveAndFlush(target))
+                .thenReturn(target);
+
+        UserResponse response = userManagementService.updateUserStatus(
+                ACTOR_ID,
+                TARGET_ID,
+                new UpdateUserStatusRequest(true));
+
+        assertTrue(response.enabled());
+        assertTrue(target.isEnabled());
+
+        verify(appUserRepository).saveAndFlush(target);
+        verify(userAuditLogRepository).save(any(UserAuditLog.class));
+    }
+
+    @Test
+    void updateUserStatusShouldThrowWhenUserDoesNotExist() {
+
+        mockGovernanceActor();
+
+        when(appUserRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> userManagementService.updateUserStatus(
+                        ACTOR_ID,
+                        999L,
+                        new UpdateUserStatusRequest(false)));
+
+        verify(appUserRepository, never())
+                .saveAndFlush(any(AppUser.class));
+    }
+
+    @Test
+    void updateUserRoleShouldChangeRoleAndWriteAudit() {
+
+        mockGovernanceActor();
+
+        AppUser target = createUser(
+                TARGET_ID, "operator1", Role.OPERATOR, true);
+
+        when(appUserRepository.findById(TARGET_ID))
+                .thenReturn(Optional.of(target));
+
+        when(appUserRepository.saveAndFlush(target))
+                .thenReturn(target);
+
+        UserResponse response = userManagementService.updateUserRole(
+                ACTOR_ID,
+                TARGET_ID,
+                new UpdateUserRoleRequest(Role.VIEWER));
+
+        assertEquals(Role.VIEWER, response.role());
+
+        verify(appUserRepository).saveAndFlush(target);
+        verify(userAuditLogRepository).save(any(UserAuditLog.class));
+    }
+
+    @Test
+    void lastEnabledAdminCannotBeDemoted() {
+
+        mockGovernanceActor();
+
+        when(appUserRepository.countByRoleAndEnabledTrue(Role.ADMIN))
+                .thenReturn(1L);
+
+        assertThrows(
+                LastAdminException.class,
+                () -> userManagementService.updateUserRole(
+                        ACTOR_ID,
+                        ACTOR_ID,
+                        new UpdateUserRoleRequest(Role.OPERATOR)));
+
+        verify(appUserRepository, never())
+                .saveAndFlush(any(AppUser.class));
+
+        verify(userAuditLogRepository, never())
+                .save(any(UserAuditLog.class));
+    }
+
+    @Test
+    void lastEnabledAdminCannotBeDisabled() {
+
+        mockGovernanceActor();
+
+        assertThrows(
+                LastAdminException.class,
+                () -> userManagementService.updateUserStatus(
+                        ACTOR_ID,
+                        ACTOR_ID,
+                        new UpdateUserStatusRequest(false)));
+
+        verify(appUserRepository, never())
+                .saveAndFlush(any(AppUser.class));
+
+        verify(userAuditLogRepository, never())
+                .save(any(UserAuditLog.class));
+    }
+
+    @Test
+    void adminCanBeDemotedWhenAnotherEnabledAdminExists() {
+
+        mockGovernanceActor();
+
+        AppUser secondAdmin = createUser(
+                TARGET_ID, "second-admin", Role.ADMIN, true);
+
+        when(appUserRepository.findById(TARGET_ID))
+                .thenReturn(Optional.of(secondAdmin));
+
+        when(appUserRepository.countByRoleAndEnabledTrue(Role.ADMIN))
+                .thenReturn(2L);
+
+        when(appUserRepository.saveAndFlush(secondAdmin))
+                .thenReturn(secondAdmin);
+
+        UserResponse response = userManagementService.updateUserRole(
+                ACTOR_ID,
+                TARGET_ID,
+                new UpdateUserRoleRequest(Role.OPERATOR));
+
+        assertEquals(Role.OPERATOR, response.role());
+
+        verify(appUserRepository).saveAndFlush(secondAdmin);
+        verify(userAuditLogRepository).save(any(UserAuditLog.class));
+    }
+
+    @Test
+    void disabledActorCannotPerformGovernanceOperation() {
+
+        admin.setEnabled(false);
+
+        when(governanceLockRepository.lockById(1L))
+                .thenReturn(Optional.of(GovernanceLock.of(1L)));
+
+        when(appUserRepository.findById(ACTOR_ID))
+                .thenReturn(Optional.of(admin));
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> userManagementService.createUser(ACTOR_ID, request));
+
+        verify(appUserRepository, never())
+                .saveAndFlush(any(AppUser.class));
+    }
+
+    @Test
+    void nonAdminActorCannotPerformGovernanceOperation() {
+
+        admin.setRole(Role.OPERATOR);
+
+        when(governanceLockRepository.lockById(1L))
+                .thenReturn(Optional.of(GovernanceLock.of(1L)));
+
+        when(appUserRepository.findById(ACTOR_ID))
+                .thenReturn(Optional.of(admin));
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> userManagementService.createUser(ACTOR_ID, request));
+
+        verify(appUserRepository, never())
+                .saveAndFlush(any(AppUser.class));
+    }
+
+    @Test
+    void missingGovernanceLockShouldPreventMutation() {
+
+        when(governanceLockRepository.lockById(1L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> userManagementService.createUser(ACTOR_ID, request));
+
+        verify(appUserRepository, never()).findById(ACTOR_ID);
+        verify(appUserRepository, never())
+                .saveAndFlush(any(AppUser.class));
+    }
 }

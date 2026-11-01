@@ -14,6 +14,7 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     Optional<AppUser> findByUsername(String username);
 
     boolean existsByUsername(String username);
+    long countByRoleAndEnabledTrue(Role role);
 
     List<AppUser> findByRoleInAndEnabledTrue(Collection<Role> roles);
 }

@@ -1,34 +1,39 @@
+
 package com.airhive.backend.controller;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.airhive.backend.dto.CreateUserRequest;
+import com.airhive.backend.dto.UpdateUserRoleRequest;
+import com.airhive.backend.dto.UpdateUserStatusRequest;
+import com.airhive.backend.dto.UserResponse;
+import com.airhive.backend.entity.Role;
+import com.airhive.backend.exception.ResourceNotFoundException;
+import com.airhive.backend.service.UserManagementService;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.airhive.backend.dto.CreateUserRequest;
-import com.airhive.backend.dto.UpdateUserStatusRequest;
-import com.airhive.backend.dto.UpdateUserRoleRequest;
-import com.airhive.backend.dto.UserResponse;
-import com.airhive.backend.entity.Role;
-import com.airhive.backend.exception.ResourceNotFoundException;
-import com.airhive.backend.service.UserManagementService;
 
 @SpringBootTest(properties = {
         "spring.flyway.enabled=false",
@@ -37,17 +42,47 @@ import com.airhive.backend.service.UserManagementService;
 @AutoConfigureMockMvc
 class UserControllerTest {
 
+    private static final Long ACTOR_ID = 100L;
+    private static final Long TARGET_ID = 2L;
+
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
     private UserManagementService userManagementService;
 
+    // ---------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------
+
+    private org.springframework.test.web.servlet.request.RequestPostProcessor adminJwt() {
+        return jwt()
+                .jwt(token -> token.claim("userId", ACTOR_ID))
+                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    }
+
+    private org.springframework.test.web.servlet.request.RequestPostProcessor operatorJwt() {
+        return jwt()
+                .jwt(token -> token.claim("userId", ACTOR_ID))
+                .authorities(new SimpleGrantedAuthority("ROLE_OPERATOR"));
+    }
+
+    private org.springframework.test.web.servlet.request.RequestPostProcessor viewerJwt() {
+        return jwt()
+                .jwt(token -> token.claim("userId", ACTOR_ID))
+                .authorities(new SimpleGrantedAuthority("ROLE_VIEWER"));
+    }
+
+    // ---------------------------------------------------------
+    // CREATE USER
+    // ---------------------------------------------------------
+
     @Test
-    @WithMockUser(roles = "ADMIN")
     void adminCanCreateUser() throws Exception {
 
-        when(userManagementService.createUser(any(CreateUserRequest.class)))
+        when(userManagementService.createUser(
+                eq(ACTOR_ID),
+                any(CreateUserRequest.class)))
                 .thenReturn(new UserResponse(
                         1L,
                         "new-user",
@@ -55,15 +90,16 @@ class UserControllerTest {
                         true));
 
         mockMvc.perform(post("/api/users")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "username": "new-user",
-                            "password": "password123",
-                            "role": "OPERATOR"
-                        }
-                        """))
+                        .with(adminJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "username": "new-user",
+                                    "password": "password123",
+                                    "role": "OPERATOR"
+                                }
+                                """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.username").value("new-user"))
@@ -71,40 +107,42 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.enabled").value(true))
                 .andExpect(jsonPath("$.password").doesNotExist());
 
-        verify(userManagementService).createUser(any(CreateUserRequest.class));
+        verify(userManagementService).createUser(
+                eq(ACTOR_ID),
+                any(CreateUserRequest.class));
     }
 
     @Test
-    @WithMockUser(roles = "OPERATOR")
     void operatorCannotCreateUser() throws Exception {
 
         mockMvc.perform(post("/api/users")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "username": "new-user",
-                            "password": "password123",
-                            "role": "VIEWER"
-                        }
-                        """))
+                        .with(operatorJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "username": "new-user",
+                                    "password": "password123",
+                                    "role": "VIEWER"
+                                }
+                                """))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(roles = "VIEWER")
     void viewerCannotCreateUser() throws Exception {
 
         mockMvc.perform(post("/api/users")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "username": "new-user",
-                            "password": "password123",
-                            "role": "VIEWER"
-                        }
-                        """))
+                        .with(viewerJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "username": "new-user",
+                                    "password": "password123",
+                                    "role": "VIEWER"
+                                }
+                                """))
                 .andExpect(status().isForbidden());
     }
 
@@ -112,34 +150,38 @@ class UserControllerTest {
     void unauthenticatedUserCannotCreateUser() throws Exception {
 
         mockMvc.perform(post("/api/users")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "username": "new-user",
-                            "password": "password123",
-                            "role": "VIEWER"
-                        }
-                        """))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "username": "new-user",
+                                    "password": "password123",
+                                    "role": "VIEWER"
+                                }
+                                """))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    void invalidRequestShouldReturnBadRequest() throws Exception {
+    void invalidCreateRequestShouldReturnBadRequest() throws Exception {
 
         mockMvc.perform(post("/api/users")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "username": "",
-                            "password": "short",
-                            "role": null
-                        }
-                        """))
+                        .with(adminJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "username": "",
+                                    "password": "short",
+                                    "role": null
+                                }
+                                """))
                 .andExpect(status().isBadRequest());
     }
+
+    // ---------------------------------------------------------
+    // LIST USERS
+    // ---------------------------------------------------------
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -196,141 +238,222 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isUnauthorized());
     }
+
+    // ---------------------------------------------------------
+    // UPDATE USER STATUS
+    // ---------------------------------------------------------
+
     @Test
-void adminCanUpdateUserStatus() throws Exception {
-    UserResponse response =
-            new UserResponse(1L, "operator1", Role.OPERATOR, false);
+    void adminCanUpdateUserStatus() throws Exception {
 
-    when(userManagementService.updateUserStatus(
-            eq(1L),
-            any(UpdateUserStatusRequest.class)))
-            .thenReturn(response);
+        UserResponse response =
+                new UserResponse(
+                        TARGET_ID,
+                        "operator1",
+                        Role.OPERATOR,
+                        false);
 
-    mockMvc.perform(patch("/api/users/1/status")
-                    .with(user("admin").roles("ADMIN"))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                            {
-                              "enabled": false
-                            }
-                            """))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.username").value("operator1"))
-            .andExpect(jsonPath("$.role").value("OPERATOR"))
-            .andExpect(jsonPath("$.enabled").value(false));
-}
-@Test
-void operatorCannotUpdateUserStatus() throws Exception {
-    mockMvc.perform(patch("/api/users/1/status")
-                    .with(user("operator").roles("OPERATOR"))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                            {
-                              "enabled": false
-                            }
-                            """))
-            .andExpect(status().isForbidden());
-}
-@Test
-void viewerCannotUpdateUserStatus() throws Exception {
-    mockMvc.perform(patch("/api/users/1/status")
-                    .with(user("viewer").roles("VIEWER"))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                            {
-                              "enabled": false
-                            }
-                            """))
-            .andExpect(status().isForbidden());
-}
-@Test
-void unauthenticatedUserCannotUpdateUserStatus() throws Exception {
-    mockMvc.perform(patch("/api/users/1/status")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                            {
-                              "enabled": false
-                            }
-                            """))
-            .andExpect(status().isUnauthorized());
-}
-@Test
-void invalidStatusRequestShouldReturnBadRequest() throws Exception {
-    mockMvc.perform(patch("/api/users/1/status")
-                    .with(user("admin").roles("ADMIN"))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                            {}
-                            """))
-            .andExpect(status().isBadRequest());
-}
-@Test
-void missingUserShouldReturnNotFound() throws Exception {
-    when(userManagementService.updateUserStatus(
-            eq(999L),
-            any(UpdateUserStatusRequest.class)))
-            .thenThrow(new ResourceNotFoundException(
-                    "User not found with id: 999"
-            ));
+        when(userManagementService.updateUserStatus(
+                eq(ACTOR_ID),
+                eq(TARGET_ID),
+                any(UpdateUserStatusRequest.class)))
+                .thenReturn(response);
 
-    mockMvc.perform(patch("/api/users/999/status")
-                    .with(user("admin").roles("ADMIN"))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                            {
-                              "enabled": false
-                            }
-                            """))
-            .andExpect(status().isNotFound());
-}
+        mockMvc.perform(patch("/api/users/2/status")
+                        .with(adminJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "enabled": false
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(2))
+                .andExpect(jsonPath("$.username").value("operator1"))
+                .andExpect(jsonPath("$.role").value("OPERATOR"))
+                .andExpect(jsonPath("$.enabled").value(false));
 
-@Test
-void adminCanRestoreVerifiedStaffToViewerRole() throws Exception {
-    UserResponse response =
-            new UserResponse(1L, "verified-staff", Role.VIEWER, true);
+        verify(userManagementService).updateUserStatus(
+                eq(ACTOR_ID),
+                eq(TARGET_ID),
+                any(UpdateUserStatusRequest.class));
+    }
 
-    when(userManagementService.updateUserRole(
-            eq(1L),
-            any(UpdateUserRoleRequest.class)))
-            .thenReturn(response);
+    @Test
+    void operatorCannotUpdateUserStatus() throws Exception {
 
-    mockMvc.perform(patch("/api/users/1/role")
-                    .with(user("admin").roles("ADMIN"))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                            {
-                              "role": "VIEWER"
-                            }
-                            """))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.username").value("verified-staff"))
-            .andExpect(jsonPath("$.role").value("VIEWER"))
-            .andExpect(jsonPath("$.enabled").value(true));
-}
+        mockMvc.perform(patch("/api/users/2/status")
+                        .with(operatorJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "enabled": false
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
 
-@Test
-void operatorCannotChangeUserRole() throws Exception {
-    mockMvc.perform(patch("/api/users/1/role")
-                    .with(user("operator").roles("OPERATOR"))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                            {
-                              "role": "VIEWER"
-                            }
-                            """))
-            .andExpect(status().isForbidden());
-}
+    @Test
+    void viewerCannotUpdateUserStatus() throws Exception {
 
-@Test
-void invalidRoleRequestShouldReturnBadRequest() throws Exception {
-    mockMvc.perform(patch("/api/users/1/role")
-                    .with(user("admin").roles("ADMIN"))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                            {}
-                            """))
-            .andExpect(status().isBadRequest());
-}
+        mockMvc.perform(patch("/api/users/2/status")
+                        .with(viewerJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "enabled": false
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void unauthenticatedUserCannotUpdateUserStatus() throws Exception {
+
+        mockMvc.perform(patch("/api/users/2/status")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "enabled": false
+                                }
+                                """))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void invalidStatusRequestShouldReturnBadRequest() throws Exception {
+
+        mockMvc.perform(patch("/api/users/2/status")
+                        .with(adminJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void missingUserShouldReturnNotFound() throws Exception {
+
+        when(userManagementService.updateUserStatus(
+                eq(ACTOR_ID),
+                eq(999L),
+                any(UpdateUserStatusRequest.class)))
+                .thenThrow(new ResourceNotFoundException(
+                        "User not found with id: 999"));
+
+        mockMvc.perform(patch("/api/users/999/status")
+                        .with(adminJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "enabled": false
+                                }
+                                """))
+                .andExpect(status().isNotFound());
+    }
+
+    // ---------------------------------------------------------
+    // UPDATE USER ROLE
+    // ---------------------------------------------------------
+
+    @Test
+    void adminCanUpdateUserRole() throws Exception {
+
+        UserResponse response =
+                new UserResponse(
+                        TARGET_ID,
+                        "verified-staff",
+                        Role.VIEWER,
+                        true);
+
+        when(userManagementService.updateUserRole(
+                eq(ACTOR_ID),
+                eq(TARGET_ID),
+                any(UpdateUserRoleRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(patch("/api/users/2/role")
+                        .with(adminJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "role": "VIEWER"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(2))
+                .andExpect(jsonPath("$.username").value("verified-staff"))
+                .andExpect(jsonPath("$.role").value("VIEWER"))
+                .andExpect(jsonPath("$.enabled").value(true));
+
+        verify(userManagementService).updateUserRole(
+                eq(ACTOR_ID),
+                eq(TARGET_ID),
+                any(UpdateUserRoleRequest.class));
+    }
+
+    @Test
+    void operatorCannotChangeUserRole() throws Exception {
+
+        mockMvc.perform(patch("/api/users/2/role")
+                        .with(operatorJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "role": "VIEWER"
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void viewerCannotChangeUserRole() throws Exception {
+
+        mockMvc.perform(patch("/api/users/2/role")
+                        .with(viewerJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "role": "VIEWER"
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void unauthenticatedUserCannotChangeUserRole() throws Exception {
+
+        mockMvc.perform(patch("/api/users/2/role")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "role": "VIEWER"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void invalidRoleRequestShouldReturnBadRequest() throws Exception {
+
+        mockMvc.perform(patch("/api/users/2/role")
+                        .with(adminJwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
 }
