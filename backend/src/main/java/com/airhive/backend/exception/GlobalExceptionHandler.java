@@ -115,4 +115,15 @@ public class GlobalExceptionHandler {
                                                 "status", HttpStatus.CONFLICT.value(),
                                                 "message", exception.getMessage()));
         }
+
+        @ExceptionHandler(LastAdminException.class)
+        public ResponseEntity<Map<String, Object>> handleLastAdmin(
+                        LastAdminException exception) {
+
+                return ResponseEntity
+                                .status(HttpStatus.CONFLICT)
+                                .body(Map.of(
+                                                "status", HttpStatus.CONFLICT.value(),
+                                                "message", exception.getMessage()));
+        }
 }
