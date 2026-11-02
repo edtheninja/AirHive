@@ -14,9 +14,18 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
+import org.springframework.messaging.support.MessageBuilder;
+
+import com.airhive.backend.entity.Role;
 
 @Component
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
+
+    private static final String NOTIFICATIONS_TOPIC_PREFIX =
+            "/topic/notifications/";
+
+    private static final String FLIGHTS_TOPIC =
+            "/topic/flights";
 
     private final JwtDecoder jwtDecoder;
 
@@ -24,31 +33,44 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         this.jwtDecoder = jwtDecoder;
     }
 
-    @Override
-    public Message<?> preSend(
-            Message<?> message,
-            MessageChannel channel) {
 
-        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+@Override
+public Message<?> preSend(
+        Message<?> message,
+        MessageChannel channel) {
 
-        StompCommand command = accessor.getCommand();
+    StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-        if (StompCommand.CONNECT.equals(command)) {
-            authenticateConnection(accessor);
-        }
+    StompCommand command = accessor.getCommand();
 
-        if (StompCommand.SUBSCRIBE.equals(command)) {
-            authorizeSubscription(accessor);
-        }
-
-        return message;
+    if (StompCommand.CONNECT.equals(command)) {
+        authenticateConnection(accessor);
     }
+
+    if (StompCommand.SUBSCRIBE.equals(command)) {
+        authorizeSubscription(accessor);
+    }
+
+    if (StompCommand.SEND.equals(command)) {
+        throw new IllegalArgumentException(
+                "Client-originated WebSocket messages are not allowed");
+    }
+
+    // Return a message containing the updated STOMP headers,
+    // including the authenticated Principal on CONNECT.
+    accessor.setLeaveMutable(true);
+
+    return MessageBuilder.createMessage(
+            message.getPayload(),
+            accessor.getMessageHeaders());
+}
+
 
     private void authenticateConnection(
             StompHeaderAccessor accessor) {
 
-        String authorization
-                = accessor.getFirstNativeHeader("Authorization");
+        String authorization =
+                accessor.getFirstNativeHeader("Authorization");
 
         if (authorization == null
                 || !authorization.startsWith("Bearer ")) {
@@ -74,30 +96,76 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         }
 
         String username = jwt.getSubject();
-        String role = jwt.getClaimAsString("role");
+        String roleClaim = jwt.getClaimAsString("role");
+        Long userId = extractUserId(jwt);
 
-        if (username == null
-                || username.isBlank()
-                || role == null
-                || role.isBlank()) {
+        if (username == null || username.isBlank()) {
             throw new IllegalArgumentException(
-                    "WebSocket JWT is missing required claims");
+                    "WebSocket JWT is missing subject claim");
         }
 
-        Authentication authentication
-                = new JwtAuthenticationToken(
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException(
+                    "WebSocket JWT is missing a valid userId claim");
+        }
+
+        if (roleClaim == null || roleClaim.isBlank()) {
+            throw new IllegalArgumentException(
+                    "WebSocket JWT is missing role claim");
+        }
+
+        Role role;
+
+        try {
+            role = Role.valueOf(roleClaim);
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException(
+                    "WebSocket JWT contains an invalid role",
+                    exception);
+        }
+
+        Authentication authentication =
+                new JwtAuthenticationToken(
                         jwt,
                         List.of(
                                 new SimpleGrantedAuthority(
-                                        "ROLE_" + role)));
+                                        "ROLE_" + role.name())));
 
         accessor.setUser(authentication);
+    }
+
+    private Long extractUserId(Jwt jwt) {
+
+        Object userIdClaim = jwt.getClaim("userId");
+
+        if (userIdClaim instanceof Number number) {
+            long userId = number.longValue();
+
+            // Reject non-integral numeric values.
+            if (number.doubleValue() != (double) userId) {
+                return null;
+            }
+
+            return userId;
+        }
+
+        if (userIdClaim instanceof String userIdString
+                && userIdString.matches("\\d+")) {
+            try {
+                return Long.parseLong(userIdString);
+            } catch (NumberFormatException exception) {
+                return null;
+            }
+        }
+
+        return null;
     }
 
     private void authorizeSubscription(
             StompHeaderAccessor accessor) {
 
-        Authentication authentication = (Authentication) accessor.getUser();
+        Authentication authentication =
+                (Authentication) accessor.getUser();
 
         if (authentication == null
                 || !authentication.isAuthenticated()) {
@@ -112,20 +180,37 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                     "WebSocket subscription destination is missing");
         }
 
-        if (destination.startsWith("/topic/notifications/")) {
+        if (FLIGHTS_TOPIC.equals(destination)) {
+            authorizeFlightSubscription(authentication);
+            return;
+        }
+
+        if (destination.startsWith(NOTIFICATIONS_TOPIC_PREFIX)) {
             authorizeNotificationSubscription(
                     authentication,
                     destination);
             return;
         }
 
-        if ("/topic/flights".equals(destination)) {
-            return;
-        }
-
         throw new IllegalArgumentException(
                 "Unauthorized WebSocket subscription: "
-                + destination);
+                        + destination);
+    }
+
+    private void authorizeFlightSubscription(
+            Authentication authentication) {
+
+        boolean authorized =
+                authentication.getAuthorities().stream()
+                        .anyMatch(authority ->
+                                authority.getAuthority().equals("ROLE_ADMIN")
+                                        || authority.getAuthority().equals("ROLE_OPERATOR")
+                                        || authority.getAuthority().equals("ROLE_VIEWER"));
+
+        if (!authorized) {
+            throw new IllegalArgumentException(
+                    "Role is not authorized to subscribe to flight updates");
+        }
     }
 
     private void authorizeNotificationSubscription(
@@ -133,7 +218,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             String destination) {
 
         String userIdPart = destination.substring(
-                "/topic/notifications/".length());
+                NOTIFICATIONS_TOPIC_PREFIX.length());
 
         if (userIdPart.isBlank()
                 || !userIdPart.matches("\\d+")) {
@@ -141,18 +226,21 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                     "Invalid notification subscription destination");
         }
 
-        JwtAuthenticationToken jwtAuthentication = (JwtAuthenticationToken) authentication;
-
-        String authenticatedUserId = jwtAuthentication.getToken()
-                .getClaimAsString("userId");
-
-        if (authenticatedUserId == null
-                || authenticatedUserId.isBlank()) {
+        if (!(authentication instanceof JwtAuthenticationToken jwtAuthentication)) {
             throw new IllegalArgumentException(
-                    "WebSocket JWT is missing userId claim");
+                    "WebSocket authentication must use a JWT");
         }
 
-        if (!authenticatedUserId.equals(userIdPart)) {
+        Long authenticatedUserId =
+                extractUserId(jwtAuthentication.getToken());
+
+        if (authenticatedUserId == null
+                || authenticatedUserId <= 0) {
+            throw new IllegalArgumentException(
+                    "WebSocket JWT is missing a valid userId claim");
+        }
+
+        if (!authenticatedUserId.toString().equals(userIdPart)) {
             throw new IllegalArgumentException(
                     "Cannot subscribe to another user's notifications");
         }
