@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.airhive.backend.dto.BookingResponseDTO;
 import com.airhive.backend.service.BookingService;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -47,9 +48,24 @@ public class BookingController {
 
     private Long requireUserId(Jwt jwt) {
         Object claim = jwt.getClaims().get("userId");
-        if (claim instanceof Number number) {
-            return number.longValue();
+
+        if (!(claim instanceof Number number)) {
+            throw new AccessDeniedException(
+                    "Passenger token has no valid user identity.");
         }
-        throw new AccessDeniedException("Passenger token has no valid user identity.");
+
+        try {
+            long userId = new BigDecimal(number.toString()).longValueExact();
+
+            if (userId <= 0) {
+                throw new AccessDeniedException(
+                        "Passenger token has no valid user identity.");
+            }
+
+            return userId;
+        } catch (NumberFormatException | ArithmeticException exception) {
+            throw new AccessDeniedException(
+                    "Passenger token has no valid user identity.");
+        }
     }
 }

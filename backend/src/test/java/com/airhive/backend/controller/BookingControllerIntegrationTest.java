@@ -145,6 +145,28 @@ class BookingControllerIntegrationTest {
                 .andExpect(jsonPath("$[0].pnr").value("OWNEDPNR001"));
     }
 
+    @Test
+void passengerRequestShouldRejectInvalidUserIdClaims() throws Exception {
+    Object[] invalidUserIds = {
+            "42",
+            0L,
+            -1L,
+            42.5,
+            Long.MAX_VALUE + 1.0
+    };
+
+    for (Object invalidUserId : invalidUserIds) {
+        mockMvc.perform(get("/api/bookings")
+                        .with(jwt()
+                                .jwt(token -> token
+                                        .claim("userId", invalidUserId)
+                                        .claim("role", "PASSENGER"))
+                                .authorities(new SimpleGrantedAuthority(
+                                        "ROLE_PASSENGER"))))
+                .andExpect(status().isForbidden());
+    }
+}
+
     private AppUser createPassenger(String prefix) {
         AppUser user = new AppUser();
         user.setUsername(prefix + "-" + System.nanoTime());
