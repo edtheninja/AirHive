@@ -141,6 +141,38 @@ class PassengerControllerIntegrationTest {
                 .andExpect(jsonPath("$[0].passengerCode").value("PAX-OWNED-001"));
     }
 
+    @Test
+void passengerRequestShouldRejectInvalidUserIdClaims() throws Exception {
+    Object[] invalidUserIds = {
+            "42",
+            0L,
+            -1L,
+            42.5,
+            Long.MAX_VALUE + 1.0
+    };
+
+    for (Object invalidUserId : invalidUserIds) {
+        mockMvc.perform(get("/api/passengers")
+                        .with(jwt()
+                                .jwt(token -> token
+                                        .claim("userId", invalidUserId)
+                                        .claim("role", "PASSENGER"))
+                                .authorities(new SimpleGrantedAuthority(
+                                        "ROLE_PASSENGER"))))
+                .andExpect(status().isForbidden());
+    }
+}
+
+@Test
+void passengerRequestShouldRejectMissingUserIdClaim() throws Exception {
+    mockMvc.perform(get("/api/passengers")
+                    .with(jwt()
+                            .jwt(token -> token.claim("role", "PASSENGER"))
+                            .authorities(new SimpleGrantedAuthority(
+                                    "ROLE_PASSENGER"))))
+            .andExpect(status().isForbidden());
+}
+
     private AppUser createPassengerAccount(String prefix) {
         AppUser user = new AppUser();
         user.setUsername(prefix + "-" + System.nanoTime());

@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.security.access.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,4 +127,14 @@ public class GlobalExceptionHandler {
                                                 "status", HttpStatus.CONFLICT.value(),
                                                 "message", exception.getMessage()));
         }
+        @ExceptionHandler(AccessDeniedException.class)
+public ResponseEntity<Map<String, Object>> handleAccessDenied(
+        AccessDeniedException exception) {
+
+    return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(Map.of(
+                    "status", HttpStatus.FORBIDDEN.value(),
+                    "message", exception.getMessage()));
+}
 }
