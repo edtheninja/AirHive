@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import com.airhive.backend.repository.AppUserRepository;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import java.math.BigDecimal;
 
 @Configuration
 public class JwtConfig {
@@ -60,9 +61,21 @@ public class JwtConfig {
                             .filter(user -> user.isEnabled())
                             .filter(user -> user.getRole() != null
                                     && user.getRole().name().equals(tokenRole))
-                            .filter(user -> tokenUserId instanceof Number number
-                                    && user.getId() != null
-                                    && user.getId().longValue() == number.longValue())
+                            .filter(user -> {
+                                if (!(tokenUserId instanceof Number number)
+                                        || user.getId() == null) {
+                                    return false;
+                                }
+
+                                try {
+                                    long tokenId = new BigDecimal(number.toString())
+                                            .longValueExact();
+
+                                    return tokenId > 0 && user.getId().equals(tokenId);
+                                } catch (NumberFormatException | ArithmeticException exception) {
+                                    return false;
+                                }
+                            })
                             .isPresent();
 
             if (validAccount) {

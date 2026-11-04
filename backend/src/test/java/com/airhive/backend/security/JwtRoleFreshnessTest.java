@@ -24,6 +24,7 @@ import com.airhive.backend.config.JwtConfig;
 import com.airhive.backend.entity.AppUser;
 import com.airhive.backend.entity.Role;
 import com.airhive.backend.repository.AppUserRepository;
+import java.math.BigInteger;
 
 import static org.mockito.Mockito.mock;
 
@@ -80,8 +81,29 @@ class JwtRoleFreshnessTest {
         assertThrows(JwtException.class, () -> decoder.decode(mismatchedToken));
     }
 
+    @Test
+    void rejectsTokenWhenUserIdIsFractional() {
+        String token = tokenWithUserId("PASSENGER", 42.5);
+
+        assertThrows(JwtException.class, () -> decoder.decode(token));
+    }
+
+    @Test
+    void rejectsTokenWhenUserIdExceedsLongRange() {
+        String token = tokenWithUserId(
+                "PASSENGER",
+                new BigInteger("9223372036854775808"));
+
+        assertThrows(JwtException.class, () -> decoder.decode(token));
+    }
+
     private String tokenWithRole(String role, Long userId) {
+        return tokenWithUserId(role, userId);
+    }
+
+    private String tokenWithUserId(String role, Object userId) {
         Instant now = Instant.now();
+
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(USERNAME)
                 .claim("userId", userId)
