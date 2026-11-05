@@ -432,4 +432,17 @@ void passengerCannotAccessUnmatchedMutationEndpoint() throws Exception {
                             new SimpleGrantedAuthority("ROLE_PASSENGER"))))
             .andExpect(status().isForbidden());
 }
+@Test
+void unauthenticatedFlightReadReturns401() throws Exception {
+    mockMvc.perform(get("/api/flights"))
+            .andExpect(status().isUnauthorized());
+}
+
+@Test
+void viewerCanReadFlights() throws Exception {
+    mockMvc.perform(get("/api/flights")
+                    .with(jwt().authorities(
+                            new SimpleGrantedAuthority("ROLE_VIEWER"))))
+            .andExpect(status().isOk());
+}
 }
