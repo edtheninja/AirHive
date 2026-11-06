@@ -5,6 +5,7 @@ import {
   createRootRouteWithContext,
   useRouter,
   useLocation,
+  useNavigate,
   HeadContent,
   Scripts,
   redirect,
@@ -83,6 +84,11 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
   beforeLoad: ({ location }) => {
+    console.log("[AUTH GUARD]", {
+      pathname: location.pathname,
+      browser: typeof window !== "undefined",
+      session: getSession(),
+    });
     if (
       typeof window !== "undefined" &&
       location.pathname !== "/login" &&
@@ -176,9 +182,33 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
 
+  useEffect(() => {
+    const session = getSession();
+
+    console.log("[CLIENT AUTH CHECK]", {
+      pathname: location.pathname,
+      isAuthPage,
+      session,
+    });
+
+    if (!isAuthPage && !session) {
+      console.log("[CLIENT AUTH CHECK] Redirecting to login");
+
+      window.location.replace("/login");
+      return;
+    }
+
+    if (
+      session?.role === "PASSENGER" &&
+      !["/", "/bookings", "/profile"].includes(location.pathname)
+    ) {
+      window.location.replace("/");
+    }
+  }, [isAuthPage, location.pathname]);
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
