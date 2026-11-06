@@ -127,14 +127,15 @@ public class GlobalExceptionHandler {
                                                 "status", HttpStatus.CONFLICT.value(),
                                                 "message", exception.getMessage()));
         }
-        @ExceptionHandler(AccessDeniedException.class)
-public ResponseEntity<Map<String, Object>> handleAccessDenied(
-        AccessDeniedException exception) {
 
-    return ResponseEntity
-            .status(HttpStatus.FORBIDDEN)
-            .body(Map.of(
-                    "status", HttpStatus.FORBIDDEN.value(),
-                    "message", exception.getMessage()));
-}
+        @ExceptionHandler(AccessDeniedException.class)
+        public ResponseEntity<Map<String, Object>> handleAccessDenied(
+                        AccessDeniedException exception) {
+
+                return ResponseEntity
+                                .status(HttpStatus.FORBIDDEN)
+                                .body(Map.of(
+                                                "status", HttpStatus.FORBIDDEN.value(),
+                                                "message", exception.getMessage()));
+        }
 }

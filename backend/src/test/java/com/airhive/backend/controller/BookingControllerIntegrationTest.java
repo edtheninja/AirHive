@@ -33,161 +33,170 @@ import com.airhive.backend.repository.BookingRepository;
 @Testcontainers
 class BookingControllerIntegrationTest {
 
-    @Container
-    static final PostgreSQLContainer POSTGRES =
-            new PostgreSQLContainer("postgres:18.6");
+        @Container
+        static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18.6");
 
-    static {
-        POSTGRES.start();
+        static {
+                POSTGRES.start();
 
-        Flyway.configure()
-                .dataSource(
-                        POSTGRES.getJdbcUrl(),
-                        POSTGRES.getUsername(),
-                        POSTGRES.getPassword())
-                .locations("classpath:db/migration")
-                .load()
-                .migrate();
-    }
+                Flyway.configure()
+                                .dataSource(
+                                                POSTGRES.getJdbcUrl(),
+                                                POSTGRES.getUsername(),
+                                                POSTGRES.getPassword())
+                                .locations("classpath:db/migration")
+                                .load()
+                                .migrate();
+        }
 
-    @DynamicPropertySource
-    static void configurePostgres(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registry.add("spring.datasource.username", POSTGRES::getUsername);
-        registry.add("spring.datasource.password", POSTGRES::getPassword);
-        registry.add(
-                "spring.datasource.driver-class-name",
-                () -> "org.postgresql.Driver");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
-    }
+        @DynamicPropertySource
+        static void configurePostgres(DynamicPropertyRegistry registry) {
+                registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+                registry.add("spring.datasource.username", POSTGRES::getUsername);
+                registry.add("spring.datasource.password", POSTGRES::getPassword);
+                registry.add(
+                                "spring.datasource.driver-class-name",
+                                () -> "org.postgresql.Driver");
+                registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        }
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private BookingRepository bookingRepository;
+        @Autowired
+        private BookingRepository bookingRepository;
 
-    @Autowired
-    private AppUserRepository appUserRepository;
+        @Autowired
+        private AppUserRepository appUserRepository;
 
-    @BeforeEach
-    void setUp() {
-        bookingRepository.deleteAllInBatch();
-    }
+        @BeforeEach
+        void setUp() {
+                bookingRepository.deleteAllInBatch();
+        }
 
-    @Test
-    void getAllBookingsShouldReturnEmptyArrayWhenNoBookingsExist()
-            throws Exception {
+        @Test
+        void getAllBookingsShouldReturnEmptyArrayWhenNoBookingsExist()
+                        throws Exception {
 
-        mockMvc.perform(get("/api/bookings")
-                        .with(jwt().authorities(
-                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(0));
-    }
+                mockMvc.perform(get("/api/bookings")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$").isArray())
+                                .andExpect(jsonPath("$.length()").value(0));
+        }
 
-    @Test
-    void getAllBookingsShouldReturnPersistedBookingWithCorrectFields()
-            throws Exception {
+        @Test
+        void getAllBookingsShouldReturnPersistedBookingWithCorrectFields()
+                        throws Exception {
 
-        Booking booking = new Booking();
-        booking.setPnr("AHITEST001");
-        booking.setPassenger("Test Passenger");
-        booking.setFlight("AH101");
-        booking.setRoute("DEL-BOM");
-        booking.setCabin("ECONOMY");
-        booking.setSeat("12A");
-        booking.setStatus("CONFIRMED");
-        booking.setAmount(new BigDecimal("1499.50"));
-        booking.setTravelDate(LocalDate.of(2026, 11, 15));
+                Booking booking = new Booking();
+                booking.setPnr("AHITEST001");
+                booking.setPassenger("Test Passenger");
+                booking.setFlight("AH101");
+                booking.setRoute("DEL-BOM");
+                booking.setCabin("ECONOMY");
+                booking.setSeat("12A");
+                booking.setStatus("CONFIRMED");
+                booking.setAmount(new BigDecimal("1499.50"));
+                booking.setTravelDate(LocalDate.of(2026, 11, 15));
 
-        Booking savedBooking = bookingRepository.saveAndFlush(booking);
+                Booking savedBooking = bookingRepository.saveAndFlush(booking);
 
-        mockMvc.perform(get("/api/bookings")
-                        .with(jwt().authorities(
-                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(
-                        savedBooking.getId().intValue()))
-                .andExpect(jsonPath("$[0].pnr").value("AHITEST001"))
-                .andExpect(jsonPath("$[0].passenger").value("Test Passenger"))
-                .andExpect(jsonPath("$[0].flight").value("AH101"))
-                .andExpect(jsonPath("$[0].route").value("DEL-BOM"))
-                .andExpect(jsonPath("$[0].cabin").value("ECONOMY"))
-                .andExpect(jsonPath("$[0].seat").value("12A"))
-                .andExpect(jsonPath("$[0].status").value("CONFIRMED"))
-                .andExpect(jsonPath("$[0].amount").value(1499.50))
-                .andExpect(jsonPath("$[0].travelDate").value("2026-11-15"));
-    }
+                mockMvc.perform(get("/api/bookings")
+                                .with(jwt().authorities(
+                                                new SimpleGrantedAuthority("ROLE_VIEWER"))))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$").isArray())
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].id").value(
+                                                savedBooking.getId().intValue()))
+                                .andExpect(jsonPath("$[0].pnr").value("AHITEST001"))
+                                .andExpect(jsonPath("$[0].passenger").value("Test Passenger"))
+                                .andExpect(jsonPath("$[0].flight").value("AH101"))
+                                .andExpect(jsonPath("$[0].route").value("DEL-BOM"))
+                                .andExpect(jsonPath("$[0].cabin").value("ECONOMY"))
+                                .andExpect(jsonPath("$[0].seat").value("12A"))
+                                .andExpect(jsonPath("$[0].status").value("CONFIRMED"))
+                                .andExpect(jsonPath("$[0].amount").value(1499.50))
+                                .andExpect(jsonPath("$[0].travelDate").value("2026-11-15"));
+        }
 
-    @Test
-    void passengerCanOnlyReadBookingsAssignedToTheirAccount() throws Exception {
-        AppUser owner = createPassenger("booking-owner");
-        AppUser other = createPassenger("booking-other");
+        @Test
+        void passengerCanOnlyReadBookingsAssignedToTheirAccount() throws Exception {
+                AppUser owner = createPassenger("booking-owner");
+                AppUser other = createPassenger("booking-other");
 
-        Booking ownedBooking = createBooking("OWNEDPNR001", owner);
-        createBooking("OTHERPNR001", other);
-        createBooking("LEGACYPNR001", null);
+                Booking ownedBooking = createBooking("OWNEDPNR001", owner);
+                createBooking("OTHERPNR001", other);
+                createBooking("LEGACYPNR001", null);
 
-        mockMvc.perform(get("/api/bookings")
-                        .with(jwt()
-                                .jwt(token -> token
-                                        .subject(owner.getUsername())
-                                        .claim("userId", owner.getId())
-                                        .claim("role", "PASSENGER"))
-                                .authorities(new SimpleGrantedAuthority("ROLE_PASSENGER"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(ownedBooking.getId().intValue()))
-                .andExpect(jsonPath("$[0].pnr").value("OWNEDPNR001"));
-    }
+                mockMvc.perform(get("/api/bookings")
+                                .with(jwt()
+                                                .jwt(token -> token
+                                                                .subject(owner.getUsername())
+                                                                .claim("userId", owner.getId())
+                                                                .claim("role", "PASSENGER"))
+                                                .authorities(new SimpleGrantedAuthority("ROLE_PASSENGER"))))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].id").value(ownedBooking.getId().intValue()))
+                                .andExpect(jsonPath("$[0].pnr").value("OWNEDPNR001"));
+        }
 
-    @Test
-void passengerRequestShouldRejectInvalidUserIdClaims() throws Exception {
-    Object[] invalidUserIds = {
-            "42",
-            0L,
-            -1L,
-            42.5,
-            Long.MAX_VALUE + 1.0
-    };
+        @Test
+        void passengerRequestShouldRejectInvalidUserIdClaims() throws Exception {
+                Object[] invalidUserIds = {
+                                "42",
+                                0L,
+                                -1L,
+                                42.5,
+                                Long.MAX_VALUE + 1.0
+                };
 
-    for (Object invalidUserId : invalidUserIds) {
-        mockMvc.perform(get("/api/bookings")
-                        .with(jwt()
-                                .jwt(token -> token
-                                        .claim("userId", invalidUserId)
-                                        .claim("role", "PASSENGER"))
-                                .authorities(new SimpleGrantedAuthority(
-                                        "ROLE_PASSENGER"))))
-                .andExpect(status().isForbidden());
-    }
-}
+                for (Object invalidUserId : invalidUserIds) {
+                        mockMvc.perform(get("/api/bookings")
+                                        .with(jwt()
+                                                        .jwt(token -> token
+                                                                        .claim("userId", invalidUserId)
+                                                                        .claim("role", "PASSENGER"))
+                                                        .authorities(new SimpleGrantedAuthority(
+                                                                        "ROLE_PASSENGER"))))
+                                        .andExpect(status().isForbidden());
+                }
+        }
 
-    private AppUser createPassenger(String prefix) {
-        AppUser user = new AppUser();
-        user.setUsername(prefix + "-" + System.nanoTime());
-        user.setPassword("test-password-hash");
-        user.setRole(Role.PASSENGER);
-        user.setEnabled(true);
-        return appUserRepository.saveAndFlush(user);
-    }
+        @Test
+        void passengerRequestShouldRejectMissingUserIdClaim() throws Exception {
+                mockMvc.perform(get("/api/bookings")
+                                .with(jwt()
+                                                .jwt(token -> token.claim("role", "PASSENGER"))
+                                                .authorities(new SimpleGrantedAuthority(
+                                                                "ROLE_PASSENGER"))))
+                                .andExpect(status().isForbidden());
+        }
 
-    private Booking createBooking(String pnr, AppUser owner) {
-        Booking booking = new Booking();
-        booking.setPnr(pnr);
-        booking.setPassenger("Test Passenger");
-        booking.setFlight("AH101");
-        booking.setRoute("DEL-BOM");
-        booking.setCabin("ECONOMY");
-        booking.setSeat("12A");
-        booking.setStatus("CONFIRMED");
-        booking.setAmount(new BigDecimal("1499.50"));
-        booking.setTravelDate(LocalDate.of(2026, 11, 15));
-        booking.setUser(owner);
-        return bookingRepository.saveAndFlush(booking);
-    }
+        private AppUser createPassenger(String prefix) {
+                AppUser user = new AppUser();
+                user.setUsername(prefix + "-" + System.nanoTime());
+                user.setPassword("test-password-hash");
+                user.setRole(Role.PASSENGER);
+                user.setEnabled(true);
+                return appUserRepository.saveAndFlush(user);
+        }
+
+        private Booking createBooking(String pnr, AppUser owner) {
+                Booking booking = new Booking();
+                booking.setPnr(pnr);
+                booking.setPassenger("Test Passenger");
+                booking.setFlight("AH101");
+                booking.setRoute("DEL-BOM");
+                booking.setCabin("ECONOMY");
+                booking.setSeat("12A");
+                booking.setStatus("CONFIRMED");
+                booking.setAmount(new BigDecimal("1499.50"));
+                booking.setTravelDate(LocalDate.of(2026, 11, 15));
+                booking.setUser(owner);
+                return bookingRepository.saveAndFlush(booking);
+        }
 }
