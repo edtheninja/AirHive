@@ -47,25 +47,25 @@ public class PassengerController {
     }
 
     private Long requireUserId(Jwt jwt) {
-    Object claim = jwt.getClaims().get("userId");
+        Object claim = jwt.getClaims().get("userId");
 
-    if (!(claim instanceof Number number)) {
-        throw new AccessDeniedException(
-                "Passenger token has no valid user identity.");
-    }
-
-    try {
-        long userId = new BigDecimal(number.toString()).longValueExact();
-
-        if (userId <= 0) {
+        if (!(claim instanceof Number number)) {
             throw new AccessDeniedException(
                     "Passenger token has no valid user identity.");
         }
 
-        return userId;
-    } catch (NumberFormatException | ArithmeticException exception) {
-        throw new AccessDeniedException(
-                "Passenger token has no valid user identity.");
+        try {
+            long userId = new BigDecimal(number.toString()).longValueExact();
+
+            if (userId <= 0) {
+                throw new AccessDeniedException(
+                        "Passenger token has no valid user identity.");
+            }
+
+            return userId;
+        } catch (NumberFormatException | ArithmeticException exception) {
+            throw new AccessDeniedException(
+                    "Passenger token has no valid user identity.");
+        }
     }
-}
 }

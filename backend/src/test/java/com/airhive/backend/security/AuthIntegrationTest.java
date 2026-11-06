@@ -4,6 +4,7 @@ import org.json.JSONObject;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -228,5 +229,75 @@ class AuthIntegrationTest {
     void missingJwtShouldReturnUnauthorized() throws Exception {
         mockMvc.perform(get("/api/airports"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void signupShouldCreatePassengerAccountAndReturnJwt() throws Exception {
+
+        String response = mockMvc.perform(post("/api/auth/signup")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "username": "integration-signup",
+                            "password": "signup-password123"
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JSONObject json = new JSONObject(response);
+
+        assertNotNull(json.getString("token"));
+        assertFalse(json.getString("token").isBlank());
+
+        assertEquals("integration-signup", json.getString("username"));
+        assertEquals("PASSENGER", json.getString("role"));
+        assertTrue(json.getLong("userId") > 0);
+
+        AppUser savedUser = appUserRepository
+                .findByUsername("integration-signup")
+                .orElseThrow();
+
+        assertEquals(Role.PASSENGER, savedUser.getRole());
+        assertTrue(savedUser.isEnabled());
+
+        assertTrue(passwordEncoder.matches(
+                "signup-password123",
+                savedUser.getPassword()));
+
+        assertFalse(savedUser.getPassword().equals("signup-password123"));
+    }
+
+    @Test
+    void signupShouldRejectDuplicateUsername() throws Exception {
+
+        mockMvc.perform(post("/api/auth/signup")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "username": "integration-viewer",
+                            "password": "signup-password123"
+                        }
+                        """))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void signupShouldRejectInvalidRequest() throws Exception {
+
+        mockMvc.perform(post("/api/auth/signup")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "username": "",
+                            "password": "short"
+                        }
+                        """))
+                .andExpect(status().isBadRequest());
     }
 }
