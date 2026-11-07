@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.airhive.backend.entity.Flight;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 
 public interface FlightRepository extends JpaRepository<Flight, Long> {
 
@@ -47,4 +49,10 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
 
     boolean existsByArrivalAirportId(Long airportId);
     boolean existsByRouteId(Long routeId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT f FROM Flight f WHERE f.id = :flightId")
+    Optional<Flight> findByIdForBooking(
+            @Param("flightId") Long flightId);
+
 }

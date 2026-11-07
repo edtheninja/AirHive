@@ -59,6 +59,14 @@ public class Booking {
     @JoinColumn(name = "user_id")
     private AppUser user;
 
+        /**
+     * Nullable for legacy bookings that were not associated with a flight record.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "flight_id")
+    private Flight linkedFlight;
+
+
     public Booking() {
     }
 
@@ -144,5 +152,13 @@ public class Booking {
 
     public void setUser(AppUser user) {
         this.user = user;
+    }
+
+    public Flight getLinkedFlight() {
+        return linkedFlight;
+    }
+
+    public void setLinkedFlight(Flight linkedFlight) {
+        this.linkedFlight = linkedFlight;
     }
 }

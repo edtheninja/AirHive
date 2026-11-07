@@ -16,7 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.airhive.backend.dto.BookingResponseDTO;
 import com.airhive.backend.entity.Booking;
+import com.airhive.backend.repository.AppUserRepository;
 import com.airhive.backend.repository.BookingRepository;
+import com.airhive.backend.repository.FlightRepository;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
@@ -24,11 +26,17 @@ class BookingServiceTest {
     @Mock
     private BookingRepository bookingRepository;
 
+    @Mock
+    private FlightRepository flightRepository;
+
+    @Mock
+    private AppUserRepository appUserRepository;
+
     private BookingService bookingService;
 
     @BeforeEach
     void setUp() {
-        bookingService = new BookingService(bookingRepository);
+        bookingService = new BookingService(bookingRepository, flightRepository, appUserRepository);
     }
 
     @Test

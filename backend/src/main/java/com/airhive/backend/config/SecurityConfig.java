@@ -25,6 +25,11 @@ public class SecurityConfig {
                                                                 .jwtAuthenticationConverter(
                                                                                 jwtAuthenticationConverter)))
                                 .authorizeHttpRequests(auth -> auth
+                                                                                                // Passenger booking creation
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/bookings")
+                                                .hasRole("PASSENGER")
                                                 // Docker and service health monitoring
                                                 .requestMatchers("/actuator/health/**")
                                                 .permitAll()
