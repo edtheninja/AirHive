@@ -25,7 +25,7 @@ public class SecurityConfig {
                                                                 .jwtAuthenticationConverter(
                                                                                 jwtAuthenticationConverter)))
                                 .authorizeHttpRequests(auth -> auth
-                                                                                                // Passenger booking creation
+                                                // Passenger booking creation
                                                 .requestMatchers(
                                                                 HttpMethod.POST,
                                                                 "/api/bookings")
@@ -71,6 +71,17 @@ public class SecurityConfig {
                                                                 HttpMethod.PATCH,
                                                                 "/api/users/**")
                                                 .hasRole("ADMIN")
+
+                                                // Passenger flight discovery
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/flights",
+                                                                "/api/flights/*")
+                                                .hasAnyRole(
+                                                                "PASSENGER",
+                                                                "VIEWER",
+                                                                "OPERATOR",
+                                                                "ADMIN")
 
                                                 // Passenger endpoints perform ownership filtering in their controllers.
                                                 // This matcher must precede the generic read rule.

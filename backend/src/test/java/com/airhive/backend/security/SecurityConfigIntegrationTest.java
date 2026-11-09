@@ -445,4 +445,45 @@ void viewerCanReadFlights() throws Exception {
                             new SimpleGrantedAuthority("ROLE_VIEWER"))))
             .andExpect(status().isOk());
 }
+@Test
+void passengerCanReadFlights() throws Exception {
+    mockMvc.perform(get("/api/flights")
+                    .with(jwt().authorities(
+                            new SimpleGrantedAuthority("ROLE_PASSENGER"))))
+            .andExpect(status().isOk());
+}
+
+@Test
+void passengerCanAccessIndividualFlightReadEndpoint() throws Exception {
+    mockMvc.perform(get("/api/flights/1")
+                    .with(jwt().authorities(
+                            new SimpleGrantedAuthority("ROLE_PASSENGER"))))
+            .andExpect(status().isNotFound());
+}
+
+@Test
+void passengerCannotCreateFlight() throws Exception {
+    mockMvc.perform(post("/api/flights")
+                    .with(csrf())
+                    .with(jwt().authorities(
+                            new SimpleGrantedAuthority("ROLE_PASSENGER")))
+                    .contentType("application/json")
+                    .content("{}"))
+            .andExpect(status().isForbidden());
+}
+
+@Test
+void passengerCannotUpdateFlightStatus() throws Exception {
+    mockMvc.perform(patch("/api/flights/1/status")
+                    .with(csrf())
+                    .with(jwt().authorities(
+                            new SimpleGrantedAuthority("ROLE_PASSENGER")))
+                    .contentType("application/json")
+                    .content("""
+                            {
+                                "status": "DELAYED"
+                            }
+                            """))
+            .andExpect(status().isForbidden());
+}
 }
