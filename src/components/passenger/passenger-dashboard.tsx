@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import {
@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { PageHeader, SectionCard } from "@/components/ams/primitives";
 import { pageVariants, spring } from "@/lib/ams/motion";
-import { getBookings, type Booking } from "@/lib/api/bookings";
+import { createBooking, getBookings, type Booking } from "@/lib/api/bookings";
+import { getFlights, type Flight } from "@/lib/api/flights";
 import { useAuth } from "@/lib/auth/auth-context";
 
 const statusTone: Record<Booking["status"], string> = {
@@ -36,6 +37,22 @@ function formatDate(value: string) {
   });
 }
 
+function formatDateTime(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value || "Schedule unavailable";
+  }
+
+  return date.toLocaleString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 function isUpcoming(booking: Booking) {
   if (booking.status === "Cancelled") return false;
 
@@ -49,26 +66,31 @@ function isUpcoming(booking: Booking) {
   return date >= today;
 }
 
+function isBookableFlight(flight: Flight) {
+  if (flight.status.toUpperCase() !== "SCHEDULED") return false;
+
+  const departure = new Date(flight.scheduledDeparture);
+  return !Number.isNaN(departure.getTime()) && departure > new Date();
+}
+
 export function PassengerDashboard() {
   const { session } = useAuth();
+
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const loadBookings = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const [flights, setFlights] = useState<Flight[]>([]);
+  const [flightsLoading, setFlightsLoading] = useState(true);
+  const [flightsError, setFlightsError] = useState<string | null>(null);
+  const [flightReloadKey, setFlightReloadKey] = useState(0);
 
-    try {
-      const result = await getBookings();
-      setBookings(result);
-    } catch {
-      setError("We couldn't load your bookings. Check your connection and try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [passengerName, setPassengerName] = useState(session?.username ?? "");
+  const [selectedFlightId, setSelectedFlightId] = useState<number | null>(null);
+  const [bookingFlightId, setBookingFlightId] = useState<number | null>(null);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingConfirmation, setBookingConfirmation] = useState<Booking | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -95,6 +117,45 @@ export function PassengerDashboard() {
       mounted = false;
     };
   }, [reloadKey]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      setFlightsLoading(true);
+      setFlightsError(null);
+
+      try {
+        const result = await getFlights();
+        if (mounted) setFlights(result);
+      } catch {
+        if (mounted) {
+          setFlightsError("We couldn't load available flights. Please try again.");
+        }
+      } finally {
+        if (mounted) setFlightsLoading(false);
+      }
+    }
+
+    void load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [flightReloadKey]);
+
+  const availableFlights = useMemo(
+    () =>
+      flights
+        .filter(isBookableFlight)
+        .sort(
+          (a, b) =>
+            new Date(a.scheduledDeparture).getTime() - new Date(b.scheduledDeparture).getTime(),
+        ),
+    [flights],
+  );
+
+  const selectedFlight = availableFlights.find((flight) => flight.id === selectedFlightId);
 
   const upcomingBookings = useMemo(
     () =>
@@ -130,6 +191,36 @@ export function PassengerDashboard() {
       tone: "text-success",
     },
   ];
+
+  async function handleBooking() {
+    if (!selectedFlight || !passengerName.trim()) {
+      setBookingError("Select a flight and enter the passenger name.");
+      return;
+    }
+
+    setBookingFlightId(selectedFlight.id);
+    setBookingError(null);
+    setBookingConfirmation(null);
+
+    try {
+      const result = await createBooking({
+        flightId: selectedFlight.id,
+        passenger: passengerName.trim(),
+        cabin: "ECONOMY",
+      });
+
+      setBookings((current) => [result, ...current.filter((booking) => booking.id !== result.id)]);
+
+      setBookingConfirmation(result);
+      setSelectedFlightId(null);
+    } catch (err) {
+      setBookingError(
+        err instanceof Error ? err.message : "We couldn't complete your booking. Please try again.",
+      );
+    } finally {
+      setBookingFlightId(null);
+    }
+  }
 
   return (
     <motion.div
@@ -191,6 +282,173 @@ export function PassengerDashboard() {
           </motion.div>
         ))}
       </div>
+
+      <SectionCard
+        title="Book a flight"
+        subtitle="Choose from upcoming scheduled flights"
+        action={<PlaneTakeoff className="h-5 w-5 text-muted-foreground" />}
+      >
+        <div className="space-y-5">
+          {bookingConfirmation ? (
+            <div role="status" className="rounded-2xl border border-success/30 bg-success/5 p-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+                <div>
+                  <p className="font-semibold">Booking confirmed!</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Your reservation for {bookingConfirmation.route} on flight{" "}
+                    {bookingConfirmation.flight} has been created.
+                  </p>
+                  <p className="mt-2 text-sm">
+                    PNR: <span className="num font-semibold">{bookingConfirmation.pnr}</span>
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Travel date: {formatDate(bookingConfirmation.travelDate)}
+                  </p>
+                  <Link
+                    to="/bookings"
+                    className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                  >
+                    View my bookings <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {flightsError ? (
+            <div
+              role="alert"
+              className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4"
+            >
+              <p className="text-sm text-muted-foreground">{flightsError}</p>
+              <button
+                type="button"
+                onClick={() => setFlightReloadKey((key) => key + 1)}
+                className="mt-3 inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-medium hover:bg-foreground/5"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Retry
+              </button>
+            </div>
+          ) : flightsLoading ? (
+            <div className="space-y-3 py-3" aria-label="Loading flights">
+              {[0, 1, 2].map((item) => (
+                <div key={item} className="h-20 animate-pulse rounded-2xl bg-foreground/5" />
+              ))}
+            </div>
+          ) : availableFlights.length === 0 ? (
+            <div className="rounded-2xl border border-border/60 p-6 text-center">
+              <PlaneTakeoff className="mx-auto h-8 w-8 text-muted-foreground" />
+              <p className="mt-3 font-medium">No upcoming scheduled flights</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Please check back later for available flights.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {availableFlights.map((flight) => {
+                  const selected = selectedFlightId === flight.id;
+
+                  return (
+                    <button
+                      key={flight.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedFlightId(flight.id);
+                        setBookingError(null);
+                        setBookingConfirmation(null);
+                      }}
+                      className={`w-full rounded-2xl border p-4 text-left transition-colors ${
+                        selected
+                          ? "border-primary bg-primary/5"
+                          : "border-border/60 hover:bg-foreground/[0.03]"
+                      }`}
+                      aria-pressed={selected}
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold">
+                            {flight.departureAirportCode} → {flight.arrivalAirportCode}
+                          </p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            Flight {flight.flightNumber}
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-success/12 px-2.5 py-1 text-xs font-medium text-success">
+                          Scheduled
+                        </span>
+                      </div>
+                      <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                        <CalendarDays className="h-4 w-4" />
+                        {formatDateTime(flight.scheduledDeparture)}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-4 border-t border-border/60 pt-5">
+                <div>
+                  <label htmlFor="passenger-name" className="mb-2 block text-sm font-medium">
+                    Passenger name
+                  </label>
+                  <input
+                    id="passenger-name"
+                    type="text"
+                    value={passengerName}
+                    onChange={(event) => setPassengerName(event.target.value)}
+                    placeholder="Enter passenger's full name"
+                    maxLength={120}
+                    required
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary"
+                  />
+                </div>
+
+                {selectedFlight ? (
+                  <div className="rounded-xl bg-foreground/[0.03] p-3 text-sm">
+                    <p className="font-medium">Selected: {selectedFlight.flightNumber}</p>
+                    <p className="mt-1 text-muted-foreground">
+                      {selectedFlight.departureAirportCode} → {selectedFlight.arrivalAirportCode} ·
+                      Economy
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Select a flight above to continue with your booking.
+                  </p>
+                )}
+
+                {bookingError ? (
+                  <p role="alert" className="text-sm text-destructive">
+                    {bookingError}
+                  </p>
+                ) : null}
+
+                <button
+                  type="button"
+                  onClick={() => void handleBooking()}
+                  disabled={!selectedFlight || !passengerName.trim() || bookingFlightId !== null}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {bookingFlightId !== null ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Booking flight…
+                    </>
+                  ) : (
+                    <>
+                      <Ticket className="h-4 w-4" />
+                      Confirm Economy booking
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </SectionCard>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.8fr)]">
         <SectionCard
