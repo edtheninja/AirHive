@@ -101,6 +101,14 @@ export const Route = createRootRouteWithContext<{
     const session = getSession();
 
     if (
+      typeof window !== "undefined" &&
+      location.pathname === "/users" &&
+      session?.role !== "ADMIN"
+    ) {
+      throw redirect({ to: "/" });
+    }
+
+    if (
       session?.role === "PASSENGER" &&
       !["/", "/bookings", "/profile"].includes(location.pathname)
     ) {
@@ -201,7 +209,10 @@ function RootComponent() {
       window.location.replace("/login");
       return;
     }
-
+    if (location.pathname === "/users" && session?.role !== "ADMIN") {
+      window.location.replace("/");
+      return;
+    }
     if (
       session?.role === "PASSENGER" &&
       !["/", "/bookings", "/profile"].includes(location.pathname)
