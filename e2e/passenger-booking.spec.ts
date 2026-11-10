@@ -69,9 +69,34 @@ test.describe("Passenger flight booking", () => {
     const pnr = pnrMatch![1];
 
     expect(pnr.length).toBeGreaterThan(0);
-
-    // Verify the booking confirmation contains the generated PNR.
+    // Verify the PNR before navigating away from confirmation.
     await expect(confirmation).toContainText(pnr);
+
+    // Verify the booking survives a page reload.
+    await page.reload();
+
+    await expect(
+      page.getByRole("heading", {
+        name: new RegExp(`Welcome,?\\s*${PASSENGER_USERNAME}`),
+      }),
+    ).toBeVisible();
+
+    // Open the passenger's booking history.
+    await page.goto("/bookings");
+
+    await expect(page.getByRole("heading", { name: "My bookings" })).toBeVisible();
+
+    // Verify the newly created booking appears in history.
+    const savedBooking = page.locator("article").filter({
+      hasText: pnr,
+    });
+
+    await expect(savedBooking).toBeVisible();
+    await expect(savedBooking).toContainText(pnr);
+    await expect(savedBooking).toContainText("Confirmed");
+
+    console.log("[PASSENGER BOOKING PERSISTENCE E2E]", { pnr });
+
     console.log("[PASSENGER BOOKING E2E]", {
       pnr,
       apiStatus: bookingResponse.status(),
