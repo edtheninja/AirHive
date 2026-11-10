@@ -21,6 +21,7 @@ import {
   Users,
   Wrench,
   LogOut,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/ams/motion";
@@ -55,7 +56,22 @@ const NAV = [
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/settings", label: "Settings", icon: Cog },
   { to: "/profile", label: "User Profile", icon: CalendarClock },
+  { to: "/users", label: "Users", icon: UserCog },
 ] as const;
+
+function getNavItems(role?: string) {
+  return NAV.filter((item) => {
+    if (item.to === "/users") {
+      return role === "ADMIN";
+    }
+
+    if (role === "PASSENGER") {
+      return ["/", "/bookings", "/profile"].includes(item.to);
+    }
+
+    return true;
+  });
+}
 
 function useTheme() {
   const [dark, setDark] = useState(false);
@@ -80,10 +96,7 @@ function NavItems({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { session } = useAuth();
 
-  const items =
-    session?.role === "PASSENGER"
-      ? NAV.filter((item) => ["/", "/bookings", "/profile"].includes(item.to))
-      : NAV;
+  const items = getNavItems(session?.role);
 
   return (
     <nav className="flex flex-col gap-1">
@@ -149,10 +162,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { unreadCount } = useNotifications();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const current =
-    (session?.role === "PASSENGER"
-      ? NAV.filter((item) => ["/", "/bookings", "/profile"].includes(item.to))
-      : NAV
-    ).find((item) => item.to === pathname)?.label ?? "Dashboard";
+    getNavItems(session?.role).find((item) => item.to === pathname)?.label ?? "Dashboard";
   const userInitials = session?.username?.slice(0, 2).toUpperCase() ?? "AH";
 
   const [isHydrated, setIsHydrated] = useState(false);

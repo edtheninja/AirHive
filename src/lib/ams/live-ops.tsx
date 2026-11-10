@@ -5,6 +5,9 @@ import { getFlights, type Flight as ApiFlight } from "@/lib/api/flights";
 import { getAircraft, type ApiAircraft } from "@/lib/api/aircraft";
 import { useNotifications } from "@/lib/notifications/notification-context";
 import { LiveOpsContext, type LiveOpsValue, type Kpis } from "./context";
+import { useAuth } from "@/lib/auth/auth-context";
+import { getSession } from "@/lib/auth/session";
+
 function mapApiFlight(flight: ApiFlight): Flight {
   return {
     id: String(flight.id),
@@ -73,6 +76,13 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [aircraft, setAircraft] = useState<ApiAircraft[]>([]);
   const { notifications: apiNotifications } = useNotifications();
+  const { isAuthenticated } = useAuth();
+  useEffect(() => {
+    console.log("[LIVE OPS AUTH]", {
+      isAuthenticated,
+      session: localStorage.getItem("airhive_auth"),
+    });
+  }, [isAuthenticated]);
 
   const notifications = useMemo<OpsNotification[]>(
     () =>
@@ -99,9 +109,26 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
+    console.log("[LIVE OPS EFFECT]", {
+      isAuthenticated,
+      session: getSession(),
+    });
+
+    if (!isAuthenticated) {
+      setFlights([]);
+      setAircraft([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     let cancelled = false;
 
     async function loadDashboardData() {
+      console.log("[LIVE OPS LOAD]", {
+        isAuthenticated,
+        session: localStorage.getItem("airhive_auth"),
+      });
       setLoading(true);
       setError(null);
       try {
@@ -156,7 +183,7 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     setKpis((current) => ({
@@ -168,6 +195,9 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
   }, [flights]);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
     const handleFlightEvent = (event: FlightEvent) => {
       const updatedFlight = mapApiFlight(event.flight);
 
@@ -195,7 +225,7 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
     return () => {
       disconnect();
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const value = useMemo<LiveOpsValue>(
     () => ({
