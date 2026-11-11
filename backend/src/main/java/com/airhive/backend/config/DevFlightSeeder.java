@@ -3,6 +3,7 @@ package com.airhive.backend.config;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -24,11 +25,14 @@ public class DevFlightSeeder {
     ) {
         return args -> {
             LocalDate baseDate = LocalDate.now().plusDays(3);
+            String dateSuffix = baseDate.format(
+                    DateTimeFormatter.BASIC_ISO_DATE
+            );
 
             seedFlight(
                     flightRepository,
                     flightService,
-                    "AH701",
+                    "AH701-" + dateSuffix,
                     27L,
                     2L,
                     2L,
@@ -40,7 +44,7 @@ public class DevFlightSeeder {
             seedFlight(
                     flightRepository,
                     flightService,
-                    "AH702",
+                    "AH702-" + dateSuffix,
                     27L,
                     26L,
                     2L,
@@ -52,7 +56,7 @@ public class DevFlightSeeder {
             seedFlight(
                     flightRepository,
                     flightService,
-                    "AH703",
+                    "AH703-" + dateSuffix,
                     28L,
                     4L,
                     2L,
