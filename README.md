@@ -83,7 +83,7 @@ The system currently provides functionality for:
 
 Public registration now creates a `PASSENGER` account by default. Passenger access is separated from staff operations, and passenger booking/passenger reads are scoped to the authenticated account. Staff account provisioning is supported by admin-protected backend APIs; a dedicated User Management screen and stronger administrator lifecycle safeguards remain future work.
 
-The current passenger milestone covers account registration, role assignment, protected passenger access, and ownership-aware reads. It does **not** yet provide a passenger self-service booking-creation workflow.
+The passenger milestone now includes account registration, a dedicated passenger dashboard, flight discovery, self-service booking creation, booking confirmation with PNR, and ownership-scoped booking and passenger access. Administrators can view registered users and manage their roles through the admin interface.
 
 The project is being developed with an emphasis on:
 
@@ -263,7 +263,7 @@ Current capabilities include:
 - Role-based access control for `ADMIN`, `OPERATOR`, `VIEWER`, and `PASSENGER`
 - Passenger ownership checks for passenger booking and passenger records
 - JWT role freshness and user-identity validation
-- Admin-protected backend APIs for creating users, changing roles, and enabling/disabling accounts
+- Admin-protected APIs and a dedicated frontend interface for listing users, creating staff accounts, changing roles, and enabling/disabling accounts
 - Password hashing and protected API endpoints
 - Security exception handling
 - WebSocket security foundation
@@ -1041,10 +1041,19 @@ cd backend
 ## Current Test Checkpoint
 
 ```text
-Tests:    313
+Tests:    410
 Failures: 0
 Errors:   0
 Skipped:  0
+```
+
+Latest end-to-end regression checkpoint:
+
+```text
+Playwright E2E: 8 passed, 0 failed
+Passenger booking creation: verified
+Passenger booking ownership isolation: verified
+Admin user listing and role updates: verified
 ```
 
 Frontend type checking:
@@ -1233,7 +1242,7 @@ The backend already exposes the following endpoints under `/api/users`. All are 
 | `PATCH` | `/api/users/{id}/role` | Change an account's role |
 | `PATCH` | `/api/users/{id}/status` | Enable or disable an account |
 
-An administrator can use these APIs to provision `OPERATOR` and `VIEWER` accounts and, where authorized, additional `ADMIN` accounts. The backend API exists; a dedicated frontend User Management screen is not yet documented as complete.
+An administrator can use these APIs to provision `OPERATOR` and `VIEWER` accounts and, where authorized, additional `ADMIN` accounts. The admin frontend includes a User Management screen for viewing registered accounts and updating their roles. The backend remains responsible for enforcing administrator-only access.
 
 ## Passenger data ownership
 
@@ -1249,13 +1258,13 @@ The project does not yet contain a production-grade first-administrator bootstra
 
 ## Operational safeguards still required
 
-The current user-management implementation is a foundation, not a complete production identity-governance workflow. Before production rollout, add and test:
+The user-management workflow is implemented and covered by automated tests. The following production identity-governance safeguards remain outstanding:
 
 - A one-time, secure initial-admin bootstrap procedure with no hardcoded production credentials.
 - Protection against an administrator demoting or disabling their own account unintentionally.
 - Protection against removing or disabling the last enabled administrator.
 - Audit records for account creation, role changes, and account enable/disable actions, including actor and timestamp.
-- A dedicated, role-protected User Management interface for authorized administrators.
+- A dedicated, role-protected User Management interface for authorized administrators. (Implemented.)
 - Appropriate credential delivery and password-reset/invitation flows for staff accounts.
 
 Until these safeguards and the frontend workflow are implemented, treat administrator provisioning as a controlled backend operation rather than a finished self-service admin console.
@@ -1365,10 +1374,10 @@ git push origin main
 | JWT Security and role freshness | ✅ Complete |
 | Passenger ownership-aware reads | ✅ Complete |
 | Admin-protected user management APIs | ✅ Backend complete |
-| Admin User Management frontend | 🛠️ Pending |
+| Admin User Management frontend | ✅ Complete |
 | Secure initial-admin bootstrap | 🛠️ Pending |
 | Admin lifecycle safeguards and audit history | 🛠️ Pending |
-| Passenger self-service booking creation | 🛠️ Pending |
+| Passenger self-service booking creation | ✅ Complete |
 | Role-Based Access Control | ✅ Complete (current API policies) |
 | Notifications | ✅ Complete |
 | Advanced Flight Operations | ✅ Complete |
@@ -1386,8 +1395,8 @@ git push origin main
 | Deployment Hardening | ✅ Complete |
 | Phase 12 Analytics | ✅ Complete |
 | Phase 13 AI | 🔮 Future / Postponed |
-| Phase 14 Deployment & Observability | ✅ Complete |
-| Phase 15 Finalization & Release | ✅ Complete |
+| Phase 14 Deployment & Observability | ✅ Local Docker/observability foundation complete; production deployment verification pending |
+| Phase 15 Finalization & Release | 🔄 In progress |
 
 ---
 
@@ -1474,7 +1483,7 @@ git push origin main
 - [x] Notification tests
 - [x] Analytics tests
 - [x] Regression testing
-- [x] 313 backend tests passing
+- [x] 410 backend tests passing (latest verified run)
 
 ## Phase 7 — Redis and Caching
 
@@ -2044,7 +2053,7 @@ Phase 13 AI capabilities were deliberately moved to a future phase.
 
 Phase 14 completed deployment, Dockerization, observability, runtime configuration, and hardening.
 
-The passenger-account milestone now separates customer signup from staff roles and scopes passenger record reads to the authenticated account. The next identity-management work is secure admin bootstrap, administrator safeguards, audit history, and an admin-facing user-management interface. Passenger self-service booking creation remains a separate pending workflow.
+The passenger-account milestone now includes passenger-only public signup, a dedicated dashboard, self-service flight booking, PNR confirmation, and ownership-isolated booking access. Administrators can view registered users and manage account roles through the frontend and protected backend APIs. Remaining identity-management work includes secure initial-admin bootstrap, administrator lifecycle safeguards, and audit history.
 
 The broader development focus remains:
 
