@@ -84,11 +84,6 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
   beforeLoad: ({ location }) => {
-    console.log("[AUTH GUARD]", {
-      pathname: location.pathname,
-      browser: typeof window !== "undefined",
-      session: getSession(),
-    });
     if (
       typeof window !== "undefined" &&
       location.pathname !== "/login" &&
@@ -197,15 +192,7 @@ function RootComponent() {
   useEffect(() => {
     const session = getSession();
 
-    console.log("[CLIENT AUTH CHECK]", {
-      pathname: location.pathname,
-      isAuthPage,
-      session,
-    });
-
     if (!isAuthPage && !session) {
-      console.log("[CLIENT AUTH CHECK] Redirecting to login");
-
       window.location.replace("/login");
       return;
     }

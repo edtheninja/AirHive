@@ -6,7 +6,6 @@ import { getAircraft, type ApiAircraft } from "@/lib/api/aircraft";
 import { useNotifications } from "@/lib/notifications/notification-context";
 import { LiveOpsContext, type LiveOpsValue, type Kpis } from "./context";
 import { useAuth } from "@/lib/auth/auth-context";
-import { getSession } from "@/lib/auth/session";
 
 function mapApiFlight(flight: ApiFlight): Flight {
   return {
@@ -77,13 +76,6 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
   const [aircraft, setAircraft] = useState<ApiAircraft[]>([]);
   const { notifications: apiNotifications } = useNotifications();
   const { isAuthenticated } = useAuth();
-  useEffect(() => {
-    console.log("[LIVE OPS AUTH]", {
-      isAuthenticated,
-      session: localStorage.getItem("airhive_auth"),
-    });
-  }, [isAuthenticated]);
-
   const notifications = useMemo<OpsNotification[]>(
     () =>
       apiNotifications.map((notification) => ({
@@ -109,11 +101,6 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    console.log("[LIVE OPS EFFECT]", {
-      isAuthenticated,
-      session: getSession(),
-    });
-
     if (!isAuthenticated) {
       setFlights([]);
       setAircraft([]);
@@ -125,10 +112,6 @@ export function LiveOpsProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     async function loadDashboardData() {
-      console.log("[LIVE OPS LOAD]", {
-        isAuthenticated,
-        session: localStorage.getItem("airhive_auth"),
-      });
       setLoading(true);
       setError(null);
       try {

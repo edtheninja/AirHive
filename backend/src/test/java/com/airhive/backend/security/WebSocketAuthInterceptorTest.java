@@ -1,7 +1,6 @@
 
 package com.airhive.backend.security;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -9,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,16 +24,26 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
+import com.airhive.backend.entity.AppUser;
+import com.airhive.backend.entity.Role;
+import com.airhive.backend.repository.AppUserRepository;
+
 class WebSocketAuthInterceptorTest {
 
     private JwtDecoder jwtDecoder;
+    private AppUserRepository appUserRepository;
     private WebSocketAuthInterceptor interceptor;
     private MessageChannel channel;
 
     @BeforeEach
     void setUp() {
         jwtDecoder = org.mockito.Mockito.mock(JwtDecoder.class);
-        interceptor = new WebSocketAuthInterceptor(jwtDecoder);
+        appUserRepository = org.mockito.Mockito.mock(AppUserRepository.class);
+
+        interceptor = new WebSocketAuthInterceptor(
+                jwtDecoder,
+                appUserRepository);
+
         channel = org.mockito.Mockito.mock(MessageChannel.class);
     }
 
@@ -63,6 +73,7 @@ class WebSocketAuthInterceptorTest {
         Jwt jwt = createJwt("viewer", 10L, "VIEWER");
 
         when(jwtDecoder.decode("valid-token")).thenReturn(jwt);
+        mockCurrentUser(10L, "viewer", Role.VIEWER, true);
 
         Message<?> message = createConnectMessage("Bearer valid-token");
 
@@ -109,6 +120,62 @@ class WebSocketAuthInterceptorTest {
     }
 
     @Test
+    void connectWithNonexistentUserShouldBeRejected() {
+        Jwt jwt = createJwt("user", 10L, "VIEWER");
+
+        when(jwtDecoder.decode("valid-token")).thenReturn(jwt);
+        when(appUserRepository.findById(10L)).thenReturn(Optional.empty());
+
+        Message<?> message = createConnectMessage("Bearer valid-token");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> interceptor.preSend(message, channel));
+    }
+
+    @Test
+    void connectWithDisabledUserShouldBeRejected() {
+        Jwt jwt = createJwt("user", 10L, "VIEWER");
+
+        when(jwtDecoder.decode("valid-token")).thenReturn(jwt);
+        mockCurrentUser(10L, "user", Role.VIEWER, false);
+
+        Message<?> message = createConnectMessage("Bearer valid-token");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> interceptor.preSend(message, channel));
+    }
+
+    @Test
+    void connectWithUsernameMismatchShouldBeRejected() {
+        Jwt jwt = createJwt("different-user", 10L, "VIEWER");
+
+        when(jwtDecoder.decode("valid-token")).thenReturn(jwt);
+        mockCurrentUser(10L, "user", Role.VIEWER, true);
+
+        Message<?> message = createConnectMessage("Bearer valid-token");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> interceptor.preSend(message, channel));
+    }
+
+    @Test
+    void connectWithOutdatedRoleShouldBeRejected() {
+        Jwt jwt = createJwt("user", 10L, "VIEWER");
+
+        when(jwtDecoder.decode("valid-token")).thenReturn(jwt);
+        mockCurrentUser(10L, "user", Role.PASSENGER, true);
+
+        Message<?> message = createConnectMessage("Bearer valid-token");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> interceptor.preSend(message, channel));
+    }
+
+    @Test
     void adminShouldBeAllowedToSubscribeToFlights() {
         assertFlightSubscriptionAllowed("ADMIN");
     }
@@ -125,6 +192,8 @@ class WebSocketAuthInterceptorTest {
 
     @Test
     void passengerShouldNotBeAllowedToSubscribeToFlights() {
+        mockCurrentUser(10L, "user", Role.PASSENGER, true);
+
         Message<?> message = createSubscribeMessage(
                 "/topic/flights",
                 createAuthentication("PASSENGER", 10L));
@@ -135,7 +204,35 @@ class WebSocketAuthInterceptorTest {
     }
 
     @Test
+    void subscriptionWithDisabledUserShouldBeRejected() {
+        mockCurrentUser(10L, "user", Role.VIEWER, false);
+
+        Message<?> message = createSubscribeMessage(
+                "/topic/flights",
+                createAuthentication("VIEWER", 10L));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> interceptor.preSend(message, channel));
+    }
+
+    @Test
+    void subscriptionWithOutdatedRoleShouldBeRejected() {
+        mockCurrentUser(10L, "user", Role.PASSENGER, true);
+
+        Message<?> message = createSubscribeMessage(
+                "/topic/flights",
+                createAuthentication("VIEWER", 10L));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> interceptor.preSend(message, channel));
+    }
+
+    @Test
     void userShouldBeAllowedToSubscribeToOwnNotifications() {
+        mockCurrentUser(10L, "user", Role.PASSENGER, true);
+
         Message<?> message = createSubscribeMessage(
                 "/topic/notifications/10",
                 createAuthentication("PASSENGER", 10L));
@@ -147,6 +244,8 @@ class WebSocketAuthInterceptorTest {
 
     @Test
     void userShouldNotBeAllowedToSubscribeToAnotherUsersNotifications() {
+        mockCurrentUser(10L, "user", Role.PASSENGER, true);
+
         Message<?> message = createSubscribeMessage(
                 "/topic/notifications/20",
                 createAuthentication("PASSENGER", 10L));
@@ -158,6 +257,8 @@ class WebSocketAuthInterceptorTest {
 
     @Test
     void unknownSubscriptionDestinationShouldBeRejected() {
+        mockCurrentUser(10L, "user", Role.VIEWER, true);
+
         Message<?> message = createSubscribeMessage(
                 "/topic/unknown",
                 createAuthentication("VIEWER", 10L));
@@ -177,6 +278,8 @@ class WebSocketAuthInterceptorTest {
     }
 
     private void assertFlightSubscriptionAllowed(String role) {
+        mockCurrentUser(10L, "user", Role.valueOf(role), true);
+
         Message<?> message = createSubscribeMessage(
                 "/topic/flights",
                 createAuthentication(role, 10L));
@@ -184,6 +287,21 @@ class WebSocketAuthInterceptorTest {
         Message<?> result = interceptor.preSend(message, channel);
 
         assertNotNull(result);
+    }
+
+    private void mockCurrentUser(
+            Long userId,
+            String username,
+            Role role,
+            boolean enabled) {
+
+        AppUser user = new AppUser();
+        user.setUsername(username);
+        user.setRole(role);
+        user.setEnabled(enabled);
+
+        when(appUserRepository.findById(userId))
+                .thenReturn(Optional.of(user));
     }
 
     private Message<?> createConnectMessage(String authorization) {
