@@ -11,6 +11,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import com.airhive.backend.security.WebSocketAuthInterceptor;
+import com.airhive.backend.security.WebSocketOutboundAuthInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -20,11 +21,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private String allowedOrigins;
 
     private final WebSocketAuthInterceptor webSocketAuthInterceptor;
+    private final WebSocketOutboundAuthInterceptor webSocketOutboundAuthInterceptor;
 
     public WebSocketConfig(
-            WebSocketAuthInterceptor webSocketAuthInterceptor) {
+            WebSocketAuthInterceptor webSocketAuthInterceptor,
+            WebSocketOutboundAuthInterceptor webSocketOutboundAuthInterceptor) {
 
         this.webSocketAuthInterceptor = webSocketAuthInterceptor;
+        this.webSocketOutboundAuthInterceptor =
+                webSocketOutboundAuthInterceptor;
     }
 
     @Override
@@ -38,6 +43,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             ChannelRegistration registration) {
 
         registration.interceptors(webSocketAuthInterceptor);
+    }
+
+    @Override
+    public void configureClientOutboundChannel(
+            ChannelRegistration registration) {
+
+        registration.interceptors(webSocketOutboundAuthInterceptor);
     }
 
     @Override
